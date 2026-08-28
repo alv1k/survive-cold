@@ -1,0 +1,4 @@
+.system_generated/
+scratch/
+*.tmp
+.DS_Store

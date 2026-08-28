@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Survive the Cold - Slower Enemy Speeds Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #0b0f19;
+      color: #f0f4fc;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+    }
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #111927;
+    }
+
+    /* Screen Frost Vignette */
+    #frost-vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      box-shadow: inset 0 0 100px 40px rgba(0, 180, 255, 0);
+      transition: box-shadow 0.3s ease;
+      z-index: 5;
+    }
+
+    /* HUD Overlay */
+    .hud-panel {
+      position: absolute;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Status Bar (Bottom Center) */
+    #status-bar {
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .bar-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 150px;
+    }
+    .bar-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+    }
+    .bar-bg {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 100%;
+      border-radius: 6px;
+      transition: width 0.2s ease, background 0.3s ease;
+    }
+    #warmth-fill { background: linear-gradient(90deg, #ff7b00, #ffae00); }
+    #health-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    /* Dynamic Inventory Grid (Bottom Center) */
+    #inventory-bar {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      border-radius: 16px;
+      max-width: 90vw;
+      overflow-x: auto;
+    }
+    .inv-slot {
+      width: 58px;
+      height: 64px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .inv-slot.selected {
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+      background: rgba(56, 189, 248, 0.25);
+      transform: translateY(-4px);
+    }
+    .inv-slot:hover {
+      border-color: #38bdf8;
+      background: rgba(51, 65, 85, 0.9);
+    }
+    .inv-slot.empty {
+      border-style: dashed;
+      opacity: 0.5;
+    }
+    .slot-key-badge {
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #fef08a;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 1px 4px;
+      border-radius: 4px;
+      border: 1px solid rgba(234, 179, 8, 0.5);
+    }
+    .slot-icon { font-size: 20px; }
+    .slot-name { font-size: 9px; font-weight: 800; color: #cbd5e1; margin-top: 2px; text-align: center; }
+    .slot-count {
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #38bdf8;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    /* Quest & Equipment Counter (Top Right) */
+    #quest-bar {
+      top: 20px;
+      right: 20px;
+      font-weight: 800;
+      font-size: 13px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Fireplace Fuel Prompt */
+    #fire-prompt {
+      position: absolute;
+      bottom: 200px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid #ff7b00;
+      border-radius: 12px;
+      padding: 10px 20px;
+      text-align: center;
+      display: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+    #fire-prompt button {
+      background: linear-gradient(135deg, #ff7b00, #ea580c);
+      border: none; color: #fff; padding: 6px 14px;
+      font-weight: 800; border-radius: 6px; margin-top: 6px; cursor: pointer;
+    }
+
+    /* House Prompt */
+    #house-prompt {
+      position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 20; background: rgba(15, 23, 42, 0.9); border: 2px solid #eab308;
+      border-radius: 12px; padding: 12px 20px; text-align: center; display: none;
+    }
+    #house-prompt button {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      border: none; color: #000; padding: 8px 16px; font-weight: 800; border-radius: 8px; margin-top: 8px; cursor: pointer;
+    }
+
+    /* Workbench Modal */
+    #workbench-modal {
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 30;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 2px solid #eab308;
+      border-radius: 16px; padding: 24px 32px;
+      display: none; flex-direction: column; align-items: center; gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+    .workbench-title { font-size: 18px; font-weight: 900; color: #fef08a; }
+    .craft-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    .craft-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff; padding: 10px 12px; border-radius: 10px;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .craft-btn:hover:not(:disabled) { background: rgba(51, 65, 85, 0.9); border-color: #eab308; }
+    .craft-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Alert Banner */
+    #alert-banner {
+      position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 10;
+      font-size: 18px; font-weight: 900; text-transform: uppercase; padding: 10px 24px;
+      border-radius: 30px; background: rgba(220, 38, 38, 0.25); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; display: none;
+    }
+
+    #shop-waypoint {
+      position: absolute; top: 130px; left: 20px; z-index: 10;
+      font-size: 12px; font-weight: 800; color: #38bdf8; background: rgba(15, 23, 42, 0.7);
+      padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    #inventory-warning {
+      position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); z-index: 15;
+      font-size: 13px; font-weight: 900; color: #f87171; background: rgba(15, 23, 42, 0.9);
+      padding: 6px 16px; border-radius: 20px; border: 1px solid #ef4444; display: none;
+    }
+
+    #modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(16px); z-index: 100; display: none;
+      justify-content: center; align-items: center; flex-direction: column; gap: 16px;
+    }
+    #modal-box {
+      background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px; padding: 32px 48px; text-align: center; max-width: 440px;
+    }
+    #modal-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
+    #modal-desc { font-size: 15px; color: #94a3b8; margin-bottom: 24px; line-height: 1.5; }
+    .action-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1); border: none; color: #fff;
+      padding: 12px 28px; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer;
+    }
+
+    #controls-hint {
+      position: absolute; top: 80px; left: 20px; z-index: 10;
+      font-size: 11px; color: #94a3b8; background: rgba(15, 23, 42, 0.6);
+      padding: 8px 12px; border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="canvas"></canvas>
+    <div id="frost-vignette"></div>
+
+    <div id="alert-banner">⚠️ ВНИМАНИЕ: СНЕЖНАЯ БУРЯ!</div>
+    <div id="inventory-warning">⚠️ ИНВЕНТАРЬ ПОЛОН!</div>
+
+    <div id="shop-waypoint">🧭 Магазин одежды (30 сек): <span id="shop-dist-val">700м</span> ➔</div>
+
+    <!-- Main Residential House Repair Prompt -->
+    <div id="house-prompt">
+      <div style="font-size:14px; font-weight:800; color:#fef08a;">🏡 ЖИЛОЙ ДОМ ИГРОКА (С КОСТРОМ И ВЕРСТАКОМ!)</div>
+      <div style="font-size:12px; color:#cbd5e1; margin-top:2px;">Почините за 3 Доски! Нажмите E!</div>
+      <button onclick="repairPlayerHouse()">🛠️ Отремонтировать (3 🪵 Доски)</button>
+    </div>
+
+    <!-- Fireplace Fuel Prompt (Residential House Only!) -->
+    <div id="fire-prompt">
+      <div style="font-size:13px; font-weight:800; color:#ff7b00;">🔥 КОСТЕР В ЖИЛОМ ДОМЕ (Время горения: <span id="fire-fuel-val">120сек</span>)</div>
+      <div style="font-size:11px; color:#cbd5e1;">Каждая ветка дает +60 сек горения! (Нажмите E)</div>
+      <button onclick="addFuelToFire()">🪵 Бросить 1 ветку (+60 сек огня)</button>
+    </div>
+
+    <!-- Workbench Modal -->
+    <div id="workbench-modal">
+      <div class="workbench-title">🛠️ ВЕРСТАК В ЖИЛОМ ДОМЕ</div>
+      <div class="craft-options">
+        <button class="craft-btn" id="btn-torch" onclick="craftItem('Torch')">
+          <span>🔥 Факел (x1)</span> <span>5 Веток + 5 Волокна</span>
+        </button>
+        <button class="craft-btn" onclick="craftItem('Backpack7')">
+          <span>🎒 Рюкзак (7 Слотов)</span> <span>3 Доски + 5 Волокна</span>
+        </button>
+        <button class="craft-btn" onclick="craftItem('Backpack9')">
+          <span>🎒 Рюкзак (9 Слотов)</span> <span>5 Досок + 5 Волокна + 5 Камней</span>
+        </button>
+        <button class="craft-btn" id="btn-turret" onclick="craftItem('Turret')">
+          <span>🏹 Турель</span> <span>3 Доски + 5 Камней</span>
+        </button>
+        <button class="craft-btn" id="btn-wall" onclick="craftItem('Wall')">
+          <span>🛡️ Стена</span> <span>3 Доски</span>
+        </button>
+      </div>
+      <button class="action-btn" style="padding:6px 20px; font-size:12px; margin-top:8px;" onclick="closeWorkbench()">Закрыть верстак</button>
+    </div>
+
+    <!-- Controls Hint -->
+    <div id="controls-hint">
+      🐾 <b>Скорость врагов снижена:</b> Волк в 2 раза медленнее (1.15), Снежный человек и Бигфут в 10 раз медленнее (0.17)!
+    </div>
+
+    <!-- Dynamic Inventory UI (Bottom Center) -->
+    <div id="inventory-bar" class="hud-panel">
+      <!-- Slots rendered via JS dynamically -->
+    </div>
+
+    <!-- Top Relic Quest & Equipment Counter -->
+    <div id="quest-bar" class="hud-panel">
+      <span>🎒 Слоты: <b id="slots-capacity-label" style="color:#38bdf8;">5 слотов</b></span>
+      <span>🧥 Одежда: <b id="clothing-level-label" style="color:#f59e0b;">Lvl 0 (Джинсы 0%)</b></span>
+      <span>🐾 Питомцы: <span id="pet-count" style="color:#a855f7;">0</span></span>
+      <span>🗿 Реликвии: <span id="relic-count">0</span> / 7</span>
+    </div>
+
+    <!-- Bottom Status -->
+    <div id="status-bar" class="hud-panel">
+      <div class="bar-group">
+        <div class="bar-label"><span>🔥 Тепло</span><span id="warmth-val">100%</span></div>
+        <div class="bar-bg"><div id="warmth-fill" class="bar-fill"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label"><span>❤️ Здоровье</span><span id="health-val">100%</span></div>
+        <div class="bar-bg"><div id="health-fill" class="bar-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Mannequin Shop Modal -->
+    <div id="shop-modal">
+      <div class="shop-title">🏪 МАГАЗИН ОДЕЖДЫ (ВСЕ КОСТЮМЫ 1-4 БЕСПЛАТНЫЕ!)</div>
+      <div class="mannequins-grid" id="mannequins-container"></div>
+      <button class="action-btn" style="padding:6px 20px; font-size:12px;" onclick="closeShop()">Закрыть магазин</button>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay">
+      <div id="modal-box">
+        <div id="modal-title">🏆 ПОБЕДА!</div>
+        <div id="modal-desc">Вы успешно выжили в заснеженном лесу!</div>
+        <button class="action-btn" onclick="restartGame()">Играть снова</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const MAP_SIZE = 2400;
+    const PLAYER_SPEED = 3.8;
+
+    const STACK_LIMITS = {
+      branches: 5,
+      fiber: 5,
+      stone: 5,
+      planks: 3,
+      torch: 4,
+      bar: 2,
+      soup: 2,
+      chips: 2,
+      pepper: 2
+    };
+
+    const ITEM_CONFIG = {
+      branches: { name: 'Ветки', icon: '🌿', isFood: false },
+      fiber: { name: 'Волокно', icon: '🌱', isFood: false },
+      stone: { name: 'Камень', icon: '🪨', isFood: false },
+      planks: { name: 'Доски', icon: '🪵', isFood: false },
+      torch: { name: 'Факел', icon: '🔥', isFood: false },
+      bar: { name: 'Батончик', icon: '🍫', isFood: true, hp: 15, warmth: 5 },
+      soup: { name: 'Суп', icon: '🥫', isFood: true, hp: 30, warmth: 25 },
+      chips: { name: 'Чипсы', icon: '🥔', isFood: true, hp: 10, warmth: 5 },
+      pepper: { name: 'Перец', icon: '🌶️', isFood: true, hp: 0, warmth: 45 }
+    };
+
+    const CLOTHING_TIERS = {
+      0: { name: 'Джинсы и футболка', icon: '👕', protection: 0.00 },
+      1: { name: 'Легкая куртка', icon: '🧥', protection: 0.10, costWood: 0, isRobux: false },
+      2: { name: 'Теплый свитер', icon: '🦺', protection: 0.20, costWood: 0, isRobux: false },
+      3: { name: 'Зимнее пальто', icon: '🧥', protection: 0.30, costWood: 0, isRobux: false },
+      4: { name: 'Меховая парка', icon: '🐻', protection: 0.40, costWood: 0, isRobux: false },
+      5: { name: 'VIP Снаряжение', icon: '💎', protection: 0.55, robuxCost: 150, isRobux: true }
+    };
+
+    let player = {
+      id: 'Player_1',
+      x: MAP_SIZE / 2 - 200,
+      y: MAP_SIZE / 2,
+      radius: 14,
+      warmth: 100,
+      health: 100,
+      maxWarmth: 100,
+      maxHealth: 100,
+      maxSlots: 5,
+      selectedSlotIdx: -1,
+      inventory: [
+        { id: 'branches', count: 3 },
+        { id: 'planks', count: 2 },
+        { id: 'bar', count: 1 },
+        { id: 'pepper', count: 1 },
+        null
+      ],
+      relics: 0,
+      hasTorch: false,
+      clothingLevel: 0
+    };
+
+    let playerHouse = {
+      x: MAP_SIZE / 2 - 320,
+      y: MAP_SIZE / 2 - 150,
+      width: 300,
+      height: 200,
+      isRepaired: false,
+      repairCostPlanks: 3,
+      fireFuelSeconds: 120,
+      maxFuelSeconds: 360,
+      workbenchX: MAP_SIZE / 2 - 280,
+      workbenchY: MAP_SIZE / 2 - 100
+    };
+
+    let hunterCabins = [
+      { id: 1, name: 'СЗ Заимка Охотника', x: 300, y: 300, width: 150, height: 100 },
+      { id: 2, name: 'ЮВ Избушка Охотника', x: MAP_SIZE - 500, y: MAP_SIZE - 400, width: 150, height: 100 },
+      { id: 3, name: 'Северный Приют Охотника', x: MAP_SIZE / 2 + 300, y: 250, width: 150, height: 100 }
+    ];
+
+    let shop = {
+      x: MAP_SIZE / 2 + 650,
+      y: MAP_SIZE / 2 - 400,
+      width: 160,
+      height: 130,
+      mannequins: [
+        { id: 1, tier: 1, isRobux: false },
+        { id: 2, tier: 1, isRobux: false },
+        { id: 3, tier: 1, isRobux: false },
+        { id: 4, tier: Math.random() < 0.5 ? 2 : 3, isRare: true, isRobux: false },
+        { id: 5, tier: 5, isRobux: true }
+      ]
+    };
+
+    let keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'KeyG') dropActiveItemWithKeyG();
+      if (e.code === 'KeyE') interactWithKeyE();
+
+      const numKeyMap = {
+        'Digit1': 0, 'Numpad1': 0,
+        'Digit2': 1, 'Numpad2': 1,
+        'Digit3': 2, 'Numpad3': 2,
+        'Digit4': 3, 'Numpad4': 3,
+        'Digit5': 4, 'Numpad5': 4,
+        'Digit6': 5, 'Numpad6': 5,
+        'Digit7': 6, 'Numpad7': 6,
+        'Digit8': 7, 'Numpad8': 7,
+        'Digit9': 8, 'Numpad9': 8,
+        'Digit0': 9, 'Numpad0': 9
+      };
+
+      if (numKeyMap[e.code] !== undefined) {
+        let slotIdx = numKeyMap[e.code];
+        if (slotIdx < player.maxSlots) {
+          selectSlotToggle(slotIdx);
+        }
+      }
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    let weatherTimer = 0;
+    let weatherState = 'Clear';
+    let prevWeatherState = 'Clear';
+    let weatherDuration = { Clear: 2400, Fog: 600, Blizzard: 1000 };
+
+    let respawnTimerFrames = 0;
+    const RESPAWN_INTERVAL_FRAMES = 600 * 60;
+
+    let droppedGroundItems = [];
+    let groundBranches = [], bushes = [], rocks = [], groundPlanks = [], groundFood = [], relics = [], heatSources = [], turrets = [], walls = [], mobs = [], frozenPets = [], rescuedPets = [], particles = [], projectiles = [];
+
+    function initWorld() {
+      groundBranches = []; bushes = []; rocks = []; groundPlanks = []; groundFood = []; relics = []; heatSources = []; turrets = []; walls = []; mobs = []; frozenPets = []; rescuedPets = []; particles = []; droppedGroundItems = [];
+      player.x = MAP_SIZE / 2 - 200; player.y = MAP_SIZE / 2; player.warmth = 100; player.health = 100; player.relics = 0; player.hasTorch = false; player.clothingLevel = 0;
+      player.maxSlots = 5; player.selectedSlotIdx = -1;
+      player.inventory = [
+        { id: 'branches', count: 3 },
+        { id: 'planks', count: 2 },
+        { id: 'bar', count: 1 },
+        { id: 'pepper', count: 1 },
+        null
+      ];
+
+      playerHouse.isRepaired = false;
+      playerHouse.fireFuelSeconds = 120;
+
+      spawnWorldResourcesHalfDensity();
+      spawnOneRandomFoodPerHunterCabin();
+
+      heatSources = [
+        { x: MAP_SIZE / 2 + 180, y: MAP_SIZE / 2 + 50, radius: 180, power: 10 },
+        { x: shop.x + 80, y: shop.y + 60, radius: 200, power: 12 }
+      ];
+
+      // WOLF = 2X SLOWER (1.15), YETI = 10X SLOWER (0.17)!
+      for (let i = 0; i < 8; i++) {
+        let isWolf = Math.random() < 0.70;
+        let homeX = MAP_SIZE/2 + 200 + Math.random() * 800;
+        let homeY = MAP_SIZE/2 - 400 + Math.random() * 800;
+        mobs.push({
+          type: isWolf ? 'Wolf' : 'Yeti',
+          label: isWolf ? '🐺 Волк (в 2р медленнее)' : '❄️ Снежный Человек (в 10р медленнее)',
+          x: homeX, y: homeY, homeX: homeX, homeY: homeY,
+          hp: isWolf ? 30 : 60, maxHp: isWolf ? 30 : 60,
+          speed: isWolf ? 1.15 : 0.17, // WOLF 2X SLOWER (2.3 -> 1.15), YETI 10X SLOWER (1.7 -> 0.17)!
+          aggroRadius: 220,
+          patrolRadius: 600,
+          patrolAngle: Math.random() * Math.PI * 2,
+          isAggro: false, color: isWolf ? '#ef4444' : '#06b6d4', radius: isWolf ? 12 : 16
+        });
+      }
+
+      frozenPets = [
+        { x: MAP_SIZE/2 - 200, y: MAP_SIZE/2 - 250, isRescued: false, type: '❄️ Снежный Лис' },
+        { x: MAP_SIZE/2 + 300, y: MAP_SIZE/2 - 100, isRescued: false, type: '🧊 Ледяной Волчонок' }
+      ];
+
+      for (let i = 1; i <= 7; i++) {
+        relics.push({ id: i, x: Math.random() * (MAP_SIZE - 300) + 150, y: Math.random() * (MAP_SIZE - 300) + 150, collected: false });
+      }
+
+      updateUI();
+    }
+
+    function spawnWorldResourcesHalfDensity() {
+      groundBranches = []; bushes = []; rocks = []; groundPlanks = [];
+      for (let i = 0; i < 55; i++) groundBranches.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
+      for (let i = 0; i < 30; i++) bushes.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
+      for (let i = 0; i < 20; i++) rocks.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
+      for (let i = 0; i < 25; i++) groundPlanks.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
+    }
+
+    function spawnOneRandomFoodPerHunterCabin() {
+      groundFood = [];
+      const foodTypes = ['bar', 'soup', 'chips', 'pepper'];
+      const foodLabels = { bar: '🍫 Батончик', soup: '🥫 Суп', chips: '🥔 Чипсы', pepper: '🌶️ Перец' };
+
+      for (let cabin of hunterCabins) {
+        let fType = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+        groundFood.push({
+          type: fType, label: foodLabels[fType],
+          x: cabin.x + 20 + Math.random() * (cabin.width - 40),
+          y: cabin.y + 20 + Math.random() * (cabin.height - 40)
+        });
+      }
+    }
+
+    initWorld();
+
+    function getItemCount(itemId) {
+      let total = 0;
+      for (let slot of player.inventory) {
+        if (slot && slot.id === itemId) total += slot.count;
+      }
+      return total;
+    }
+
+    function removeItem(itemId, amount) {
+      let needed = amount;
+      for (let i = 0; i < player.inventory.length; i++) {
+        let slot = player.inventory[i];
+        if (slot && slot.id === itemId) {
+          if (slot.count > needed) {
+            slot.count -= needed;
+            needed = 0;
+            break;
+          } else {
+            needed -= slot.count;
+            player.inventory[i] = null;
+            if (needed <= 0) break;
+          }
+        }
+      }
+      updateUI();
+      return needed === 0;
+    }
+
+    function tryAddItemToInventory(itemId, count = 1) {
+      let limit = STACK_LIMITS[itemId] || 5;
+
+      for (let slot of player.inventory) {
+        if (slot && slot.id === itemId && slot.count < limit) {
+          let space = limit - slot.count;
+          let toAdd = Math.min(space, count);
+          slot.count += toAdd;
+          count -= toAdd;
+          if (count <= 0) { updateUI(); return true; }
+        }
+      }
+
+      while (count > 0) {
+        let emptyIdx = player.inventory.findIndex(s => s === null);
+        if (emptyIdx !== -1 && emptyIdx < player.maxSlots) {
+          let toAdd = Math.min(limit, count);
+          player.inventory[emptyIdx] = { id: itemId, count: toAdd };
+          count -= toAdd;
+        } else {
+          showInventoryWarning();
+          updateUI();
+          return false;
+        }
+      }
+
+      updateUI();
+      return true;
+    }
+
+    function addItemToInventory(itemId, count = 1) {
+      return tryAddItemToInventory(itemId, count);
+    }
+
+    function dropItemToGroundPublic(itemId, count) {
+      droppedGroundItems.push({
+        id: itemId,
+        count: count,
+        ownerId: null,
+        x: player.x + (Math.random() - 0.5) * 50,
+        y: player.y + (Math.random() - 0.5) * 50
+      });
+    }
+
+    function setInventorySlots(newCapacity) {
+      player.maxSlots = newCapacity;
+      while (player.inventory.length < player.maxSlots) {
+        player.inventory.push(null);
+      }
+      createSparks(player.x, player.y, '#38bdf8');
+      updateUI();
+    }
+
+    function showInventoryWarning() {
+      const warn = document.getElementById('inventory-warning');
+      warn.innerText = `⚠️ ИНВЕНТАРЬ ПОЛОН! Предмет остается на земле!`;
+      warn.style.display = 'block';
+      setTimeout(() => { warn.style.display = 'none'; }, 2000);
+    }
+
+    window.addEventListener('click', (e) => {
+      const worldClickX = e.clientX - (canvas.width/2 - player.x);
+      const worldClickY = e.clientY - (canvas.height/2 - player.y);
+      
+      let activeSlot = player.selectedSlotIdx >= 0 ? player.inventory[player.selectedSlotIdx] : null;
+      if (activeSlot && ITEM_CONFIG[activeSlot.id] && ITEM_CONFIG[activeSlot.id].isFood) {
+        consumeEquippedFood();
+      } else {
+        gatherActionStrictTarget(worldClickX, worldClickY);
+      }
+    });
+
+    function consumeEquippedFood() {
+      if (player.selectedSlotIdx < 0) return;
+      let slotIdx = player.selectedSlotIdx;
+      let slot = player.inventory[slotIdx];
+      if (slot) {
+        let cfg = ITEM_CONFIG[slot.id];
+        if (cfg && cfg.isFood) {
+          slot.count--;
+          if (slot.count <= 0) {
+            player.inventory[slotIdx] = null;
+            player.selectedSlotIdx = -1;
+          }
+          if (cfg.hp) player.health = Math.min(player.maxHealth, player.health + cfg.hp);
+          if (cfg.warmth) player.warmth = Math.min(player.maxWarmth, player.warmth + cfg.warmth);
+          createSparks(player.x, player.y, '#22c55e');
+          updateUI();
+        }
+      }
+    }
+
+    function gatherActionStrictTarget(clickX, clickY) {
+      for (let dr of droppedGroundItems) {
+        if (Math.hypot(clickX - dr.x, clickY - dr.y) < 30 && Math.hypot(player.x - dr.x, player.y - dr.y) < 70) {
+          if (!dr.ownerId || dr.ownerId === player.id) {
+            if (tryAddItemToInventory(dr.id, dr.count)) {
+              createSparks(dr.x, dr.y, '#38bdf8');
+              droppedGroundItems = droppedGroundItems.filter(item => item !== dr);
+            }
+          } else {
+            alert("🔒 Предмет выброшен в чужом жилом доме и защищен владельцем!");
+          }
+          return;
+        }
+      }
+
+      for (let f of groundFood) {
+        if (Math.hypot(clickX - f.x, clickY - f.y) < 30 && Math.hypot(player.x - f.x, player.y - f.y) < 70) {
+          if (tryAddItemToInventory(f.type, 1)) {
+            createSparks(f.x, f.y, '#22c55e');
+            groundFood = groundFood.filter(item => item !== f);
+          }
+          return;
+        }
+      }
+
+      for (let br of groundBranches) {
+        if (Math.hypot(clickX - br.x, clickY - br.y) < 35 && Math.hypot(player.x - br.x, player.y - br.y) < 70) {
+          br.hitsLeft--;
+          createSparks(br.x, br.y, '#b45309');
+          if (br.hitsLeft <= 0) {
+            let randAmount = Math.floor(Math.random() * 3) + 1;
+            if (!tryAddItemToInventory('branches', randAmount)) {
+              dropItemToGroundPublic('branches', randAmount);
+            }
+            groundBranches = groundBranches.filter(item => item !== br);
+          }
+          return;
+        }
+      }
+
+      for (let b of bushes) {
+        if (Math.hypot(clickX - b.x, clickY - b.y) < 35 && Math.hypot(player.x - b.x, player.y - b.y) < 70) {
+          b.hitsLeft--;
+          createSparks(b.x, b.y, '#84cc16');
+          if (b.hitsLeft <= 0) {
+            let randAmount = Math.floor(Math.random() * 3) + 1;
+            if (!tryAddItemToInventory('fiber', randAmount)) {
+              dropItemToGroundPublic('fiber', randAmount);
+            }
+            bushes = bushes.filter(item => item !== b);
+          }
+          return;
+        }
+      }
+
+      for (let r of rocks) {
+        if (Math.hypot(clickX - r.x, clickY - r.y) < 35 && Math.hypot(player.x - r.x, player.y - r.y) < 70) {
+          r.hitsLeft--;
+          createSparks(r.x, r.y, '#94a3b8');
+          if (r.hitsLeft <= 0) {
+            let randAmount = Math.floor(Math.random() * 3) + 1;
+            if (!tryAddItemToInventory('stone', randAmount)) {
+              dropItemToGroundPublic('stone', randAmount);
+            }
+            rocks = rocks.filter(item => item !== r);
+          }
+          return;
+        }
+      }
+
+      for (let pl of groundPlanks) {
+        if (Math.hypot(clickX - pl.x, clickY - pl.y) < 35 && Math.hypot(player.x - pl.x, player.y - pl.y) < 70) {
+          pl.hitsLeft--;
+          createSparks(pl.x, pl.y, '#eab308');
+          if (pl.hitsLeft <= 0) {
+            let randAmount = Math.floor(Math.random() * 3) + 1;
+            if (!tryAddItemToInventory('planks', randAmount)) {
+              dropItemToGroundPublic('planks', randAmount);
+            }
+            groundPlanks = groundPlanks.filter(item => item !== pl);
+          }
+          return;
+        }
+      }
+    }
+
+    function interactWithKeyE() {
+      if (Math.hypot(player.x - playerHouse.workbenchX, player.y - playerHouse.workbenchY) < 60) {
+        openWorkbench(); return;
+      }
+
+      if (!playerHouse.isRepaired && Math.hypot(player.x - (playerHouse.x + playerHouse.width/2), player.y - (playerHouse.y + playerHouse.height/2)) < 160) {
+        repairPlayerHouse(); return;
+      }
+
+      if (isPlayerInsidePlayerHouse()) {
+        addFuelToFire(); return;
+      }
+
+      for (let f of groundFood) {
+        if (Math.hypot(player.x - f.x, player.y - f.y) < 60) {
+          if (tryAddItemToInventory(f.type, 1)) {
+            createSparks(f.x, f.y, '#22c55e');
+            groundFood = groundFood.filter(item => item !== f);
+          }
+          return;
+        }
+      }
+
+      for (let dr of droppedGroundItems) {
+        if (Math.hypot(player.x - dr.x, player.y - dr.y) < 60) {
+          if (!dr.ownerId || dr.ownerId === player.id) {
+            if (tryAddItemToInventory(dr.id, dr.count)) {
+              createSparks(dr.x, dr.y, '#38bdf8');
+              droppedGroundItems = droppedGroundItems.filter(item => item !== dr);
+            }
+          }
+          return;
+        }
+      }
+    }
+
+    function dropActiveItemWithKeyG() {
+      if (player.selectedSlotIdx < 0) return;
+      let slotIdx = player.selectedSlotIdx;
+      let slot = player.inventory[slotIdx];
+      if (slot && slot.count > 0) {
+        let inside = isPlayerInsidePlayerHouse();
+        
+        droppedGroundItems.push({
+          id: slot.id,
+          count: 1,
+          ownerId: inside ? player.id : null,
+          x: player.x + (Math.random() - 0.5) * 40,
+          y: player.y + (Math.random() - 0.5) * 40
+        });
+
+        slot.count--;
+        if (slot.count <= 0) {
+          player.inventory[slotIdx] = null;
+          player.selectedSlotIdx = -1;
+        }
+
+        createSparks(player.x, player.y, inside ? '#eab308' : '#38bdf8');
+        updateUI();
+      }
+    }
+
+    function createSparks(x, y, color) {
+      for (let i = 0; i < 6; i++) {
+        particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, life: 20, color: color });
+      }
+    }
+
+    function selectSlotToggle(slotIdx) {
+      if (player.selectedSlotIdx === slotIdx) {
+        player.selectedSlotIdx = -1;
+      } else {
+        player.selectedSlotIdx = slotIdx;
+      }
+      updateUI();
+    }
+
+    function repairPlayerHouse() {
+      if (getItemCount('planks') >= playerHouse.repairCostPlanks && !playerHouse.isRepaired) {
+        removeItem('planks', playerHouse.repairCostPlanks);
+        playerHouse.isRepaired = true;
+        playerHouse.fireFuelSeconds = 180;
+        createSparks(playerHouse.x + playerHouse.width/2, playerHouse.y + playerHouse.height/2, '#f59e0b');
+        updateUI();
+      }
+    }
+
+    function addFuelToFire() {
+      if (getItemCount('branches') >= 1) {
+        removeItem('branches', 1);
+        playerHouse.fireFuelSeconds = Math.min(playerHouse.maxFuelSeconds, playerHouse.fireFuelSeconds + 60);
+        createSparks(playerHouse.x + playerHouse.width/2, playerHouse.y + playerHouse.height/2, '#ff7b00');
+        updateUI();
+      }
+    }
+
+    function craftItem(type) {
+      if (type === 'Torch' && getItemCount('branches') >= 5 && getItemCount('fiber') >= 5) {
+        removeItem('branches', 5); removeItem('fiber', 5);
+        addItemToInventory('torch', 1);
+        player.hasTorch = true;
+      } else if (type === 'Backpack7' && getItemCount('planks') >= 3 && getItemCount('fiber') >= 5) {
+        if (player.maxSlots < 7) {
+          removeItem('planks', 3); removeItem('fiber', 5);
+          setInventorySlots(7);
+        }
+      } else if (type === 'Backpack9' && getItemCount('planks') >= 5 && getItemCount('fiber') >= 5 && getItemCount('stone') >= 5) {
+        if (player.maxSlots < 9) {
+          removeItem('planks', 5); removeItem('fiber', 5); removeItem('stone', 5);
+          setInventorySlots(9);
+        }
+      } else if (type === 'Turret' && getItemCount('planks') >= 3 && getItemCount('stone') >= 5) {
+        removeItem('planks', 3); removeItem('stone', 5);
+        turrets.push({ x: player.x + 30, y: player.y, range: 220, fireCooldown: 0 });
+      } else if (type === 'Wall' && getItemCount('planks') >= 3) {
+        removeItem('planks', 3);
+        walls.push({ x: player.x + 30, y: player.y, hp: 100 });
+      }
+      updateUI();
+    }
+
+    function openWorkbench() { document.getElementById('workbench-modal').style.display = 'flex'; }
+    function closeWorkbench() { document.getElementById('workbench-modal').style.display = 'none'; }
+
+    function openShop() {
+      const container = document.getElementById('mannequins-container');
+      container.innerHTML = '';
+      shop.mannequins.forEach((m) => {
+        const info = CLOTHING_TIERS[m.tier];
+        const card = document.createElement('div');
+        card.className = `mannequin-card ${m.isRare ? 'rare' : ''} ${m.isRobux ? 'robux' : ''}`;
+        let priceHtml = m.isRobux ? `<div class="mannequin-robux">R$ 150 Robux</div>` : `<div class="mannequin-free">🎉 БЕСПЛАТНО (0 🪵)</div>`;
+        let btnClass = m.isRobux ? 'buy-btn robux-btn' : 'buy-btn free-btn';
+        let btnText = m.isRobux ? '💳 Купить R$' : (player.clothingLevel >= m.tier ? 'Экипировано' : 'Забрать БЕСПЛАТНО');
+        let isDisabled = !m.isRobux && player.clothingLevel >= m.tier;
+
+        card.innerHTML = `
+          <div class="mannequin-icon">${info.icon}</div>
+          <div class="mannequin-name">${m.isRobux ? '💳 Платный VIP' : (m.isRare ? '⭐ Редкий Lvl ' + m.tier : 'Манекен ' + m.id)}</div>
+          <div style="font-size:11px; font-weight:800; color:#cbd5e1;">${info.name}</div>
+          <div class="mannequin-stat">Lvl ${m.tier} (Защита +${info.protection * 100}%)</div>
+          ${priceHtml}
+          <button class="${btnClass}" ${isDisabled ? 'disabled' : ''} onclick="buyClothing(${m.tier}, ${m.isRobux})">
+            ${btnText}
+          </button>
+        `;
+        container.appendChild(card);
+      });
+      document.getElementById('shop-modal').style.display = 'flex';
+    }
+
+    function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+
+    function buyClothing(tier, isRobux) {
+      if (isRobux) {
+        alert("🛒 Единственный платный костюм за 150 Robux! Костюм Lvl 5 активирован!");
+        player.clothingLevel = 5; createSparks(player.x, player.y, '#10b981'); updateUI(); openShop();
+      } else {
+        player.clothingLevel = tier; createSparks(player.x, player.y, '#22c55e'); updateUI(); openShop();
+      }
+    }
+
+    function isPlayerInsidePlayerHouse() {
+      return player.x >= playerHouse.x && player.x <= playerHouse.x + playerHouse.width &&
+             player.y >= playerHouse.y && player.y <= playerHouse.y + playerHouse.height;
+    }
+
+    function isPlayerInsideAnyStructure() {
+      if (isPlayerInsidePlayerHouse()) return true;
+      for (let c of hunterCabins) {
+        if (player.x >= c.x && player.x <= c.x + c.width && player.y >= c.y && player.y <= c.y + c.height) return true;
+      }
+      return false;
+    }
+
+    function isInsideAnyStructure(x, y) {
+      if (x >= playerHouse.x - 10 && x <= playerHouse.x + playerHouse.width + 10 &&
+          y >= playerHouse.y - 10 && y <= playerHouse.y + playerHouse.height + 10) return true;
+      for (let c of hunterCabins) {
+        if (x >= c.x - 10 && x <= c.x + c.width + 10 && y >= c.y - 10 && y <= c.y + c.height + 10) return true;
+      }
+      return false;
+    }
+
+    function isPlayerNearShop() {
+      return Math.hypot(player.x - (shop.x + shop.width/2), player.y - (shop.y + shop.height/2)) < 130;
+    }
+
+    function updateUI() {
+      const invContainer = document.getElementById('inventory-bar');
+      invContainer.innerHTML = '';
+
+      for (let i = 0; i < player.maxSlots; i++) {
+        let slot = player.inventory[i];
+        let slotDiv = document.createElement('div');
+        let isSelected = (i === player.selectedSlotIdx);
+        let displayBadge = (i === 9) ? '0' : (i + 1);
+
+        if (slot) {
+          let cfg = ITEM_CONFIG[slot.id];
+          let limit = STACK_LIMITS[slot.id];
+          slotDiv.className = `inv-slot ${isSelected ? 'selected' : ''}`;
+          slotDiv.onclick = () => selectSlotToggle(i);
+          slotDiv.innerHTML = `
+            <div class="slot-key-badge">${displayBadge}</div>
+            <div class="slot-count">${slot.count}/${limit}</div>
+            <div class="slot-icon">${cfg.icon}</div>
+            <div class="slot-name">${cfg.name}</div>
+          `;
+        } else {
+          slotDiv.className = `inv-slot empty ${isSelected ? 'selected' : ''}`;
+          slotDiv.onclick = () => selectSlotToggle(i);
+          slotDiv.innerHTML = `
+            <div class="slot-key-badge">${displayBadge}</div>
+            <div style="font-size:10px; color:#64748b;">Пусто</div>
+          `;
+        }
+        invContainer.appendChild(slotDiv);
+      }
+
+      document.getElementById('slots-capacity-label').innerText = `${player.maxSlots} слотов`;
+      document.getElementById('relic-count').innerText = player.relics;
+      document.getElementById('pet-count').innerText = rescuedPets.length;
+
+      const clothingInfo = CLOTHING_TIERS[player.clothingLevel];
+      document.getElementById('clothing-level-label').innerText = `Lvl ${player.clothingLevel} (${clothingInfo.name} ${clothingInfo.protection*100}%)`;
+
+      document.getElementById('warmth-val').innerText = Math.round(player.warmth) + '%';
+      document.getElementById('warmth-fill').style.width = player.warmth + '%';
+      
+      document.getElementById('health-val').innerText = Math.round(player.health) + '%';
+      document.getElementById('health-fill').style.width = player.health + '%';
+
+      document.getElementById('fire-fuel-val').innerText = Math.round(playerHouse.fireFuelSeconds) + ' сек';
+
+      const distToShop = Math.round(Math.hypot(player.x - (shop.x + shop.width/2), player.y - (shop.y + shop.height/2)));
+      document.getElementById('shop-dist-val').innerText = `${distToShop}m`;
+
+      const housePrompt = document.getElementById('house-prompt');
+      const firePrompt = document.getElementById('fire-prompt');
+
+      if (!playerHouse.isRepaired && Math.hypot(player.x - (playerHouse.x + playerHouse.width/2), player.y - (playerHouse.y + playerHouse.height/2)) < 160) {
+        housePrompt.style.display = 'block'; firePrompt.style.display = 'none';
+      } else {
+        housePrompt.style.display = 'none';
+        if (isPlayerInsidePlayerHouse()) { firePrompt.style.display = 'block'; } else { firePrompt.style.display = 'none'; }
+      }
+
+      if (isPlayerNearShop()) {
+        if (document.getElementById('shop-modal').style.display !== 'flex') openShop();
+      }
+
+      const vignette = document.getElementById('frost-vignette');
+      if (player.warmth < 40) {
+        const opacity = (1 - (player.warmth / 40)) * 0.7;
+        vignette.style.boxShadow = `inset 0 0 120px 60px rgba(0, 180, 255, ${opacity})`;
+      } else {
+        vignette.style.boxShadow = 'inset 0 0 100px 40px rgba(0, 180, 255, 0)';
+      }
+    }
+
+    // BIGFOOT SPEED 10X SLOWER (1.3 -> 0.13)
+    function spawnPostBlizzardBigfoot() {
+      let spawnX = shop.x + (Math.random() - 0.5) * 200;
+      let spawnY = shop.y + (Math.random() - 0.5) * 200;
+      mobs.push({
+        type: 'Bigfoot', label: '🦍 БИГФУТ (в 10р медленнее)',
+        x: spawnX, y: spawnY, homeX: spawnX, homeY: spawnY,
+        hp: 120, maxHp: 120,
+        speed: 0.13, // 10X SLOWER SPEED (1.3 -> 0.13)!
+        aggroRadius: 280,
+        patrolRadius: 800,
+        patrolAngle: Math.random() * Math.PI * 2,
+        isAggro: false, color: '#b91c1c', radius: 20
+      });
+      createSparks(spawnX, spawnY, '#ef4444');
+    }
+
+    let tickCounter = 0;
+    function update() {
+      tickCounter++;
+
+      respawnTimerFrames++;
+      if (respawnTimerFrames >= RESPAWN_INTERVAL_FRAMES) {
+        respawnTimerFrames = 0;
+        spawnWorldResourcesHalfDensity();
+        spawnOneRandomFoodPerHunterCabin();
+        console.log("🌲 [10-Min Timer] Ресурсы на карте и еда в заимках респавнились!");
+      }
+
+      let dx = 0, dy = 0;
+      if (keys['KeyW'] || keys['ArrowUp']) dy -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) dy += 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
+
+      if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
+      player.x = Math.max(30, Math.min(MAP_SIZE - 30, player.x + dx * PLAYER_SPEED));
+      player.y = Math.max(30, Math.min(MAP_SIZE - 30, player.y + dy * PLAYER_SPEED));
+
+      if (playerHouse.fireFuelSeconds > 0 && tickCounter % 60 === 0) {
+        playerHouse.fireFuelSeconds = Math.max(0, playerHouse.fireFuelSeconds - 1);
+      }
+
+      weatherTimer++;
+      prevWeatherState = weatherState;
+
+      if (weatherTimer < weatherDuration.Clear) {
+        weatherState = 'Clear'; document.getElementById('alert-banner').style.display = 'none';
+      } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog) {
+        weatherState = 'Fog'; document.getElementById('alert-banner').style.display = 'block';
+        document.getElementById('alert-banner').innerText = '⚠️ ПРИБЛИЖАЕТСЯ СНЕЖНАЯ БУРЯ!';
+      } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog + weatherDuration.Blizzard) {
+        weatherState = 'Blizzard'; document.getElementById('alert-banner').style.display = 'block';
+        document.getElementById('alert-banner').innerText = '🌪️ СНЕЖНАЯ БУРЯ В РАЗГАРЕ!';
+      } else {
+        weatherTimer = 0;
+      }
+
+      if (prevWeatherState === 'Blizzard' && weatherState === 'Clear') {
+        spawnPostBlizzardBigfoot();
+      }
+
+      let ambientDecay = weatherState === 'Blizzard' ? 0.35 : (weatherState === 'Fog' ? 0.15 : 0.05);
+      const clothingProtection = CLOTHING_TIERS[player.clothingLevel].protection;
+      ambientDecay = ambientDecay * (1 - clothingProtection);
+
+      let heatGain = player.hasTorch ? 0.25 : 0;
+      if (isPlayerInsidePlayerHouse() && playerHouse.fireFuelSeconds > 0) heatGain += 0.8;
+      if (isPlayerInsideAnyStructure()) ambientDecay = 0;
+      heatGain += rescuedPets.length * 0.08;
+
+      player.warmth = Math.max(0, Math.min(player.maxWarmth, player.warmth + (heatGain - ambientDecay)));
+      if (player.warmth <= 0) {
+        player.health = Math.max(0, player.health - 0.15);
+        if (player.health <= 0) gameOver();
+      }
+
+      for (let pet of frozenPets) {
+        if (!pet.isRescued && Math.hypot(player.x - pet.x, player.y - pet.y) < 40) {
+          if (player.hasTorch || heatGain > 0.3) {
+            pet.isRescued = true;
+            rescuedPets.push({ x: pet.x, y: pet.y, type: pet.type });
+            createSparks(pet.x, pet.y, '#a855f7'); updateUI();
+          }
+        }
+      }
+
+      for (let i = 0; i < rescuedPets.length; i++) {
+        let p = rescuedPets[i];
+        let targetX = player.x + (i + 1) * -22;
+        let targetY = player.y + (i + 1) * 15;
+        p.x += (targetX - p.x) * 0.1; p.y += (targetY - p.y) * 0.1;
+      }
+
+      for (let rel of relics) {
+        if (!rel.collected && Math.hypot(player.x - rel.x, rel.y - rel.y) < 30) {
+          rel.collected = true; player.relics++; createSparks(rel.x, rel.y, '#38bdf8');
+          updateUI(); if (player.relics >= 7) victory();
+        }
+      }
+
+      for (let mob of mobs) {
+        let distToPlayer = Math.hypot(player.x - mob.x, player.y - mob.y);
+        if (distToPlayer <= mob.aggroRadius) { mob.isAggro = true; }
+        else if (distToPlayer > mob.aggroRadius * 1.3) { mob.isAggro = false; }
+
+        let targetX, targetY;
+        if (mob.isAggro) {
+          targetX = player.x; targetY = player.y;
+        } else {
+          if (tickCounter % 180 === 0) {
+            mob.patrolAngle += (Math.random() - 0.5) * 1.5;
+          }
+          targetX = mob.homeX + Math.cos(mob.patrolAngle) * mob.patrolRadius;
+          targetY = mob.homeY + Math.sin(mob.patrolAngle) * mob.patrolRadius;
+        }
+
+        let angle = Math.atan2(targetY - mob.y, targetX - mob.x);
+        let nextX = mob.x + Math.cos(angle) * mob.speed;
+        let nextY = mob.y + Math.sin(angle) * mob.speed;
+
+        if (isInsideAnyStructure(nextX, nextY)) {
+          mob.x -= Math.cos(angle) * mob.speed; mob.y -= Math.sin(angle) * mob.speed;
+          mob.patrolAngle += Math.PI * 0.8;
+        } else {
+          mob.x = nextX; mob.y = nextY;
+        }
+
+        if (distToPlayer < mob.radius + 8 && mob.isAggro) {
+          let mobDmg = mob.type === 'Bigfoot' ? 0.6 : (mob.type === 'Yeti' ? 0.4 : 0.25);
+          player.health = Math.max(0, player.health - mobDmg);
+          if (player.health <= 0) gameOver();
+        }
+      }
+
+      for (let tur of turrets) {
+        tur.fireCooldown--;
+        if (tur.fireCooldown <= 0) {
+          let closestMob = null, minDist = tur.range;
+          for (let m of mobs) {
+            let d = Math.hypot(m.x - tur.x, m.y - tur.y);
+            if (d < minDist) { minDist = d; closestMob = m; }
+          }
+          if (closestMob) {
+            tur.fireCooldown = 40;
+            projectiles.push({ x: tur.x, y: tur.y, tx: closestMob.x, ty: closestMob.y, targetMob: closestMob, life: 15 });
+          }
+        }
+      }
+
+      for (let p of projectiles) {
+        p.life--;
+        if (p.targetMob && Math.hypot(p.targetMob.x - p.x, p.targetMob.y - p.y) < 20) {
+          p.targetMob.hp -= 20;
+          if (p.targetMob.hp <= 0) mobs = mobs.filter(m => m !== p.targetMob);
+          p.life = 0;
+        }
+      }
+      projectiles = projectiles.filter(p => p.life > 0);
+
+      for (let p of particles) { p.x += p.vx; p.y += p.vy; p.life--; }
+      particles = particles.filter(p => p.life > 0);
+
+      updateUI();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cameraX = canvas.width / 2 - player.x;
+      const cameraY = canvas.height / 2 - player.y;
+
+      ctx.save();
+      ctx.translate(cameraX, cameraY);
+
+      ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.04)'; ctx.fillRect(MAP_SIZE/2, 0, MAP_SIZE/2, MAP_SIZE);
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.2)'; ctx.setLineDash([12, 12]);
+      ctx.strokeRect(MAP_SIZE/2, 0, MAP_SIZE/2, MAP_SIZE); ctx.setLineDash([]);
+      ctx.fillStyle = '#f87171'; ctx.font = 'bold 13px Inter';
+      ctx.fillText('🔴 ЗОНА ВРАГОВ (ПРАВАЯ ЧАСТЬ КАРТЫ)', MAP_SIZE/2 + 20, 40);
+
+      ctx.fillStyle = 'rgba(30, 58, 138, 0.45)'; ctx.fillRect(shop.x, shop.y, shop.width, shop.height);
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(shop.x, shop.y, shop.width, shop.height);
+      ctx.fillStyle = '#93c5fd'; ctx.font = 'bold 12px Inter';
+      ctx.fillText('🏪 ДАЛЬНИЙ МАГАЗИН (БЕСПЛАТНЫЕ КОСТЮМЫ)', shop.x + 4, shop.y + 20);
+
+      for (let i = 0; i < shop.mannequins.length; i++) {
+        let m = shop.mannequins[i];
+        let mx = shop.x + 12 + (i * 28);
+        let my = shop.y + 65;
+        ctx.fillStyle = m.isRobux ? '#10b981' : (m.isRare ? '#a855f7' : '#22c55e');
+        ctx.fillRect(mx, my, 18, 30);
+      }
+
+      if (playerHouse.isRepaired) {
+        ctx.fillStyle = 'rgba(180, 83, 9, 0.45)'; ctx.fillRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 6; ctx.strokeRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
+        ctx.fillStyle = '#fef08a'; ctx.font = 'bold 13px Inter'; ctx.fillText('🏡 ЖИЛОЙ ДОМ ИГРОКА (С КОСТРОМ И ВЕРСТАКОМ)', playerHouse.x + 8, playerHouse.y + 24);
+      } else {
+        ctx.fillStyle = 'rgba(120, 53, 15, 0.2)'; ctx.fillRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4; ctx.setLineDash([8, 8]);
+        ctx.strokeRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height); ctx.setLineDash([]);
+        ctx.fillStyle = '#fca5a5'; ctx.font = 'bold 13px Inter'; ctx.fillText('🏚️ ДЫРЯВЫЙ ЖИЛОЙ ДОМ', playerHouse.x + 8, playerHouse.y + 24);
+      }
+
+      ctx.fillStyle = '#b45309'; ctx.fillRect(playerHouse.workbenchX - 14, playerHouse.workbenchY - 10, 32, 22);
+      ctx.fillStyle = '#fef08a'; ctx.font = 'bold 10px Inter'; ctx.fillText('🛠️ ВЕРСТАК (E)', playerHouse.workbenchX - 26, playerHouse.workbenchY - 14);
+
+      let fireX = playerHouse.x + playerHouse.width / 2;
+      let fireY = playerHouse.y + playerHouse.height / 2;
+      if (playerHouse.fireFuelSeconds > 0) {
+        ctx.beginPath(); ctx.arc(fireX, fireY, Math.min(120, 40 + playerHouse.fireFuelSeconds * 0.4), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 120, 0, 0.15)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(fireX, fireY, 14, 0, Math.PI * 2); ctx.fillStyle = '#ff7b00'; ctx.fill();
+        ctx.fillStyle = '#fef08a'; ctx.font = 'bold 10px Inter'; ctx.fillText(`🔥 Огонь: ${playerHouse.fireFuelSeconds}сек (E)`, fireX - 30, fireY + 24);
+      } else {
+        ctx.beginPath(); ctx.arc(fireX, fireY, 12, 0, Math.PI * 2); ctx.fillStyle = '#475569'; ctx.fill();
+        ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 10px Inter'; ctx.fillText('💨 ПОГАС (E)', fireX - 16, fireY + 24);
+      }
+
+      for (let cabin of hunterCabins) {
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.35)'; ctx.fillRect(cabin.x, cabin.y, cabin.width, cabin.height);
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.strokeRect(cabin.x, cabin.y, cabin.width, cabin.height);
+        ctx.fillStyle = '#e0f2fe'; ctx.font = 'bold 10px Inter';
+        ctx.fillText(`🏚️ ${cabin.name}`, cabin.x + 6, cabin.y + 18);
+      }
+
+      for (let dr of droppedGroundItems) {
+        let cfg = ITEM_CONFIG[dr.id];
+        ctx.fillStyle = dr.ownerId ? 'rgba(234, 179, 8, 0.2)' : 'rgba(56, 189, 248, 0.2)';
+        ctx.beginPath(); ctx.arc(dr.x, dr.y, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = dr.ownerId ? '#eab308' : '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px Inter';
+        ctx.fillText(`${cfg.icon} ${cfg.name} (${dr.count})`, dr.x - 20, dr.y - 12);
+        ctx.fillStyle = dr.ownerId ? '#38bdf8' : '#22c55e'; ctx.font = '9px Inter';
+        ctx.fillText(dr.ownerId ? `🔒 Личное (E)` : `🌐 Общий (E)`, dr.x - 14, dr.y + 18);
+      }
+
+      for (let br of groundBranches) {
+        ctx.strokeStyle = '#b45309'; ctx.lineWidth = 4; ctx.beginPath();
+        ctx.moveTo(br.x - 8, br.y - 4); ctx.lineTo(br.x + 8, br.y + 4);
+        ctx.moveTo(br.x - 4, br.y + 6); ctx.lineTo(br.x + 4, br.y - 6); ctx.stroke();
+        ctx.fillStyle = '#fde047'; ctx.font = '9px Inter';
+        ctx.fillText(`🌿 Ветка [${5 - br.hitsLeft}/4]`, br.x - 18, br.y - 8);
+      }
+
+      for (let pl of groundPlanks) {
+        ctx.fillStyle = '#b45309'; ctx.fillRect(pl.x - 10, pl.y - 6, 20, 12);
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.strokeRect(pl.x - 10, pl.y - 6, 20, 12);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px Inter';
+        ctx.fillText(`🪵 Доски [${5 - pl.hitsLeft}/4]`, pl.x - 20, pl.y - 10);
+      }
+
+      for (let f of groundFood) {
+        ctx.fillStyle = f.type === 'pepper' ? '#ef4444' : (f.type === 'soup' ? '#f59e0b' : '#22c55e');
+        ctx.beginPath(); ctx.arc(f.x, f.y, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px Inter';
+        ctx.fillText(`${f.label} (1 шт)`, f.x - 22, f.y - 10);
+      }
+
+      for (let b of bushes) {
+        ctx.beginPath(); ctx.arc(b.x, b.y, 12, 0, Math.PI * 2); ctx.fillStyle = '#65a30d'; ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px Inter';
+        ctx.fillText(`🌱 [${5 - b.hitsLeft}/4]`, b.x - 14, b.y - 14);
+      }
+
+      for (let r of rocks) {
+        ctx.beginPath(); ctx.arc(r.x, r.y, 14, 0, Math.PI * 2); ctx.fillStyle = '#64748b'; ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px Inter';
+        ctx.fillText(`🪨 [${5 - r.hitsLeft}/4]`, r.x - 14, r.y - 16);
+      }
+
+      for (let pet of frozenPets) {
+        if (!pet.isRescued) {
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.3)'; ctx.fillRect(pet.x - 14, pet.y - 14, 28, 28);
+          ctx.strokeStyle = '#c084fc'; ctx.strokeRect(pet.x - 14, pet.y - 14, 28, 28);
+          ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 10px Inter'; ctx.fillText(pet.type, pet.x - 30, pet.y - 18);
+        }
+      }
+
+      for (let pet of rescuedPets) {
+        ctx.beginPath(); ctx.arc(pet.x, pet.y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#c084fc'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+      }
+
+      for (let rel of relics) {
+        if (!rel.collected) {
+          ctx.beginPath(); ctx.arc(rel.x, rel.y, 12, 0, Math.PI * 2);
+          ctx.fillStyle = '#06b6d4'; ctx.fill(); ctx.strokeStyle = '#cffaff'; ctx.lineWidth = 3; ctx.stroke();
+        }
+      }
+
+      for (let tur of turrets) {
+        ctx.fillStyle = '#334155'; ctx.fillRect(tur.x - 12, tur.y - 12, 24, 24);
+        ctx.fillStyle = '#0284c7'; ctx.beginPath(); ctx.arc(tur.x, tur.y, 8, 0, Math.PI * 2); ctx.fill();
+      }
+
+      for (let m of mobs) {
+        ctx.beginPath(); ctx.arc(m.x, m.y, m.aggroRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = m.isAggro ? 'rgba(239, 68, 68, 0.35)' : 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1; ctx.stroke();
+
+        ctx.beginPath(); ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+        ctx.fillStyle = m.color; ctx.fill();
+        ctx.strokeStyle = m.isAggro ? '#f87171' : '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px Inter';
+        ctx.fillText(`${m.label} ${m.isAggro ? '⚠️ АГРО' : '🐌 Патруль'}`, m.x - 30, m.y - m.radius - 6);
+      }
+
+      for (let p of projectiles) {
+        ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; ctx.beginPath();
+        ctx.moveTo(p.x, p.y); ctx.lineTo(p.targetMob ? p.targetMob.x : p.tx, p.targetMob ? p.targetMob.y : p.ty); ctx.stroke();
+      }
+
+      for (let p of particles) { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 4, 4); }
+
+      if (player.hasTorch) {
+        ctx.beginPath(); ctx.arc(player.x, player.y, 40, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 120, 0, 0.18)'; ctx.fill();
+      }
+
+      ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = player.clothingLevel === 0 ? '#64748b' : (player.clothingLevel === 5 ? '#10b981' : (player.clothingLevel >= 3 ? '#a855f7' : '#38bdf8'));
+      ctx.fill();
+      ctx.strokeStyle = player.clothingLevel === 5 ? '#34d399' : '#ffffff';
+      ctx.lineWidth = 3; ctx.stroke();
+
+      if (player.selectedSlotIdx >= 0) {
+        let equipped = player.inventory[player.selectedSlotIdx];
+        if (equipped && ITEM_CONFIG[equipped.id]) {
+          let cfg = ITEM_CONFIG[equipped.id];
+          ctx.fillStyle = '#fef08a'; ctx.font = 'bold 11px Inter';
+          ctx.fillText(`В руках: ${cfg.icon} ${cfg.name}`, player.x - 25, player.y - 20);
+        }
+      }
+
+      if (weatherState === 'Fog' || weatherState === 'Blizzard') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        let density = weatherState === 'Blizzard' ? 120 : 40;
+        for (let i = 0; i < density; i++) {
+          let sx = (Math.sin(tickCounter * 0.05 + i) * 800) + player.x;
+          let sy = ((tickCounter * 4 + i * 50) % 900) - 450 + player.y;
+          ctx.fillRect(sx, sy, 3, 3);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function gameLoop() { update(); render(); requestAnimationFrame(gameLoop); }
+    gameLoop();
+
+    function victory() {
+      document.getElementById('modal-title').innerText = '🏆 ПОБЕДА!';
+      document.getElementById('modal-desc').innerText = 'Вы успешно выжили в заснеженном лесу!';
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function gameOver() {
+      document.getElementById('modal-title').innerText = '💀 ВЫ ЗАМЕРЗЛИ ИЛИ ПОГИБЛИ!';
+      document.getElementById('modal-desc').innerText = 'Укрывайтесь в жилом доме или заимках!';
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function restartGame() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      initWorld();
+    }
+  </script>
+</body>
+</html>

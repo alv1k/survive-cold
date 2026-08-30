@@ -101,6 +101,7 @@
     }
     #warmth-fill { background: linear-gradient(90deg, #ff7b00, #ffae00); }
     #health-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+    #stamina-fill { background: linear-gradient(90deg, #06b6d4, #38bdf8); }
 
     /* Dynamic Inventory Grid (Bottom Center) */
     #inventory-bar {
@@ -220,37 +221,158 @@
       position: absolute;
       top: 50%; left: 50%; transform: translate(-50%, -50%);
       z-index: 30;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       backdrop-filter: blur(16px);
       border: 2px solid #eab308;
-      border-radius: 16px; padding: 24px 32px;
-      display: none; flex-direction: column; align-items: center; gap: 14px;
+      border-radius: 16px; padding: 20px 28px;
+      display: none; flex-direction: column; align-items: center; gap: 12px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      max-width: 680px; width: 92vw;
     }
-    .workbench-title { font-size: 18px; font-weight: 900; color: #fef08a; }
-    .craft-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .workbench-title { font-size: 18px; font-weight: 900; color: #fef08a; text-transform: uppercase; }
+    .craft-section-label { font-size: 13px; font-weight: 800; color: #38bdf8; width: 100%; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 4px; margin-top: 4px; }
+    .craft-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; width: 100%; }
 
     .craft-btn {
-      background: rgba(30, 41, 59, 0.8);
+      background: rgba(30, 41, 59, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff; padding: 10px 12px; border-radius: 10px;
       font-size: 11px; font-weight: 700; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+      transition: all 0.2s ease;
+      text-align: left;
     }
-    .craft-btn:hover:not(:disabled) { background: rgba(51, 65, 85, 0.9); border-color: #eab308; }
-    .craft-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .craft-btn:hover:not(:disabled) { background: rgba(51, 65, 85, 0.95); border-color: #eab308; transform: translateY(-2px); }
+    .craft-btn:disabled { opacity: 0.45; cursor: not-allowed; border-color: rgba(255, 255, 255, 0.05); }
+    .craft-btn.weapon-btn { border-color: rgba(234, 179, 8, 0.4); }
+    .craft-btn.locked { background: rgba(15, 23, 42, 0.7); border-color: rgba(239, 68, 68, 0.3); }
+    .craft-cost { font-size: 10px; color: #94a3b8; font-weight: 600; }
+    .craft-bonus { font-size: 10px; color: #4ade80; font-weight: 800; }
 
     /* Alert Banner */
     #alert-banner {
       position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 10;
       font-size: 18px; font-weight: 900; text-transform: uppercase; padding: 10px 24px;
       border-radius: 30px; background: rgba(220, 38, 38, 0.25); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; display: none;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
     }
 
-    #shop-waypoint {
+    /* Background Watermark Completion Counter */
+    #bg-watermark {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      pointer-events: none;
+      text-align: center;
+      opacity: 0.32;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+    .bg-rebirth-title {
+      font-size: 26px;
+      font-weight: 900;
+      color: #cbd5e1;
+      letter-spacing: 6px;
+      text-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
+      text-transform: uppercase;
+    }
+    .bg-rebirth-sub {
+      font-size: 11px;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 3px;
+      margin-top: 5px;
+      text-transform: uppercase;
+    }
+
+    /* Multi-Waypoint HUD (Top Left) */
+    #waypoints-hud {
       position: absolute; top: 130px; left: 20px; z-index: 10;
-      font-size: 12px; font-weight: 800; color: #38bdf8; background: rgba(15, 23, 42, 0.7);
-      padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 11px; font-weight: 800; color: #e2e8f0;
+      background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+      padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex; flex-direction: column; gap: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .waypoint-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+
+    /* Pets Management HUD Panel (Top Right) */
+    #pets-hud {
+      position: absolute; top: 130px; right: 20px; z-index: 10;
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px);
+      padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.4);
+      display: none; flex-direction: column; gap: 8px; max-width: 280px; width: 280px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .pets-hud-title {
+      font-size: 11px; font-weight: 900; color: #c084fc; letter-spacing: 1px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px;
+    }
+    .pet-card {
+      background: rgba(30, 41, 59, 0.7); border-radius: 8px; padding: 7px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; gap: 5px;
+    }
+    .pet-header {
+      display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;
+    }
+    .pet-satiety-wrapper {
+      display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 700;
+    }
+    .pet-satiety-bg {
+      width: 100%; height: 6px; background: #0f172a; border-radius: 4px; overflow: hidden; margin: 2px 0;
+    }
+    .pet-satiety-fill {
+      height: 100%; border-radius: 4px; transition: width 0.3s;
+    }
+    .pet-buff-tag {
+      font-size: 9.5px; color: #fde047; font-weight: 700; background: rgba(253, 224, 71, 0.12);
+      padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(253, 224, 71, 0.25);
+    }
+    .pet-controls-row {
+      display: flex; gap: 6px; margin-top: 2px;
+    }
+    .pet-action-btn {
+      flex: 1; font-size: 9.5px; font-weight: 800; padding: 4px 6px; border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer; background: rgba(51, 65, 85, 0.8);
+      color: #fff; transition: all 0.15s ease;
+    }
+    .pet-action-btn:hover {
+      background: #475569; transform: translateY(-1px);
+    }
+    .pet-action-btn.feed-btn {
+      background: linear-gradient(135deg, #16a34a, #15803d); border-color: #22c55e;
+    }
+    .pet-action-btn.mode-btn {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9); border-color: #a855f7;
+    }
+
+    /* Altar Prompt */
+    #altar-prompt {
+      position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 20; background: rgba(15, 23, 42, 0.95); border: 2px solid #06b6d4;
+      border-radius: 14px; padding: 14px 24px; text-align: center; display: none;
+      box-shadow: 0 0 35px rgba(6, 182, 212, 0.5);
+    }
+    #altar-prompt button {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      border: none; color: #fff; padding: 8px 18px; font-weight: 800; border-radius: 8px; margin-top: 8px; cursor: pointer;
+    }
+
+    /* Bunker Prompt */
+    #bunker-prompt {
+      position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 20; background: rgba(15, 23, 42, 0.95); border: 2px solid #10b981;
+      border-radius: 14px; padding: 14px 24px; text-align: center; display: none;
+      box-shadow: 0 0 35px rgba(16, 185, 129, 0.5);
+    }
+    #bunker-prompt button {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none; color: #fff; padding: 8px 20px; font-weight: 800; border-radius: 8px; margin-top: 8px; cursor: pointer;
     }
 
     #inventory-warning {
@@ -270,13 +392,142 @@
     }
     #modal-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
     #modal-desc { font-size: 15px; color: #94a3b8; margin-bottom: 24px; line-height: 1.5; }
-    .action-btn {
-      background: linear-gradient(135deg, #0284c7, #0369a1); border: none; color: #fff;
-      padding: 12px 28px; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer;
+    /* Clothing Shop Modal */
+    #shop-modal {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 30; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px);
+      border: 2px solid #38bdf8; border-radius: 18px; padding: 24px 32px;
+      display: none; flex-direction: column; align-items: center; gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); max-width: 680px; width: 90vw;
+    }
+    .shop-title { font-size: 18px; font-weight: 900; color: #38bdf8; text-transform: uppercase; }
+    .mannequins-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; width: 100%; }
+    .mannequin-card {
+      background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px; padding: 12px; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; text-align: center;
+    }
+    .mannequin-card.rare { border-color: #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.4); }
+    .mannequin-card.robux { border-color: #10b981; box-shadow: 0 0 12px rgba(168, 85, 247, 0.4); }
+    .mannequin-icon { font-size: 28px; }
+    .mannequin-name { font-size: 12px; font-weight: 900; color: #f8fafc; }
+    .mannequin-stat { font-size: 10px; color: #38bdf8; font-weight: 700; }
+    .mannequin-free { font-size: 10px; font-weight: 900; color: #4ade80; margin: 4px 0; }
+    .mannequin-robux { font-size: 10px; font-weight: 900; color: #10b981; margin: 4px 0; }
+    .buy-btn {
+      border: none; border-radius: 6px; padding: 6px 10px; font-size: 10px; font-weight: 800;
+      cursor: pointer; width: 100%; transition: all 0.2s;
+    }
+    .free-btn { background: #22c55e; color: #fff; }
+    .free-btn:hover:not(:disabled) { background: #16a34a; }
+    .robux-btn { background: #10b981; color: #fff; }
+    .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Food Shop Modal */
+    #food-shop-modal {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 30; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px);
+      border: 2px solid #22c55e; border-radius: 18px; padding: 24px 30px;
+      display: none; flex-direction: column; align-items: center; gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); max-width: 720px; width: 90vw;
+    }
+    .food-shop-title { font-size: 18px; font-weight: 900; color: #4ade80; text-transform: uppercase; }
+    .food-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; width: 100%; }
+    .food-card {
+      background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; text-align: center; transition: all 0.2s;
+    }
+    .food-card:hover { border-color: #22c55e; background: rgba(51, 65, 85, 0.9); }
+    .food-icon { font-size: 28px; }
+    .food-name { font-size: 12px; font-weight: 900; color: #f8fafc; }
+    .food-effects { font-size: 10px; font-weight: 800; color: #fde047; display: flex; flex-direction: column; gap: 1px; }
+    .food-cost { font-size: 10px; font-weight: 800; color: #94a3b8; margin: 4px 0 2px 0; }
+    .food-buy-btn {
+      background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 6px;
+      color: #fff; padding: 6px 12px; font-size: 10px; font-weight: 800; cursor: pointer; width: 100%;
+    }
+    .food-buy-btn:hover:not(:disabled) { background: linear-gradient(135deg, #16a34a, #15803d); }
+    .food-buy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Welcome / Tutorial Guide Modal */
+    #welcome-modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(11, 15, 25, 0.88); backdrop-filter: blur(18px); z-index: 120; display: none;
+      justify-content: center; align-items: center; padding: 20px;
+    }
+    #welcome-dialog {
+      background: rgba(15, 23, 42, 0.96); border: 2px solid #38bdf8;
+      border-radius: 20px; max-width: 820px; width: 95vw; max-height: 88vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.3);
+    }
+    .welcome-header {
+      padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(90deg, rgba(30, 58, 138, 0.5), rgba(15, 23, 42, 0.7));
+    }
+    .welcome-title {
+      font-size: 19px; font-weight: 900; color: #38bdf8; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;
+    }
+    .welcome-sub { font-size: 11.5px; color: #94a3b8; margin-top: 3px; }
+    .welcome-tabs-bar {
+      display: flex; gap: 6px; padding: 10px 24px; background: rgba(30, 41, 59, 0.5);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); overflow-x: auto;
+    }
+    .welcome-tab-btn {
+      padding: 7px 14px; border-radius: 10px; font-size: 11px; font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .welcome-tab-btn:hover { color: #fff; background: rgba(51, 65, 85, 0.8); }
+    .welcome-tab-btn.active {
+      background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+    .welcome-body {
+      padding: 18px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;
+    }
+    .guide-card {
+      background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .guide-card-title {
+      font-size: 13px; font-weight: 900; color: #fde047; display: flex; align-items: center; gap: 6px;
+    }
+    .guide-card-text { font-size: 12px; color: #cbd5e1; line-height: 1.55; }
+    .guide-grid-2 {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;
+    }
+    .key-badge {
+      display: inline-block; background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8;
+      font-weight: 900; font-size: 11px; padding: 2px 7px; border-radius: 5px; margin-right: 4px;
+    }
+    .welcome-footer {
+      padding: 12px 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.85);
+    }
+    .welcome-start-btn {
+      background: linear-gradient(135deg, #22c55e, #16a34a); border: none;
+      color: #fff; padding: 9px 24px; font-size: 13px; font-weight: 900;
+      border-radius: 10px; cursor: pointer; box-shadow: 0 0 16px rgba(34, 197, 94, 0.4);
+      transition: all 0.2s;
+    }
+    .welcome-start-btn:hover { background: linear-gradient(135deg, #16a34a, #15803d); transform: scale(1.02); }
+
+    #guide-open-btn {
+      position: absolute; top: 80px; left: 20px; z-index: 15;
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px);
+      border: 1px solid #38bdf8; color: #38bdf8; font-size: 11.5px; font-weight: 900;
+      padding: 7px 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 6px;
+    }
+    #guide-open-btn:hover {
+      background: #0284c7; color: #fff; transform: translateY(-1px); box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
     }
 
     #controls-hint {
-      position: absolute; top: 80px; left: 20px; z-index: 10;
+      position: absolute; top: 80px; left: 185px; z-index: 10;
       font-size: 11px; color: #94a3b8; background: rgba(15, 23, 42, 0.6);
       padding: 8px 12px; border-radius: 8px;
     }
@@ -288,10 +539,28 @@
     <canvas id="canvas"></canvas>
     <div id="frost-vignette"></div>
 
+    <!-- Background Completion / Rebirth Counter Watermark -->
+    <div id="bg-watermark">
+      <div class="bg-rebirth-title">Ц И К Л &nbsp; П Е Р Е Р О Ж Д Е Н И Я &nbsp; #<span id="bg-rebirth-val">0</span></div>
+      <div class="bg-rebirth-sub">🏆 УСПЕШНЫХ ПРОХОЖДЕНИЙ: <span id="bg-completed-val">0</span> &nbsp;•&nbsp; ⏱️ ВРЕМЯ ЗАБЕГА: <span id="bg-timer-val">00:00</span></div>
+    </div>
+
     <div id="alert-banner">⚠️ ВНИМАНИЕ: СНЕЖНАЯ БУРЯ!</div>
     <div id="inventory-warning">⚠️ ИНВЕНТАРЬ ПОЛОН!</div>
 
-    <div id="shop-waypoint">🧭 Магазин одежды (30 сек): <span id="shop-dist-val">700м</span> ➔</div>
+    <!-- Help / Guide Button (Top Left) -->
+    <button id="guide-open-btn" onclick="openWelcomeModal(0)">
+      <span>❓ Обучение & Гайд</span>
+    </button>
+
+    <!-- Multi-Waypoint HUD -->
+    <div id="waypoints-hud" style="top:125px;">
+      <div class="waypoint-item"><span>🥫 <b>Продуктовый:</b></span> <span id="foodshop-dist-val" style="color:#4ade80;">400м</span></div>
+      <div class="waypoint-item"><span>🏪 <b>Одежда:</b></span> <span id="shop-dist-val" style="color:#38bdf8;">700м</span></div>
+      <div class="waypoint-item"><span>⛩️ <b>Алтарь:</b></span> <span id="altar-dist-val" style="color:#38bdf8;">320м (0/7)</span></div>
+      <div class="waypoint-item"><span>🚪 <b>Бункер:</b></span> <span id="bunker-dist-val" style="color:#f87171;">700м [🔒 Закрыт]</span></div>
+      <div class="waypoint-item"><span>🏡 <b>Жилой дом:</b></span> <span id="house-dist-val" style="color:#f59e0b;">100м</span></div>
+    </div>
 
     <!-- Main Residential House Repair Prompt -->
     <div id="house-prompt">
@@ -307,32 +576,55 @@
       <button onclick="addFuelToFire()">🪵 Бросить 1 ветку (+60 сек огня)</button>
     </div>
 
+    <!-- Ancient Relic Altar Prompt -->
+    <div id="altar-prompt">
+      <div style="font-size:14px; font-weight:900; color:#38bdf8;">⛩️ ДРЕВНИЙ АЛТАРЬ РЕЛИКВИЙ (<span id="altar-prompt-placed">0</span>/7)</div>
+      <div id="altar-prompt-sub" style="font-size:12px; color:#cbd5e1; margin:4px 0 8px 0;">У вас в руках: <b id="altar-prompt-hand" style="color:#fde047;">0</b> реликвий. Нажмите E!</div>
+      <button onclick="placeRelicsOnAltar()">✨ Освятить на Алтаре (E)</button>
+    </div>
+
+    <!-- Bunker Rebirth Prompt -->
+    <div id="bunker-prompt">
+      <div id="bunker-prompt-title" style="font-size:14px; font-weight:900; color:#10b981;">🚪 БУНКЕР ЭВАКУАЦИИ И ПЕРЕРОЖДЕНИЯ</div>
+      <div id="bunker-prompt-sub" style="font-size:12px; color:#cbd5e1; margin:4px 0 8px 0;">Капсула гиперсна готова! Нажмите E для перерождения!</div>
+      <button id="bunker-prompt-btn" onclick="openRebirthModal()">🌀 Войти в Бункер (E)</button>
+    </div>
+
     <!-- Workbench Modal -->
     <div id="workbench-modal">
-      <div class="workbench-title">🛠️ ВЕРСТАК В ЖИЛОМ ДОМЕ</div>
-      <div class="craft-options">
-        <button class="craft-btn" id="btn-torch" onclick="craftItem('Torch')">
-          <span>🔥 Факел (x1)</span> <span>5 Веток + 5 Волокна</span>
-        </button>
-        <button class="craft-btn" onclick="craftItem('Backpack7')">
-          <span>🎒 Рюкзак (7 Слотов)</span> <span>3 Доски + 5 Волокна</span>
-        </button>
-        <button class="craft-btn" onclick="craftItem('Backpack9')">
-          <span>🎒 Рюкзак (9 Слотов)</span> <span>5 Досок + 5 Волокна + 5 Камней</span>
-        </button>
-        <button class="craft-btn" id="btn-turret" onclick="craftItem('Turret')">
-          <span>🏹 Турель</span> <span>3 Доски + 5 Камней</span>
-        </button>
-        <button class="craft-btn" id="btn-wall" onclick="craftItem('Wall')">
-          <span>🛡️ Стена</span> <span>3 Доски</span>
-        </button>
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px solid rgba(234, 179, 8, 0.3); padding-bottom:8px;">
+        <div>
+          <div class="workbench-title" id="workbench-modal-title">🛠️ ВЕРСТАК (УРОВЕНЬ <span id="wb-lvl-badge">1</span>/5)</div>
+          <div id="wb-desc-badge" style="font-size:11px; color:#cbd5e1; margin-top:2px;">Базовые инструменты: Факел, Копье</div>
+        </div>
+        <div id="wb-upgrade-container"></div>
       </div>
-      <button class="action-btn" style="padding:6px 20px; font-size:12px; margin-top:8px;" onclick="closeWorkbench()">Закрыть верстак</button>
+      
+      <div class="craft-section-label">⚔️ ОРУЖИЕ И БОЕПРИПАСЫ</div>
+      <div class="craft-options" id="workbench-weapons-container">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="craft-section-label">🛡️ СНАРЯЖЕНИЕ, ОБОРОНА И МЕХОВЫЕ ИЗДЕЛИЯ</div>
+      <div class="craft-options" id="workbench-gear-container">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button class="action-btn" style="padding:6px 20px; font-size:12px; margin-top:6px;" onclick="closeWorkbench()">Закрыть верстак</button>
     </div>
 
     <!-- Controls Hint -->
     <div id="controls-hint">
-      🐾 <b>Скорость врагов снижена:</b> Волк в 2 раза медленнее (1.15), Снежный человек и Бигфут в 10 раз медленнее (0.17)!
+      🏃 <b>Shift:</b> Бег • 🐾 <b>F:</b> Покормить питомца • 🏡 <b>T:</b> Отправить в дом / Следовать • 📦 <b>G:</b> Выбросить
+    </div>
+
+    <!-- Pets HUD Panel (Top Right) -->
+    <div id="pets-hud">
+      <div class="pets-hud-title">
+        <span>🐾 ВАШИ ПИТОМЦЫ</span>
+        <span style="font-size:9.5px; color:#cbd5e1;">[F: Кормить | T: Режим]</span>
+      </div>
+      <div id="pets-container" style="display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 
     <!-- Dynamic Inventory UI (Bottom Center) -->
@@ -342,10 +634,12 @@
 
     <!-- Top Relic Quest & Equipment Counter -->
     <div id="quest-bar" class="hud-panel">
+      <span>👑 Цикл: <b id="rebirth-counter-badge" style="color:#f59e0b;">#0</b></span>
       <span>🎒 Слоты: <b id="slots-capacity-label" style="color:#38bdf8;">5 слотов</b></span>
       <span>🧥 Одежда: <b id="clothing-level-label" style="color:#f59e0b;">Lvl 0 (Джинсы 0%)</b></span>
+      <span>🏹 Боеприпасы: <b id="ammo-hud-badge" style="color:#fde047;">🪨 0 | 💥 0</b></span>
       <span>🐾 Питомцы: <span id="pet-count" style="color:#a855f7;">0</span></span>
-      <span>🗿 Реликвии: <span id="relic-count">0</span> / 7</span>
+      <span>🗿 Алтарь: <b id="altar-relic-badge" style="color:#06b6d4;">0/7</b> (<span id="hand-relic-badge" style="color:#fde047;">0 в руках</span>)</span>
     </div>
 
     <!-- Bottom Status -->
@@ -355,19 +649,268 @@
         <div class="bar-bg"><div id="warmth-fill" class="bar-fill"></div></div>
       </div>
       <div class="bar-group">
+        <div class="bar-label"><span>🍗 Сытость</span><span id="hunger-val">100%</span></div>
+        <div class="bar-bg"><div id="hunger-fill" class="bar-fill" style="background:linear-gradient(90deg, #f59e0b, #fbbf24);"></div></div>
+      </div>
+      <div class="bar-group">
         <div class="bar-label"><span>❤️ Здоровье</span><span id="health-val">100%</span></div>
         <div class="bar-bg"><div id="health-fill" class="bar-fill"></div></div>
       </div>
+      <div class="bar-group">
+        <div class="bar-label"><span>⚡ Бег (Shift)</span><span id="stamina-val">100%</span></div>
+        <div class="bar-bg"><div id="stamina-fill" class="bar-fill"></div></div>
+      </div>
     </div>
 
-    <!-- Mannequin Shop Modal -->
+    <!-- Mannequin Clothing Shop Modal -->
     <div id="shop-modal">
       <div class="shop-title">🏪 МАГАЗИН ОДЕЖДЫ (ВСЕ КОСТЮМЫ 1-4 БЕСПЛАТНЫЕ!)</div>
       <div class="mannequins-grid" id="mannequins-container"></div>
       <button class="action-btn" style="padding:6px 20px; font-size:12px;" onclick="closeShop()">Закрыть магазин</button>
     </div>
 
-    <!-- Modal Overlay -->
+    <!-- Food / Grocery Shop Modal -->
+    <div id="food-shop-modal">
+      <div class="food-shop-title">🥫 ПРОДУКТОВЫЙ МАГАЗИН И ПОВАРНЯ</div>
+      <div style="font-size:12px; color:#cbd5e1; margin-top:-6px;">Сытная горячая еда восстанавливает Здоровье (❤️) и согревает (🔥) в суровый мороз!</div>
+      <div class="food-grid" id="food-shop-container"></div>
+      <button class="action-btn" style="padding:6px 20px; font-size:12px;" onclick="closeFoodShop()">Закрыть магазин</button>
+    </div>
+
+    <!-- Bunker Rebirth / Completion Modal -->
+    <div id="rebirth-modal" style="position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(11,15,25,0.92); backdrop-filter:blur(16px); z-index:100; display:none; justify-content:center; align-items:center;">
+      <div style="background:rgba(15,23,42,0.95); border:2px solid #06b6d4; border-radius:20px; padding:32px 42px; text-align:center; max-width:520px; box-shadow:0 0 60px rgba(6,182,212,0.4);">
+        <div style="font-size:28px; font-weight:900; color:#38bdf8; margin-bottom:6px;">🌀 БУНКЕР ЭВАКУАЦИИ И ПЕРЕРОЖДЕНИЯ</div>
+        <div style="font-size:13px; color:#94a3b8; margin-bottom:20px; line-height:1.4;">Проклятие вечной зимы снято всеми 7 Реликвиями! Капсула гиперсна готова запустить новый усиленный цикл.</div>
+        <div style="background:rgba(30,41,59,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px 20px; margin-bottom:22px; text-align:left; font-size:13px; display:flex; flex-direction:column; gap:9px;">
+          <div style="display:flex; justify-content:space-between;"><span>⏱️ Время текущего забега:</span><b id="rebirth-stat-time" style="color:#fde047;">00:00</b></div>
+          <div style="display:flex; justify-content:space-between;"><span>🗿 Освящено реликвий:</span><b style="color:#38bdf8;">7 / 7 (Все на Алтаре!)</b></div>
+          <div style="display:flex; justify-content:space-between;"><span>🐾 Спасено питомцев:</span><b id="rebirth-stat-pets" style="color:#c084fc;">0</b></div>
+          <div style="display:flex; justify-content:space-between;"><span>🧥 Уровень экипировки:</span><b id="rebirth-stat-cloth" style="color:#34d399;">Lvl 0</b></div>
+          <div style="border-top:1px solid rgba(255,255,255,0.15); margin-top:4px; padding-top:10px; display:flex; justify-content:space-between; font-weight:800;">
+            <span>👑 Завершено прохождений: <b id="rebirth-stat-current">0</b></span>
+            <span style="color:#10b981;">➔ Следующий Цикл: <b id="rebirth-stat-next">#1</b></span>
+          </div>
+          <div style="font-size:11px; color:#67e8f9; background:rgba(6,182,212,0.12); padding:10px; border-radius:8px; border:1px solid rgba(6,182,212,0.3); line-height:1.4;">
+            ✨ <b>Постоянные бонусы перерождения:</b> +5% к базовой скорости, +10% к стойкости против мороза и бонусные стартовые припасы!
+          </div>
+        </div>
+        <button class="action-btn" onclick="executeRebirth()" style="background:linear-gradient(135deg, #06b6d4, #0284c7); font-size:16px; padding:14px 34px; box-shadow:0 0 25px rgba(6,182,212,0.6); width:100%;">🚀 ПЕРЕРОДИТЬСЯ (REBIRTH)</button>
+      </div>
+    </div>
+
+    <!-- Welcome & Onboarding Guide Modal -->
+    <div id="welcome-modal-overlay">
+      <div id="welcome-dialog">
+        <div class="welcome-header">
+          <div>
+            <div class="welcome-title">❄️ ВЫЖИТЬ В ХОЛОДЕ: 7 РЕЛИКВИЙ</div>
+            <div class="welcome-sub">Ознакомительный гид для выживших • Ключевые цели, механики и горячие клавиши</div>
+          </div>
+          <button class="action-btn" style="padding:4px 12px; font-size:11px; background:#334155;" onclick="closeWelcomeModal()">✕</button>
+        </div>
+
+        <div class="welcome-tabs-bar">
+          <button class="welcome-tab-btn active" id="wtab-btn-0" onclick="switchWelcomeTab(0)">🎯 1. Главная цель</button>
+          <button class="welcome-tab-btn" id="wtab-btn-1" onclick="switchWelcomeTab(1)">🎮 2. Управление</button>
+          <button class="welcome-tab-btn" id="wtab-btn-2" onclick="switchWelcomeTab(2)">🍗 3. Тепло и Сытость</button>
+          <button class="welcome-tab-btn" id="wtab-btn-3" onclick="switchWelcomeTab(3)">🛠️ 4. Верстак и Дом</button>
+          <button class="welcome-tab-btn" id="wtab-btn-4" onclick="switchWelcomeTab(4)">🦊 5. Питомцы и Баффы</button>
+        </div>
+
+        <div class="welcome-body" id="wtab-content-0">
+          <div class="guide-card">
+            <div class="guide-card-title">🗺️ Исследуйте бескрайний заснеженный мир (12000 × 12000)</div>
+            <div class="guide-card-text">
+              Вы очнулись посреди арктической тундры. Ваша база расположена в безопасном <b>Западном регионе</b>, в то время как восточные земли таят опасных диких волков, йети и древние сокровища.
+            </div>
+          </div>
+
+          <div class="guide-grid-2">
+            <div class="guide-card">
+              <div class="guide-card-title">💎 1. Найдите 7 Реликвий</div>
+              <div class="guide-card-text">
+                Светящиеся кристаллы спрятаны в разных уголках мира. Приблизьтесь к реликвии, чтобы поднять её в руки (по 1 за раз). <b>🦊 Снежный Лис</b> своим нюхом укажет пунктирную стрелку-радар к ближайшей реликвии!
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-title">⛩️ 2. Освятите на Алтаре</div>
+              <div class="guide-card-text">
+                Принесите реликвии на <b>Древний Алтарь (X: 3200, Y: 6450)</b> и нажмите <span class="key-badge">E</span>. Каждая освященная реликвия увеличивает длительность дня на +45 сек, снижает урон метели и согревает округу!
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card" style="border-color:#10b981;">
+            <div class="guide-card-title" style="color:#34d399;">🚪 3. Эвакуация в Бункере и Перерождение (Rebirth)</div>
+            <div class="guide-card-text">
+              Как только все 7 реликвий будут установлены на Алтаре, к востоку от базы откроется гермодверь <b>Бункера (X: 4800, Y: 6000)</b>. Зайдите внутрь и нажмите <span class="key-badge">E</span>, чтобы завершить цикл выживания, получить постоянный бонус к скорости бега и новый титул!
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-body" id="wtab-content-1" style="display:none;">
+          <div class="guide-grid-2">
+            <div class="guide-card">
+              <div class="guide-card-title">🏃 Передвижение и Бег</div>
+              <div class="guide-card-text">
+                • <span class="key-badge">W</span><span class="key-badge">A</span><span class="key-badge">S</span><span class="key-badge">D</span> / Стрелочки — Ходьба<br>
+                • <span class="key-badge">Shift</span> — Спринт (расходует шкалу ⚡ Стамины)<br>
+                • <i>Если стамина упадет до 0%, начнется одышка. Бег возобновится после восстановления до 20%.</i>
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">✋ Взаимодействие и Сбор</div>
+              <div class="guide-card-text">
+                • <span class="key-badge">ЛКМ (Клик)</span> — Рубка деревьев, камней, кустов, атака оружием<br>
+                • <span class="key-badge">E</span> — Взаимодействие (подобрать предмет, открыть сундуки Деталей, верстак, магазины, костер)<br>
+                • <span class="key-badge">G</span> — Выбросить выбранный предмет на землю
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🎒 Инвентарь и Оружие</div>
+              <div class="guide-card-text">
+                • <span class="key-badge">1</span>..<span class="key-badge">5</span> (или <span class="key-badge">0</span>) — Выбрать слот рюкзака<br>
+                • <b>ЛКМ с едой в руках</b> — Съесть и восстановить здоровье и сытость<br>
+                • <b>ЛКМ с оружием в руках</b> — Ударить пикой или выстрелить из рогатки / револьвера
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🐾 Команды Питомцам</div>
+              <div class="guide-card-text">
+                • <span class="key-badge">F</span> — Быстро покормить напарника едой из рюкзака<br>
+                • <span class="key-badge">T</span> — Переключить спутника (Взять с собой / Оставить дома)<br>
+                • <b>Клик по питомцу</b> — Покормить прямо на экране
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-body" id="wtab-content-2" style="display:none;">
+          <div class="guide-grid-2">
+            <div class="guide-card">
+              <div class="guide-card-title">🔥 1. Шкала Тепла (Warmth)</div>
+              <div class="guide-card-text">
+                На морозе шкала тепла стремительно тает. При 0% тепла персонаж замерзает и теряет здоровье.<br><br>
+                <b>Как согреться:</b><br>
+                • Стойте у костра в жилом доме (подкидывайте дрова на <span class="key-badge">E</span>)<br>
+                • Заходите в магазины и заимки охотников<br>
+                • Держите в руках <b>🔥 Факел</b> (+0.25 тепла)<br>
+                • Берите с собой <b>🐻 Полярного Медвежонка</b> (+0.35 защиты)
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🍗 2. Шкала Сытости (Hunger)</div>
+              <div class="guide-card-text">
+                Калории тратятся при ходьбе, беге и дрожи в метель. При сытости > 65% и тепле > 60% включается <b>пассивная регенерация здоровья</b>.<br><br>
+                <b>Где взять еду:</b><br>
+                • В <b>Продуктовом магазине (X: 2820, Y: 5620)</b> всегда доступен <b>🎉 Бесплатный паёк 🍫</b><br>
+                • Обменивайте ветки на сытный стейк, хлеб, кофе и горячий суп!
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-card-title">🧥 3. Теплая одежда и защита</div>
+            <div class="guide-card-text">
+              В <b>Магазине Одежды (X: 3580, Y: 5620)</b> манекены бесплатно выдают куртки и пальто (Lvl 1–3). А на верстаке можно сшить меховую жилетку из шкур волка и элитную парку из шкуры Йети!
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-body" id="wtab-content-3" style="display:none;">
+          <div class="guide-card">
+            <div class="guide-card-title">🏡 Жилой дом — Ваша неприкосновенная крепость</div>
+            <div class="guide-card-text">
+              Отремонтируйте дом за 3 Доски. <b>Главное правило:</b> при гибели или перерождении рюкзак теряется, но <b>всё, что сложено внутри дома на полу — остаётся в безопасности навсегда!</b>
+            </div>
+          </div>
+
+          <div class="guide-grid-2">
+            <div class="guide-card">
+              <div class="guide-card-title">⚙️ Сундучки Деталей (Part Chests)</div>
+              <div class="guide-card-text">
+                По карте спрятано 16 кованых ящиков 📦 [⚙️ Сундук Деталей]. Откройте их на <span class="key-badge">E</span>, чтобы получить 1–2 детали (стак 4 шт.). Детали нужны для прокачки верстака и постройки турелей!
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🏹 Сумка Боеприпасов</div>
+              <div class="guide-card-text">
+                Снаряды для рогатки (🪨) и патроны для револьвера (💥) <b>НЕ занимают слоты инвентаря</b>, а хранятся в специальном кармане боеприпасов!
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-card-title">🛠️ 5 Уровней Прокачки Верстака</div>
+            <div class="guide-card-text">
+              • <b>Ур. 1:</b> 🗡️ Охотничье Копье (ближний бой, урон 30) + 🔥 Факел<br>
+              • <b>Ур. 2:</b> 🏹 Рогатка (+50 снарядов) + 🎒 Рюкзак на 7 слотов (из шкуры волка)<br>
+              • <b>Ур. 3:</b> 🏹 Авто-Турель + 🛡️ Защитная Стена + 🦺 Волчья жилетка (Lvl 2)<br>
+              • <b>Ур. 4:</b> 🔫 Револьвер (урон 55) + 💥 Пули + 🎒 Рюкзак на 9 слотов (из шкуры Йети)<br>
+              • <b>Ур. 5:</b> ⚡ Тяжелая Сдвоенная Турель (двойная скорострельность, урон 35) + 🐻 Меховая парка (Lvl 4)
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-body" id="wtab-content-4" style="display:none;">
+          <div class="guide-card">
+            <div class="guide-card-title">🧊 Спасение питомцев из ледяных глыб</div>
+            <div class="guide-card-text">
+              Подойдите к замерзшему животному с горящим факелом в руках, чтобы отогреть и приручить его.
+            </div>
+          </div>
+
+          <div class="guide-grid-2">
+            <div class="guide-card">
+              <div class="guide-card-title">🦊 Снежный Лис (X: 2200, Y: 5200)</div>
+              <div class="guide-card-text">
+                • <b>Бафф:</b> +35% к скорости восстановления выносливости<br>
+                • <b>Радар:</b> Пунктирный компас указывает путь к ближайшей реликвии!<br>
+                • <b>Любимая еда:</b> 🍫 Батончик, 🥔 Чипсы
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🐺 Ледяной Волчонок (X: 7800, Y: 4800)</div>
+              <div class="guide-card-text">
+                • <b>Бафф:</b> +25% к урону всего оружия + 10% к скорости бега<br>
+                • <b>Любимая еда:</b> 🥩 Жареный стейк, 🥫 Мясной суп
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">🐻 Полярный Медвежонок (X: 4200, Y: 7800)</div>
+              <div class="guide-card-text">
+                • <b>Бафф:</b> +0.35 постоянный обогрев + защита от метели<br>
+                • <b>Любимая еда:</b> 🍞 Хлеб, 🥩 Стейк
+              </div>
+            </div>
+
+            <div class="guide-card">
+              <div class="guide-card-title">⚠️ Кормление и Домашний отдых</div>
+              <div class="guide-card-text">
+                • Нажмите <span class="key-badge">F</span> или кликните по питомцу для кормления.<br>
+                • При 0% сытости питомец голодает, и через <b>60 секунд уйдёт в лес</b>!<br>
+                • Нажмите <span class="key-badge">T</span>, чтобы отправить питомца отдыхать в дом на лежанку (там он тратит сытость в 3 раза медленнее и согревает костер).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-footer">
+          <div style="font-size:11px; color:#94a3b8;">💡 Вы всегда можете открыть эту справку кнопкой <b>❓ Обучение & Гайд</b> в верхнем углу!</div>
+          <button class="welcome-start-btn" onclick="closeWelcomeModal()">🚀 Начать выживание!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Overlay (Game Over / Fallback) -->
     <div id="modal-overlay">
       <div id="modal-box">
         <div id="modal-title">🏆 ПОБЕДА!</div>
@@ -388,7 +931,7 @@
     window.addEventListener('resize', resize);
     resize();
 
-    const MAP_SIZE = 2400;
+    const MAP_SIZE = 12000;
     const PLAYER_SPEED = 3.8;
 
     const STACK_LIMITS = {
@@ -397,10 +940,19 @@
       stone: 5,
       planks: 3,
       torch: 4,
-      bar: 2,
-      soup: 2,
-      chips: 2,
-      pepper: 2
+      parts: 4, // стак=4шт
+      wolf_pelt: 5,
+      yeti_pelt: 5,
+      bar: 3,
+      bread: 3,
+      chips: 3,
+      soup: 3,
+      pepper: 3,
+      coffee: 3,
+      steak: 2,
+      spear: 1,
+      slingshot: 1,
+      revolver: 1
     };
 
     const ITEM_CONFIG = {
@@ -409,10 +961,66 @@
       stone: { name: 'Камень', icon: '🪨', isFood: false },
       planks: { name: 'Доски', icon: '🪵', isFood: false },
       torch: { name: 'Факел', icon: '🔥', isFood: false },
-      bar: { name: 'Батончик', icon: '🍫', isFood: true, hp: 15, warmth: 5 },
-      soup: { name: 'Суп', icon: '🥫', isFood: true, hp: 30, warmth: 25 },
-      chips: { name: 'Чипсы', icon: '🥔', isFood: true, hp: 10, warmth: 5 },
-      pepper: { name: 'Перец', icon: '🌶️', isFood: true, hp: 0, warmth: 45 }
+      parts: { name: 'Детали', icon: '⚙️', isFood: false, desc: 'Металлические детали (стак 4 шт) для прокачки верстака' },
+      wolf_pelt: { name: 'Шкура волка', icon: '🐺', isFood: false, desc: 'Теплая шкура лесного волка' },
+      yeti_pelt: { name: 'Шкура Йети', icon: '❄️', isFood: false, desc: 'Густая плотная шкура снежного йети' },
+      bar: { name: 'Батончик', icon: '🍫', isFood: true, hp: 15, warmth: 10, hunger: 30 },
+      bread: { name: 'Хлеб', icon: '🍞', isFood: true, hp: 25, warmth: 15, hunger: 50 },
+      chips: { name: 'Чипсы', icon: '🥔', isFood: true, hp: 15, warmth: 8, hunger: 25 },
+      soup: { name: 'Суп', icon: '🥫', isFood: true, hp: 35, warmth: 30, hunger: 70 },
+      pepper: { name: 'Перец', icon: '🌶️', isFood: true, hp: 5, warmth: 50, hunger: 15 },
+      coffee: { name: 'Кофе', icon: '☕', isFood: true, hp: 20, warmth: 40, hunger: 20, speedBoost: 1.35, duration: 15 },
+      steak: { name: 'Стейк', icon: '🥩', isFood: true, hp: 60, warmth: 35, hunger: 90 },
+      spear: { id: 'spear', name: 'Пика (Копье)', icon: '🗡️', isFood: false, isWeapon: true, weaponType: 'melee', damage: 30, desc: 'Ближний бой (Урон: 30)' },
+      slingshot: { id: 'slingshot', name: 'Рогатка (Праща)', icon: '🏹', isFood: false, isWeapon: true, weaponType: 'ranged', damage: 22, desc: 'Дальний бой (Урон: 22)' },
+      revolver: { id: 'revolver', name: 'Револьвер', icon: '🔫', isFood: false, isWeapon: true, weaponType: 'ranged', damage: 55, desc: 'Мощный огнестрел (Урон: 55)' }
+    };
+
+    const PET_CONFIG = {
+      fox: {
+        id: 'fox',
+        name: 'Снежный Лис',
+        icon: '🦊',
+        color: '#f97316',
+        auraColor: 'rgba(249, 115, 22, 0.3)',
+        buffName: '⚡ Зоркий нюх & Стамина',
+        buffDesc: '+35% Регенерация стамины & Поиск реликвий',
+        favFood: ['bar', 'chips'],
+        homeOffsetX: -40,
+        homeOffsetY: 35
+      },
+      wolf: {
+        id: 'wolf',
+        name: 'Ледяной Волчонок',
+        icon: '🐺',
+        color: '#38bdf8',
+        auraColor: 'rgba(56, 189, 248, 0.3)',
+        buffName: '⚔️ Охотничий азарт',
+        buffDesc: '+25% Урон оружием & +10% Скорость бега',
+        favFood: ['steak', 'soup'],
+        homeOffsetX: 0,
+        homeOffsetY: 40
+      },
+      bear: {
+        id: 'bear',
+        name: 'Полярный Медвежонок',
+        icon: '🐻',
+        color: '#fbbf24',
+        auraColor: 'rgba(251, 191, 36, 0.3)',
+        buffName: '🔥 Теплая шубка',
+        buffDesc: '+0.35 Постоянный обогрев & Защита от метели',
+        favFood: ['bread', 'steak'],
+        homeOffsetX: 40,
+        homeOffsetY: 35
+      }
+    };
+
+    const STARVATION_LIMIT_FRAMES = 60 * 60; // 60 seconds of 0% satiety before pet leaves
+
+    let unlockedWeapons = {
+      spear: false,
+      slingshot: false,
+      revolver: false
     };
 
     const CLOTHING_TIERS = {
@@ -424,51 +1032,101 @@
       5: { name: 'VIP Снаряжение', icon: '💎', protection: 0.55, robuxCost: 150, isRobux: true }
     };
 
+    let rebirthCount = parseInt(localStorage.getItem('survive_the_cold_rebirths') || '0', 10);
+    let runTimerSeconds = 0;
+    let runTimerInterval = null;
+
     let player = {
       id: 'Player_1',
-      x: MAP_SIZE / 2 - 200,
-      y: MAP_SIZE / 2,
+      x: 3350,
+      y: 6000,
       radius: 14,
       warmth: 100,
+      hunger: 100,
       health: 100,
+      stamina: 100,
       maxWarmth: 100,
+      maxHunger: 100,
       maxHealth: 100,
+      maxStamina: 100,
       maxSlots: 5,
       selectedSlotIdx: -1,
       inventory: [
-        { id: 'branches', count: 3 },
-        { id: 'planks', count: 2 },
-        { id: 'bar', count: 1 },
-        { id: 'pepper', count: 1 },
+        null,
+        null,
+        null,
+        null,
         null
       ],
-      relics: 0,
+      ammo: {
+        slingshot: 0, // Снаряды из камня (не занимают слот)
+        revolver: 0   // Патроны револьвера (не занимают слот)
+      },
+      relicsInHand: 0,
       hasTorch: false,
-      clothingLevel: 0
+      clothingLevel: 0,
+      speedBuffTimer: 0,
+      isSprinting: false,
+      isExhausted: false
+    };
+
+    let altar = {
+      x: 3200,
+      y: 6450,
+      radius: 46,
+      placedRelics: 0,
+      isFullyActivated: false
+    };
+
+    let bunker = {
+      x: 4800,
+      y: 6000,
+      width: 160,
+      height: 110,
+      isOpen: false
+    };
+
+    let foodShop = {
+      x: 2820,
+      y: 5620,
+      width: 190,
+      height: 130,
+      items: [
+        { id: 'bar', cost: {}, free: true, desc: 'Бесплатный паёк' },
+        { id: 'bread', cost: { branches: 2 }, desc: '2 Ветки' },
+        { id: 'chips', cost: { fiber: 2 }, desc: '2 Волокна' },
+        { id: 'soup', cost: { branches: 3, fiber: 2 }, desc: '3 Ветки + 2 Волокна' },
+        { id: 'pepper', cost: { stone: 2, branches: 2 }, desc: '2 Камня + 2 Ветки' },
+        { id: 'coffee', cost: { branches: 3, fiber: 2 }, desc: '3 Ветки + 2 Волокна (+Скорость!)' },
+        { id: 'steak', cost: { planks: 1, branches: 2 }, desc: '1 Доска + 2 Ветки (+60 HP!)' }
+      ]
     };
 
     let playerHouse = {
-      x: MAP_SIZE / 2 - 320,
-      y: MAP_SIZE / 2 - 150,
+      x: 3200,
+      y: 5900,
       width: 300,
       height: 200,
       isRepaired: false,
       repairCostPlanks: 3,
       fireFuelSeconds: 120,
       maxFuelSeconds: 360,
-      workbenchX: MAP_SIZE / 2 - 280,
-      workbenchY: MAP_SIZE / 2 - 100
+      workbenchX: 3240,
+      workbenchY: 5950
     };
 
     let hunterCabins = [
-      { id: 1, name: 'СЗ Заимка Охотника', x: 300, y: 300, width: 150, height: 100 },
-      { id: 2, name: 'ЮВ Избушка Охотника', x: MAP_SIZE - 500, y: MAP_SIZE - 400, width: 150, height: 100 },
-      { id: 3, name: 'Северный Приют Охотника', x: MAP_SIZE / 2 + 300, y: 250, width: 150, height: 100 }
+      { id: 1, name: 'СЗ Заимка Охотника', x: 1400, y: 1400, width: 160, height: 110 },
+      { id: 2, name: 'СВ Избушка Охотника', x: MAP_SIZE - 1600, y: 1500, width: 160, height: 110 },
+      { id: 3, name: 'ЮВ Приют Охотника', x: MAP_SIZE - 1800, y: MAP_SIZE - 1600, width: 160, height: 110 },
+      { id: 4, name: 'ЮЗ Зимовье Охотника', x: 1500, y: MAP_SIZE - 1800, width: 160, height: 110 },
+      { id: 5, name: 'Северная Стоянка', x: 5000, y: 1200, width: 160, height: 110 },
+      { id: 6, name: 'Южный Аванпост', x: 4500, y: MAP_SIZE - 1400, width: 160, height: 110 }
     ];
 
     let shop = {
-      x: MAP_SIZE / 2 + 650,
-      y: MAP_SIZE / 2 - 400,
+      x: 3580,
+      y: 5620,
       width: 160,
       height: 130,
       mannequins: [
@@ -485,6 +1143,8 @@
       keys[e.code] = true;
       if (e.code === 'KeyG') dropActiveItemWithKeyG();
       if (e.code === 'KeyE') interactWithKeyE();
+      if (e.code === 'KeyF') feedNearbyPet();
+      if (e.code === 'KeyT') cycleCompanionWithKeyT();
 
       const numKeyMap = {
         'Digit1': 0, 'Numpad1': 0,
@@ -518,41 +1178,327 @@
 
     let droppedGroundItems = [];
     let groundBranches = [], bushes = [], rocks = [], groundPlanks = [], groundFood = [], relics = [], heatSources = [], turrets = [], walls = [], mobs = [], frozenPets = [], rescuedPets = [], particles = [], projectiles = [];
+    let partChests = [];
+    let workbenchLevel = 1;
 
-    function initWorld() {
-      groundBranches = []; bushes = []; rocks = []; groundPlanks = []; groundFood = []; relics = []; heatSources = []; turrets = []; walls = []; mobs = []; frozenPets = []; rescuedPets = []; particles = []; droppedGroundItems = [];
-      player.x = MAP_SIZE / 2 - 200; player.y = MAP_SIZE / 2; player.warmth = 100; player.health = 100; player.relics = 0; player.hasTorch = false; player.clothingLevel = 0;
-      player.maxSlots = 5; player.selectedSlotIdx = -1;
-      player.inventory = [
-        { id: 'branches', count: 3 },
-        { id: 'planks', count: 2 },
-        { id: 'bar', count: 1 },
-        { id: 'pepper', count: 1 },
-        null
+    const WORKBENCH_CONFIG = {
+      1: {
+        name: 'Базовый верстак (Уровень 1)',
+        desc: 'Чертежи: Факел, Охотничье копье',
+        upgradeCost: { parts: 2, planks: 3 },
+        upgradeCostText: '2 ⚙️ Детали + 3 🪵 Доски'
+      },
+      2: {
+        name: 'Продвинутый верстак (Уровень 2)',
+        desc: 'Чертежи: Рогатка, Снаряды, Рюкзак на 7 слотов',
+        upgradeCost: { parts: 3, wolf_pelt: 2, planks: 4 },
+        upgradeCostText: '3 ⚙️ Детали + 2 🐺 Шкуры волка + 4 🪵 Доски'
+      },
+      3: {
+        name: 'Инженерный верстак (Уровень 3)',
+        desc: 'Чертежи: Защитная стена, Авто-турель, Теплая жилетка (Lvl 2)',
+        upgradeCost: { parts: 4, yeti_pelt: 2, planks: 5 },
+        upgradeCostText: '4 ⚙️ Детали + 2 ❄️ Шкуры Йети + 5 🪵 Досок'
+      },
+      4: {
+        name: 'Оружейный верстак (Уровень 4)',
+        desc: 'Чертежи: Револьвер, 20x Патронов, Рюкзак на 9 слотов',
+        upgradeCost: { parts: 5, yeti_pelt: 3, stone: 6 },
+        upgradeCostText: '5 ⚙️ Детали + 3 ❄️ Шкуры Йети + 6 🪨 Камней'
+      },
+      5: {
+        name: 'Мастерский верстак (Уровень 5 - МАКСИМУМ)',
+        desc: 'Чертежи: Тяжелая сдвоенная турель, Меховая парка (Lvl 4)'
+      }
+    };
+
+    const SAVE_KEY = 'survive_the_cold_saved_game_v1';
+
+    function saveGameState() {
+      try {
+        const state = {
+          version: 1,
+          savedAt: Date.now(),
+          player: {
+            x: player.x,
+            y: player.y,
+            warmth: player.warmth,
+            hunger: player.hunger,
+            health: player.health,
+            stamina: player.stamina,
+            maxSlots: player.maxSlots,
+            selectedSlotIdx: player.selectedSlotIdx,
+            inventory: player.inventory,
+            ammo: player.ammo,
+            clothingLevel: player.clothingLevel,
+            relicsInHand: player.relicsInHand,
+            hasTorch: player.hasTorch
+          },
+          playerHouse: {
+            isRepaired: playerHouse.isRepaired,
+            fireFuelSeconds: playerHouse.fireFuelSeconds
+          },
+          workbenchLevel: workbenchLevel,
+          altar: {
+            placedRelics: altar.placedRelics,
+            isFullyActivated: altar.isFullyActivated
+          },
+          bunker: {
+            isOpen: bunker.isOpen
+          },
+          unlockedWeapons: unlockedWeapons,
+          rescuedPets: rescuedPets.map(p => ({
+            id: p.id,
+            x: p.x,
+            y: p.y,
+            satiety: p.satiety,
+            mode: p.mode,
+            starveTimerFrames: p.starveTimerFrames || 0
+          })),
+          partChests: partChests.map(c => ({
+            id: c.id,
+            x: c.x,
+            y: c.y,
+            partsCount: c.partsCount,
+            opened: c.opened
+          })),
+          droppedGroundItems: droppedGroundItems,
+          rebirthCount: rebirthCount,
+          runTimerSeconds: runTimerSeconds
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        localStorage.setItem('survive_the_cold_rebirths', rebirthCount.toString());
+      } catch (e) {
+        console.warn('Failed to save game state:', e);
+      }
+    }
+
+    function loadGameState() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+        const state = JSON.parse(raw);
+        if (!state || !state.player) return false;
+
+        if (Array.isArray(state.player.inventory)) {
+          player.maxSlots = state.player.maxSlots || 5;
+          player.inventory = state.player.inventory;
+          while (player.inventory.length < player.maxSlots) {
+            player.inventory.push(null);
+          }
+          player.selectedSlotIdx = state.player.selectedSlotIdx ?? -1;
+        }
+
+        if (state.player.ammo) {
+          player.ammo = {
+            slingshot: typeof state.player.ammo.slingshot === 'number' ? state.player.ammo.slingshot : 0,
+            revolver: typeof state.player.ammo.revolver === 'number' ? state.player.ammo.revolver : 0
+          };
+        }
+
+        // Migrate any legacy ammo items in inventory to player.ammo pouch and free up slots
+        for (let i = 0; i < player.inventory.length; i++) {
+          let it = player.inventory[i];
+          if (it) {
+            if (it.id === 'stone_ammo') {
+              player.ammo.slingshot += (it.count || 50);
+              player.inventory[i] = null;
+            } else if (it.id === 'revolver_ammo') {
+              player.ammo.revolver += (it.count || 20);
+              player.inventory[i] = null;
+            }
+          }
+        }
+
+        if (typeof state.player.clothingLevel === 'number') {
+          player.clothingLevel = state.player.clothingLevel;
+        }
+        if (typeof state.player.health === 'number' && !isNaN(state.player.health) && state.player.health > 20) {
+          player.health = Math.min(100, state.player.health);
+        } else {
+          player.health = 100;
+        }
+
+        if (typeof state.player.warmth === 'number' && !isNaN(state.player.warmth) && state.player.warmth > 20) {
+          player.warmth = Math.min(100, state.player.warmth);
+        } else {
+          player.warmth = 100;
+        }
+
+        if (typeof state.player.hunger === 'number' && !isNaN(state.player.hunger) && state.player.hunger > 20) {
+          player.hunger = Math.min(100, state.player.hunger);
+        } else {
+          player.hunger = 100;
+        }
+
+        if (typeof state.player.stamina === 'number' && !isNaN(state.player.stamina)) {
+          player.stamina = state.player.stamina;
+        } else {
+          player.stamina = 100;
+        }
+        if (typeof state.player.x === 'number' && typeof state.player.y === 'number') {
+          if (state.player.x >= 5300 && state.player.x <= 6300 && state.player.y >= 5300 && state.player.y <= 6300) {
+            player.x = playerHouse.x + playerHouse.width / 2;
+            player.y = playerHouse.y + playerHouse.height / 2;
+          } else {
+            player.x = state.player.x;
+            player.y = state.player.y;
+          }
+        }
+        if (typeof state.player.relicsInHand === 'number') player.relicsInHand = state.player.relicsInHand;
+        if (typeof state.player.hasTorch === 'boolean') player.hasTorch = state.player.hasTorch;
+
+        if (state.playerHouse) {
+          playerHouse.isRepaired = !!state.playerHouse.isRepaired;
+          playerHouse.fireFuelSeconds = state.playerHouse.fireFuelSeconds ?? 120;
+        }
+
+        if (state.altar) {
+          altar.placedRelics = state.altar.placedRelics || 0;
+          altar.isFullyActivated = !!state.altar.isFullyActivated;
+        }
+
+        if (state.bunker) {
+          bunker.isOpen = !!state.bunker.isOpen;
+        }
+
+        if (state.unlockedWeapons) {
+          unlockedWeapons = { ...unlockedWeapons, ...state.unlockedWeapons };
+        }
+
+        if (Array.isArray(state.rescuedPets)) {
+          rescuedPets = state.rescuedPets.map(p => ({
+            id: p.id,
+            x: p.x,
+            y: p.y,
+            satiety: typeof p.satiety === 'number' ? p.satiety : 100,
+            mode: p.mode || 'stay_home',
+            loveTimer: 0,
+            starveTimerFrames: p.starveTimerFrames || 0
+          }));
+        }
+
+        if (Array.isArray(state.droppedGroundItems)) {
+          droppedGroundItems = state.droppedGroundItems;
+        }
+
+        if (typeof state.workbenchLevel === 'number') {
+          workbenchLevel = state.workbenchLevel;
+        }
+
+        if (Array.isArray(state.partChests)) {
+          partChests = state.partChests;
+        }
+
+        if (typeof state.runTimerSeconds === 'number') {
+          runTimerSeconds = state.runTimerSeconds;
+        }
+
+        if (typeof state.rebirthCount === 'number') {
+          rebirthCount = state.rebirthCount;
+        }
+
+        console.log("💾 [Save System] Сохранение успешно загружено! Инвентарь и состояние восстановлены.");
+        return true;
+      } catch (e) {
+        console.warn('Failed to load game state:', e);
+        return false;
+      }
+    }
+
+    function spawnPartChests() {
+      partChests = [];
+      const chestLocations = [
+        { x: 3100, y: 5800 }, // near house
+        { x: 3450, y: 6150 }, // near clearing
+        { x: shop.x + 190, y: shop.y + 40 }, // near clothing shop
+        { x: foodShop.x - 70, y: foodShop.y + 30 }, // near food shop
+        { x: altar.x + 120, y: altar.y + 60 }, // near altar
+        { x: bunker.x + 180, y: bunker.y + 60 }, // near bunker
+        // Near each hunter cabin:
+        { x: hunterCabins[0].x + 180, y: hunterCabins[0].y + 30 },
+        { x: hunterCabins[1].x - 60, y: hunterCabins[1].y + 40 },
+        { x: hunterCabins[2].x + 170, y: hunterCabins[2].y + 50 },
+        { x: hunterCabins[3].x - 50, y: hunterCabins[3].y + 60 },
+        { x: hunterCabins[4].x + 180, y: hunterCabins[4].y + 20 },
+        { x: hunterCabins[5].x - 60, y: hunterCabins[5].y + 70 },
+        // Wilderness caches:
+        { x: 6200, y: 3500 },
+        { x: 8500, y: 2200 },
+        { x: 9200, y: 7500 },
+        { x: 7400, y: MAP_SIZE - 2800 }
       ];
+
+      for (let i = 0; i < chestLocations.length; i++) {
+        let loc = chestLocations[i];
+        let count = Math.random() < 0.5 ? 1 : 2; // 1-2 pieces of parts!
+        partChests.push({
+          id: i + 1,
+          x: loc.x,
+          y: loc.y,
+          partsCount: count,
+          opened: false
+        });
+      }
+    }
+
+    function openNearbyPartChest(chest) {
+      if (chest.opened) return;
+      chest.opened = true;
+      let count = chest.partsCount;
+      if (tryAddItemToInventory('parts', count)) {
+        createSparks(chest.x, chest.y, '#38bdf8');
+        showInventoryWarning(`📦 Открыт сундучок Деталей: Получено ${count}x ⚙️ Деталей!`);
+      } else {
+        dropItemToGroundAt('parts', count, chest.x, chest.y);
+        showInventoryWarning(`📦 Инвентарь полон! ${count}x ⚙️ Деталей выпали на землю!`);
+      }
+      saveGameState();
+      updateUI();
+    }
+
+    function initWorld(forceNew = false) {
+      groundBranches = []; bushes = []; rocks = []; groundPlanks = []; groundFood = []; relics = []; heatSources = []; turrets = []; walls = []; mobs = []; frozenPets = []; rescuedPets = []; particles = []; droppedGroundItems = [];
+      player.x = playerHouse.x + playerHouse.width / 2;
+      player.y = playerHouse.y + playerHouse.height / 2;
+      player.warmth = 100; player.hunger = 100; player.health = 100; player.stamina = 100; player.relicsInHand = 0; player.hasTorch = false; player.clothingLevel = 0;
+      player.maxSlots = 5; player.selectedSlotIdx = -1; player.speedBuffTimer = 0; player.isSprinting = false; player.isExhausted = false;
+      unlockedWeapons = { spear: false, slingshot: false, revolver: false };
+
+      player.inventory = Array(player.maxSlots).fill(null);
+      player.selectedSlotIdx = -1;
+      player.ammo = { slingshot: 0, revolver: 0 };
 
       playerHouse.isRepaired = false;
       playerHouse.fireFuelSeconds = 120;
+      workbenchLevel = 1;
+
+      altar.placedRelics = 0;
+      altar.isFullyActivated = false;
+      bunker.isOpen = false;
+      runTimerSeconds = 0;
 
       spawnWorldResourcesHalfDensity();
       spawnOneRandomFoodPerHunterCabin();
+      spawnPartChests();
 
       heatSources = [
-        { x: MAP_SIZE / 2 + 180, y: MAP_SIZE / 2 + 50, radius: 180, power: 10 },
-        { x: shop.x + 80, y: shop.y + 60, radius: 200, power: 12 }
+        { x: 3350, y: 6000, radius: 240, power: 10 },
+        { x: shop.x + 80, y: shop.y + 60, radius: 200, power: 12 },
+        { x: foodShop.x + 95, y: foodShop.y + 65, radius: 200, power: 12 }
       ];
 
-      // WOLF = 2X SLOWER (1.15), YETI = 10X SLOWER (0.17)!
+      // WOLF = 2X SLOWER (1.15), YETI = 10X SLOWER (0.17)! (Spawned in Eastern Wilderness X >= 7400, over 3500m away from house!)
       for (let i = 0; i < 8; i++) {
         let isWolf = Math.random() < 0.70;
-        let homeX = MAP_SIZE/2 + 200 + Math.random() * 800;
-        let homeY = MAP_SIZE/2 - 400 + Math.random() * 800;
+        let homeX = 7400 + Math.random() * (MAP_SIZE - 7900);
+        let homeY = 1000 + Math.random() * (MAP_SIZE - 2000);
         mobs.push({
           type: isWolf ? 'Wolf' : 'Yeti',
           label: isWolf ? '🐺 Волк (в 2р медленнее)' : '❄️ Снежный Человек (в 10р медленнее)',
           x: homeX, y: homeY, homeX: homeX, homeY: homeY,
           hp: isWolf ? 30 : 60, maxHp: isWolf ? 30 : 60,
-          speed: isWolf ? 1.15 : 0.17, // WOLF 2X SLOWER (2.3 -> 1.15), YETI 10X SLOWER (1.7 -> 0.17)!
+          speed: isWolf ? 1.15 : 0.17,
           aggroRadius: 220,
           patrolRadius: 600,
           patrolAngle: Math.random() * Math.PI * 2,
@@ -561,12 +1507,49 @@
       }
 
       frozenPets = [
-        { x: MAP_SIZE/2 - 200, y: MAP_SIZE/2 - 250, isRescued: false, type: '❄️ Снежный Лис' },
-        { x: MAP_SIZE/2 + 300, y: MAP_SIZE/2 - 100, isRescued: false, type: '🧊 Ледяной Волчонок' }
+        { id: 'fox', x: 2200, y: 5200, isRescued: false, type: '🦊 ❄️ Снежный Лис' },
+        { id: 'wolf', x: 7800, y: 4800, isRescued: false, type: '🐺 🧊 Ледяной Волчонок' },
+        { id: 'bear', x: 4200, y: 7800, isRescued: false, type: '🐻 🐻 Полярный Медвежонок' }
       ];
 
-      for (let i = 1; i <= 7; i++) {
-        relics.push({ id: i, x: Math.random() * (MAP_SIZE - 300) + 150, y: Math.random() * (MAP_SIZE - 300) + 150, collected: false });
+      // 7 Relics separated across 7 distinct sectors of the 12000x12000 map
+      const relicSpawns = [
+        { x: MAP_SIZE / 2 + (Math.random() - 0.5) * 1400, y: 1500 + Math.random() * 800 },
+        { x: MAP_SIZE - 2500 + Math.random() * 1200, y: 2200 + Math.random() * 1200 },
+        { x: MAP_SIZE - 2000 + Math.random() * 1000, y: MAP_SIZE / 2 + (Math.random() - 0.5) * 1600 },
+        { x: MAP_SIZE - 2600 + Math.random() * 1200, y: MAP_SIZE - 2400 + Math.random() * 1200 },
+        { x: MAP_SIZE / 2 + (Math.random() - 0.5) * 1400, y: MAP_SIZE - 1600 + Math.random() * 600 },
+        { x: 1800 + Math.random() * 1200, y: MAP_SIZE - 2500 + Math.random() * 1200 },
+        { x: 1600 + Math.random() * 1200, y: 1800 + Math.random() * 1200 }
+      ];
+
+      for (let i = 0; i < 7; i++) {
+        relics.push({
+          id: i + 1,
+          x: relicSpawns[i].x,
+          y: relicSpawns[i].y,
+          collected: false
+        });
+      }
+
+      if (!forceNew) {
+        let loaded = loadGameState();
+        // Update frozenPets status based on rescuedPets
+        for (let rp of rescuedPets) {
+          let fp = frozenPets.find(f => f.id === rp.id);
+          if (fp) fp.isRescued = true;
+        }
+      }
+
+      if (!runTimerInterval) {
+        runTimerInterval = setInterval(() => {
+          runTimerSeconds++;
+          let mins = Math.floor(runTimerSeconds / 60);
+          let secs = runTimerSeconds % 60;
+          let timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          let tEl = document.getElementById('bg-timer-val');
+          if (tEl) tEl.innerText = timeStr;
+        }, 1000);
       }
 
       updateUI();
@@ -574,10 +1557,49 @@
 
     function spawnWorldResourcesHalfDensity() {
       groundBranches = []; bushes = []; rocks = []; groundPlanks = [];
-      for (let i = 0; i < 55; i++) groundBranches.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
-      for (let i = 0; i < 30; i++) bushes.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
-      for (let i = 0; i < 20; i++) rocks.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
-      for (let i = 0; i < 25; i++) groundPlanks.push({ x: Math.random() * (MAP_SIZE - 200) + 100, y: Math.random() * (MAP_SIZE - 200) + 100, hitsLeft: 4 });
+
+      let houseCenterX = playerHouse.x + playerHouse.width / 2;
+      let houseCenterY = playerHouse.y + playerHouse.height / 2;
+
+      // 1. BALANCED 2X RESOURCE GROVE AROUND PLAYER HOUSE
+      function getHouseProximityCoord(minR = 140, maxR = 600) {
+        let angle = Math.random() * Math.PI * 2;
+        let dist = minR + Math.random() * (maxR - minR);
+        return {
+          x: houseCenterX + Math.cos(angle) * dist,
+          y: houseCenterY + Math.sin(angle) * dist
+        };
+      }
+
+      // 2x Branches around the house (18 branch clusters)
+      for (let i = 0; i < 18; i++) {
+        let pos = getHouseProximityCoord(130, 580);
+        groundBranches.push({ x: pos.x, y: pos.y, hitsLeft: 4 });
+      }
+
+      // 2x Planks / Wood around the house (12 wood stacks)
+      for (let i = 0; i < 12; i++) {
+        let pos = getHouseProximityCoord(130, 580);
+        groundPlanks.push({ x: pos.x, y: pos.y, hitsLeft: 4 });
+      }
+
+      // 2x Fiber Bushes around the house (14 fiber bushes)
+      for (let i = 0; i < 14; i++) {
+        let pos = getHouseProximityCoord(130, 580);
+        bushes.push({ x: pos.x, y: pos.y, hitsLeft: 4 });
+      }
+
+      // Rocks near the house (6 rocks)
+      for (let i = 0; i < 6; i++) {
+        let pos = getHouseProximityCoord(140, 620);
+        rocks.push({ x: pos.x, y: pos.y, hitsLeft: 4 });
+      }
+
+      // 2. WILDERNESS RESOURCES ACROSS MAP
+      for (let i = 0; i < 55; i++) groundBranches.push({ x: Math.random() * (MAP_SIZE - 600) + 300, y: Math.random() * (MAP_SIZE - 600) + 300, hitsLeft: 4 });
+      for (let i = 0; i < 30; i++) bushes.push({ x: Math.random() * (MAP_SIZE - 600) + 300, y: Math.random() * (MAP_SIZE - 600) + 300, hitsLeft: 4 });
+      for (let i = 0; i < 20; i++) rocks.push({ x: Math.random() * (MAP_SIZE - 600) + 300, y: Math.random() * (MAP_SIZE - 600) + 300, hitsLeft: 4 });
+      for (let i = 0; i < 25; i++) groundPlanks.push({ x: Math.random() * (MAP_SIZE - 600) + 300, y: Math.random() * (MAP_SIZE - 600) + 300, hitsLeft: 4 });
     }
 
     function spawnOneRandomFoodPerHunterCabin() {
@@ -660,13 +1682,41 @@
     }
 
     function dropItemToGroundPublic(itemId, count) {
+      dropItemToGroundAt(itemId, count, player.x, player.y);
+    }
+
+    function dropItemToGroundAt(itemId, count, x, y) {
       droppedGroundItems.push({
         id: itemId,
         count: count,
         ownerId: null,
-        x: player.x + (Math.random() - 0.5) * 50,
-        y: player.y + (Math.random() - 0.5) * 50
+        x: x + (Math.random() - 0.5) * 30,
+        y: y + (Math.random() - 0.5) * 30
       });
+    }
+
+    function handleMobDeath(mob) {
+      createSparks(mob.x, mob.y, '#f59e0b');
+      
+      // Random corresponding pelt drop on enemy kill
+      if (mob.type === 'Wolf') {
+        if (Math.random() < 0.85) {
+          dropItemToGroundAt('wolf_pelt', 1, mob.x, mob.y);
+          showInventoryWarning(`🐺 С волка выпала: Шкура волка!`);
+        } else {
+          dropItemToGroundAt('bar', 1, mob.x, mob.y);
+        }
+      } else if (mob.type === 'Yeti' || mob.type === 'Bigfoot') {
+        if (Math.random() < 0.90) {
+          dropItemToGroundAt('yeti_pelt', 1, mob.x, mob.y);
+          showInventoryWarning(`❄️ С йети выпала: Шкура Йети!`);
+        } else {
+          dropItemToGroundAt('steak', 1, mob.x, mob.y);
+        }
+      } else {
+        dropItemToGroundAt('bar', 1, mob.x, mob.y);
+      }
+      saveGameState();
     }
 
     function setInventorySlots(newCapacity) {
@@ -678,24 +1728,125 @@
       updateUI();
     }
 
-    function showInventoryWarning() {
+    function showInventoryWarning(msg) {
       const warn = document.getElementById('inventory-warning');
-      warn.innerText = `⚠️ ИНВЕНТАРЬ ПОЛОН! Предмет остается на земле!`;
+      warn.innerText = msg || `⚠️ ИНВЕНТАРЬ ПОЛОН! Предмет остается на земле!`;
       warn.style.display = 'block';
-      setTimeout(() => { warn.style.display = 'none'; }, 2000);
+      setTimeout(() => { warn.style.display = 'none'; }, 2200);
     }
 
     window.addEventListener('click', (e) => {
       const worldClickX = e.clientX - (canvas.width/2 - player.x);
       const worldClickY = e.clientY - (canvas.height/2 - player.y);
       
-      let activeSlot = player.selectedSlotIdx >= 0 ? player.inventory[player.selectedSlotIdx] : null;
-      if (activeSlot && ITEM_CONFIG[activeSlot.id] && ITEM_CONFIG[activeSlot.id].isFood) {
-        consumeEquippedFood();
-      } else {
-        gatherActionStrictTarget(worldClickX, worldClickY);
+      // 1. Direct click on or near a rescued pet to feed it!
+      for (let i = 0; i < rescuedPets.length; i++) {
+        let p = rescuedPets[i];
+        if (Math.hypot(worldClickX - p.x, worldClickY - p.y) < 35 && Math.hypot(player.x - p.x, player.y - p.y) < 95) {
+          feedPet(i);
+          return;
+        }
       }
+
+      let activeSlot = player.selectedSlotIdx >= 0 ? player.inventory[player.selectedSlotIdx] : null;
+      if (activeSlot && ITEM_CONFIG[activeSlot.id]) {
+        let cfg = ITEM_CONFIG[activeSlot.id];
+        if (cfg.isFood) {
+          consumeEquippedFood();
+          return;
+        } else if (cfg.isWeapon) {
+          performWeaponAttack(worldClickX, worldClickY, cfg);
+          return;
+        }
+      }
+      gatherActionStrictTarget(worldClickX, worldClickY);
     });
+
+    function performWeaponAttack(targetX, targetY, weaponCfg) {
+      let damageMultiplier = 1.0;
+      let wolfPet = rescuedPets.find(p => p.id === 'wolf' && p.mode === 'follow' && p.satiety > 0);
+      if (wolfPet) damageMultiplier *= 1.25;
+      let effectiveDamage = Math.round(weaponCfg.damage * damageMultiplier);
+
+      if (weaponCfg.weaponType === 'melee') {
+        // 🗡️ Spear thrust
+        let angle = Math.atan2(targetY - player.y, targetX - player.x);
+        let thrustDist = 45;
+        let attackX = player.x + Math.cos(angle) * thrustDist;
+        let attackY = player.y + Math.sin(angle) * thrustDist;
+
+        createSparks(attackX, attackY, '#cbd5e1');
+        for (let i = 0; i < 8; i++) {
+          particles.push({
+            x: attackX, y: attackY,
+            vx: Math.cos(angle) * (3 + Math.random() * 4) + (Math.random() - 0.5) * 2,
+            vy: Math.sin(angle) * (3 + Math.random() * 4) + (Math.random() - 0.5) * 2,
+            life: 15,
+            color: '#f8fafc'
+          });
+        }
+
+        // Check hits on mobs
+        for (let mob of mobs) {
+          let dist = Math.hypot(mob.x - attackX, mob.y - attackY);
+          if (dist < mob.radius + 35) {
+            mob.hp -= effectiveDamage;
+            mob.isAggro = true;
+            mob.x += Math.cos(angle) * 18;
+            mob.y += Math.sin(angle) * 18;
+            createSparks(mob.x, mob.y, '#ef4444');
+            if (mob.hp <= 0) {
+              mobs = mobs.filter(m => m !== mob);
+              handleMobDeath(mob);
+            }
+          }
+        }
+      } else if (weaponCfg.weaponType === 'ranged') {
+        let isGun = (weaponCfg.id === 'revolver');
+        if (isGun) {
+          if (player.ammo.revolver <= 0) {
+            showInventoryWarning(`⚠️ НЕТ ПАТРОНОВ! Скрафтите 💥 Пули на верстаке (2 Камня + 2 Ветки ➔ +20 пуль в патронташ)!`);
+            return;
+          }
+          player.ammo.revolver--;
+        } else {
+          if (player.ammo.slingshot <= 0) {
+            showInventoryWarning(`⚠️ НЕТ СНАРЯДОВ! Скрафтите 🪨 Снаряды на верстаке (2 Камня ➔ +50 снарядов в сумку)!`);
+            return;
+          }
+          player.ammo.slingshot--;
+        }
+
+        let angle = Math.atan2(targetY - player.y, targetX - player.x);
+        let pSpeed = isGun ? 20 : 11;
+        projectiles.push({
+          isPlayerShot: true,
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle) * pSpeed,
+          vy: Math.sin(angle) * pSpeed,
+          damage: effectiveDamage,
+          color: isGun ? '#fde047' : '#94a3b8',
+          life: isGun ? 35 : 45,
+          radius: isGun ? 3 : 5
+        });
+
+        if (isGun) {
+          // Gunshot flash
+          for (let i = 0; i < 12; i++) {
+            particles.push({
+              x: player.x + Math.cos(angle) * 16,
+              y: player.y + Math.sin(angle) * 16,
+              vx: Math.cos(angle) * (5 + Math.random() * 6) + (Math.random() - 0.5) * 3,
+              vy: Math.sin(angle) * (5 + Math.random() * 6) + (Math.random() - 0.5) * 3,
+              life: 12,
+              color: '#f59e0b'
+            });
+          }
+        }
+      }
+      updateUI();
+    }
 
     function consumeEquippedFood() {
       if (player.selectedSlotIdx < 0) return;
@@ -711,13 +1862,26 @@
           }
           if (cfg.hp) player.health = Math.min(player.maxHealth, player.health + cfg.hp);
           if (cfg.warmth) player.warmth = Math.min(player.maxWarmth, player.warmth + cfg.warmth);
+          if (cfg.hunger) player.hunger = Math.min(player.maxHunger, player.hunger + cfg.hunger);
+          if (cfg.speedBoost) {
+            player.speedBuffTimer = (cfg.duration || 15) * 60;
+          }
           createSparks(player.x, player.y, '#22c55e');
+          showInventoryWarning(`🍗 Вкусно! +${cfg.hunger || 20}% Сытости, +${cfg.hp || 0} HP, +${cfg.warmth || 0}% Тепла`);
           updateUI();
         }
       }
     }
 
     function gatherActionStrictTarget(clickX, clickY) {
+      // 0. Check Part Chests
+      for (let chest of partChests) {
+        if (!chest.opened && Math.hypot(clickX - chest.x, clickY - chest.y) < 35 && Math.hypot(player.x - chest.x, player.y - chest.y) < 70) {
+          openNearbyPartChest(chest);
+          return;
+        }
+      }
+
       for (let dr of droppedGroundItems) {
         if (Math.hypot(clickX - dr.x, clickY - dr.y) < 30 && Math.hypot(player.x - dr.x, player.y - dr.y) < 70) {
           if (!dr.ownerId || dr.ownerId === player.id) {
@@ -804,39 +1968,432 @@
     }
 
     function interactWithKeyE() {
-      if (Math.hypot(player.x - playerHouse.workbenchX, player.y - playerHouse.workbenchY) < 60) {
+      // 1. Pick up dropped items on the ground (Highest Priority)
+      let closestDropped = null;
+      // 0. Open Nearby Part Chest
+      let closestChest = null;
+      let minChestDist = 55;
+      for (let chest of partChests) {
+        if (!chest.opened) {
+          let d = Math.hypot(player.x - chest.x, player.y - chest.y);
+          if (d < minChestDist) {
+            minChestDist = d;
+            closestChest = chest;
+          }
+        }
+      }
+      if (closestChest) {
+        openNearbyPartChest(closestChest);
+        return;
+      }
+
+      let minDropDist = 70;
+      for (let dr of droppedGroundItems) {
+        let d = Math.hypot(player.x - dr.x, player.y - dr.y);
+        if (d < minDropDist) {
+          minDropDist = d;
+          closestDropped = dr;
+        }
+      }
+      if (closestDropped) {
+        if (!closestDropped.ownerId || closestDropped.ownerId === player.id) {
+          if (tryAddItemToInventory(closestDropped.id, closestDropped.count)) {
+            createSparks(closestDropped.x, closestDropped.y, '#38bdf8');
+            droppedGroundItems = droppedGroundItems.filter(item => item !== closestDropped);
+          }
+        }
+        return;
+      }
+
+      // 2. Gather Food on Ground
+      let closestFood = null;
+      let minFoodDist = 70;
+      for (let f of groundFood) {
+        let d = Math.hypot(player.x - f.x, player.y - f.y);
+        if (d < minFoodDist) {
+          minFoodDist = d;
+          closestFood = f;
+        }
+      }
+      if (closestFood) {
+        if (tryAddItemToInventory(closestFood.type, 1)) {
+          createSparks(closestFood.x, closestFood.y, '#22c55e');
+          groundFood = groundFood.filter(item => item !== closestFood);
+        }
+        return;
+      }
+
+      // 3. Workbench in House
+      if (Math.hypot(player.x - playerHouse.workbenchX, player.y - playerHouse.workbenchY) < 65) {
         openWorkbench(); return;
       }
 
+      // 4. Food Shop interaction
+      if (isPlayerNearFoodShop()) {
+        openFoodShop(); return;
+      }
+
+      // 5. Clothing Shop interaction
+      if (isPlayerNearShop()) {
+        openShop(); return;
+      }
+
+      // 6. Ancient Altar interaction
+      let distToAltar = Math.hypot(player.x - altar.x, player.y - altar.y);
+      if (distToAltar < altar.radius + 40) {
+        if (player.relicsInHand > 0) {
+          placeRelicsOnAltar();
+          return;
+        }
+      }
+
+      // 7. Bunker interaction
+      let bunkerCenterX = bunker.x + bunker.width / 2;
+      let bunkerCenterY = bunker.y + bunker.height / 2;
+      let distToBunker = Math.hypot(player.x - bunkerCenterX, player.y - bunkerCenterY);
+      if (distToBunker < 115) {
+        if (bunker.isOpen) {
+          openRebirthModal();
+          return;
+        }
+      }
+
+      // 8. Repair Player House
       if (!playerHouse.isRepaired && Math.hypot(player.x - (playerHouse.x + playerHouse.width/2), player.y - (playerHouse.y + playerHouse.height/2)) < 160) {
         repairPlayerHouse(); return;
       }
 
-      if (isPlayerInsidePlayerHouse()) {
+      // 9. Fuel Fireplace (Only when close to the fire hearth, not across the whole house!)
+      let fireX = playerHouse.x + playerHouse.width / 2;
+      let fireY = playerHouse.y + playerHouse.height / 2;
+      let distToFire = Math.hypot(player.x - fireX, player.y - fireY);
+      if (isPlayerInsidePlayerHouse() && distToFire < 70) {
         addFuelToFire(); return;
       }
+    }
 
-      for (let f of groundFood) {
-        if (Math.hypot(player.x - f.x, player.y - f.y) < 60) {
-          if (tryAddItemToInventory(f.type, 1)) {
-            createSparks(f.x, f.y, '#22c55e');
-            groundFood = groundFood.filter(item => item !== f);
-          }
-          return;
+    function feedPet(petIndex) {
+      let pet = rescuedPets[petIndex];
+      if (!pet) return;
+      let cfg = PET_CONFIG[pet.id] || PET_CONFIG.fox;
+
+      if (pet.satiety >= 100) {
+        showInventoryWarning(`😋 [${cfg.icon} ${cfg.name}] уже полностью сыт (100%) и доволен! ❤️`);
+        return;
+      }
+
+      let chosenSlotIdx = -1;
+      let chosenFood = null;
+
+      // 1. Check active equipped slot if it contains food
+      if (player.selectedSlotIdx >= 0) {
+        let act = player.inventory[player.selectedSlotIdx];
+        if (act && ITEM_CONFIG[act.id] && ITEM_CONFIG[act.id].isFood) {
+          chosenSlotIdx = player.selectedSlotIdx;
+          chosenFood = act.id;
         }
       }
 
-      for (let dr of droppedGroundItems) {
-        if (Math.hypot(player.x - dr.x, player.y - dr.y) < 60) {
-          if (!dr.ownerId || dr.ownerId === player.id) {
-            if (tryAddItemToInventory(dr.id, dr.count)) {
-              createSparks(dr.x, dr.y, '#38bdf8');
-              droppedGroundItems = droppedGroundItems.filter(item => item !== dr);
-            }
+      // 2. Check for favorite food in inventory
+      if (chosenSlotIdx < 0) {
+        for (let i = 0; i < player.maxSlots; i++) {
+          let it = player.inventory[i];
+          if (it && cfg.favFood && cfg.favFood.includes(it.id)) {
+            chosenSlotIdx = i;
+            chosenFood = it.id;
+            break;
           }
-          return;
         }
       }
+
+      // 3. Check for any food in inventory
+      if (chosenSlotIdx < 0) {
+        for (let i = 0; i < player.maxSlots; i++) {
+          let it = player.inventory[i];
+          if (it && ITEM_CONFIG[it.id] && ITEM_CONFIG[it.id].isFood) {
+            chosenSlotIdx = i;
+            chosenFood = it.id;
+            break;
+          }
+        }
+      }
+
+      if (chosenSlotIdx < 0 || !chosenFood) {
+        showInventoryWarning(`⚠️ НЕТ ЕДЫ В РЮКЗАКЕ! Возьмите бесплатный паёк в Продуктовом магазине (X: 2820, Y: 5620) или найдите в заимках!`);
+        return;
+      }
+
+      let isFav = cfg.favFood && cfg.favFood.includes(chosenFood);
+      let restore = isFav ? 65 : 40;
+      pet.satiety = Math.min(100, pet.satiety + restore);
+      pet.starveTimerFrames = 0;
+      pet.loveTimer = 60;
+
+      // Consume 1 food from inventory
+      let itemObj = player.inventory[chosenSlotIdx];
+      let foodCfg = ITEM_CONFIG[chosenFood] || { name: 'Еда', icon: '🍖' };
+      itemObj.count--;
+      if (itemObj.count <= 0) {
+        player.inventory[chosenSlotIdx] = null;
+        if (player.selectedSlotIdx === chosenSlotIdx) player.selectedSlotIdx = -1;
+      }
+
+      createSparks(pet.x, pet.y, isFav ? '#f43f5e' : '#22c55e');
+      for (let k = 0; k < 20; k++) {
+        particles.push({
+          x: pet.x + (Math.random() - 0.5) * 20,
+          y: pet.y + (Math.random() - 0.5) * 20,
+          vx: (Math.random() - 0.5) * 5,
+          vy: -Math.random() * 5 - 2,
+          life: 30,
+          color: isFav ? '#f43f5e' : '#22c55e'
+        });
+      }
+
+      showInventoryWarning(`🍖 [${cfg.icon} ${cfg.name}] съел ${foodCfg.icon} ${foodCfg.name} (+${restore}% сытости${isFav ? ' ⭐ Любимое лакомство!' : ''})! ❤️`);
+      saveGameState();
+      updateUI();
+    }
+
+    function feedNearbyPet() {
+      if (rescuedPets.length === 0) {
+        showInventoryWarning(`🐾 У вас пока нет спасённых питомцев! Спасите 🦊 Снежного Лиса на (X: 2200, Y: 5200) факелом!`);
+        return;
+      }
+
+      // 1. Prioritize active following companion if nearby
+      let activePetIdx = rescuedPets.findIndex(p => p.mode === 'follow');
+      if (activePetIdx >= 0 && Math.hypot(player.x - rescuedPets[activePetIdx].x, player.y - rescuedPets[activePetIdx].y) < 180) {
+        feedPet(activePetIdx);
+        return;
+      }
+
+      // 2. Otherwise find the closest pet
+      let closestIdx = -1;
+      let minDist = 220;
+      for (let i = 0; i < rescuedPets.length; i++) {
+        let d = Math.hypot(player.x - rescuedPets[i].x, player.y - rescuedPets[i].y);
+        if (d < minDist) {
+          minDist = d;
+          closestIdx = i;
+        }
+      }
+
+      if (closestIdx >= 0) {
+        feedPet(closestIdx);
+      } else if (activePetIdx >= 0) {
+        feedPet(activePetIdx);
+      } else {
+        feedPet(0);
+      }
+    }
+
+    function selectActiveCompanion(petIndex) {
+      if (!rescuedPets || rescuedPets.length === 0) return;
+      let targetPet = rescuedPets[petIndex];
+      if (!targetPet) return;
+
+      let cfg = PET_CONFIG[targetPet.id] || PET_CONFIG.fox;
+
+      if (targetPet.mode === 'follow') {
+        // If already following, send it home
+        targetPet.mode = 'stay_home';
+        targetPet.loveTimer = 35;
+        showInventoryWarning(`🏡 [${cfg.icon} ${cfg.name}] отправлен отдыхать в дом на лежанку!`);
+      } else {
+        // Make this pet the ONLY active traveling companion, send all others to home bed
+        for (let i = 0; i < rescuedPets.length; i++) {
+          if (i === petIndex) {
+            rescuedPets[i].mode = 'follow';
+            rescuedPets[i].loveTimer = 40;
+          } else {
+            rescuedPets[i].mode = 'stay_home';
+          }
+        }
+        createSparks(player.x, player.y, cfg.color || '#38bdf8');
+        showInventoryWarning(`⭐ [${cfg.icon} ${cfg.name}] выбран вашим активным спутником в походе!`);
+      }
+      updateUI();
+    }
+
+    function togglePetMode(petIndex) {
+      selectActiveCompanion(petIndex);
+    }
+
+    function sendAllPetsHome() {
+      if (!rescuedPets || rescuedPets.length === 0) return;
+      for (let p of rescuedPets) p.mode = 'stay_home';
+      showInventoryWarning('🏡 Все питомцы отправлены отдыхать в дом на лежанку!');
+      updateUI();
+    }
+
+    function cycleCompanionWithKeyT() {
+      if (!rescuedPets || rescuedPets.length === 0) {
+        showInventoryWarning('🐾 У вас пока нет спасенных питомцев!');
+        return;
+      }
+      let currentActiveIdx = rescuedPets.findIndex(p => p.mode === 'follow');
+      if (currentActiveIdx < 0) {
+        // None were active -> select first pet
+        selectActiveCompanion(0);
+      } else if (currentActiveIdx === rescuedPets.length - 1) {
+        // Last pet was active -> send all home
+        for (let p of rescuedPets) p.mode = 'stay_home';
+        showInventoryWarning('🏡 Все питомцы отдыхают в доме на лежанке!');
+        updateUI();
+      } else {
+        // Next pet becomes active
+        selectActiveCompanion(currentActiveIdx + 1);
+      }
+    }
+
+    function placeRelicsOnAltar() {
+      if (player.relicsInHand > 0) {
+        let countToAdd = Math.min(7 - altar.placedRelics, player.relicsInHand);
+        altar.placedRelics += countToAdd;
+        player.relicsInHand -= countToAdd;
+
+        createSparks(altar.x, altar.y, '#06b6d4');
+        for (let i = 0; i < 30; i++) {
+          particles.push({
+            x: altar.x + (Math.random() - 0.5) * 50,
+            y: altar.y + (Math.random() - 0.5) * 50,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 3,
+            life: 45,
+            color: ['#06b6d4', '#38bdf8', '#fde047', '#ffffff'][Math.floor(Math.random() * 4)]
+          });
+        }
+
+        if (altar.placedRelics >= 7) {
+          altar.isFullyActivated = true;
+          bunker.isOpen = true;
+          weatherState = 'Clear';
+          weatherTimer = 0;
+          const banner = document.getElementById('alert-banner');
+          banner.style.display = 'block';
+          banner.style.background = 'rgba(16, 185, 129, 0.35)';
+          banner.style.border = '2px solid #10b981';
+          banner.style.color = '#34d399';
+          banner.innerText = '🚨 ВСЕ 7 РЕЛИКВИЙ НА АЛТАРЕ! БУНКЕР ЭВАКУАЦИИ ОТКРЫТ!';
+          setTimeout(() => { banner.style.display = 'none'; }, 8000);
+        }
+        updateUI();
+      }
+    }
+
+    function openRebirthModal() {
+      if (bunker.isOpen) {
+        let mins = Math.floor(runTimerSeconds / 60);
+        let secs = runTimerSeconds % 60;
+        let timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        document.getElementById('rebirth-stat-time').innerText = timeStr;
+        document.getElementById('rebirth-stat-pets').innerText = `${rescuedPets.length} спасенных`;
+        document.getElementById('rebirth-stat-cloth').innerText = `Lvl ${player.clothingLevel} (${CLOTHING_TIERS[player.clothingLevel].name})`;
+        document.getElementById('rebirth-stat-current').innerText = `${rebirthCount}`;
+        document.getElementById('rebirth-stat-next').innerText = `#${rebirthCount + 1}`;
+        document.getElementById('rebirth-modal').style.display = 'flex';
+      }
+    }
+
+    function executeRebirth() {
+      rebirthCount++;
+      localStorage.setItem('survive_the_cold_rebirths', rebirthCount.toString());
+      document.getElementById('rebirth-modal').style.display = 'none';
+      
+      for (let i = 0; i < 70; i++) {
+        particles.push({
+          x: player.x,
+          y: player.y,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.5) * 16,
+          life: 65,
+          color: ['#38bdf8', '#f59e0b', '#10b981', '#a855f7', '#ec4899', '#fde047'][Math.floor(Math.random() * 6)]
+        });
+      }
+
+      // Rebirth rule: Player loses backpack contents and clothing.
+      // EVERYTHING IN THE HOUSE REMAINS IN THE HOUSE!
+      player.inventory = Array(player.maxSlots).fill(null);
+      player.selectedSlotIdx = -1;
+      player.ammo = { slingshot: 0, revolver: 0 };
+      player.clothingLevel = 0;
+      player.relicsInHand = 0;
+      player.hasTorch = false;
+      player.speedBuffTimer = 0;
+      player.isSprinting = false;
+      player.isExhausted = false;
+      player.health = 100;
+      player.warmth = 100;
+      player.hunger = 100;
+      player.stamina = 100;
+
+      // Keep only items that were inside the player's house
+      droppedGroundItems = droppedGroundItems.filter(it => isPositionInsidePlayerHouse(it.x, it.y));
+
+      // Rescued pets stay safe at home
+      for (let p of rescuedPets) {
+        p.mode = 'stay_home';
+        p.starveTimerFrames = 0;
+      }
+
+      // House remains repaired and fire keeps fuel
+      playerHouse.isRepaired = true;
+      playerHouse.fireFuelSeconds = Math.max(120, playerHouse.fireFuelSeconds);
+
+      // Player spawns inside the house
+      player.x = playerHouse.x + playerHouse.width / 2;
+      player.y = playerHouse.y + playerHouse.height / 2;
+
+      // World reset for next cycle
+      altar.placedRelics = 0;
+      altar.isFullyActivated = false;
+      bunker.isOpen = false;
+      weatherState = 'Clear';
+      weatherTimer = 0;
+      runTimerSeconds = 0;
+
+      spawnWorldResourcesHalfDensity();
+      spawnOneRandomFoodPerHunterCabin();
+
+      // Respawn 7 relics in the 7 sectors
+      relics = [];
+      const relicSpawns = [
+        { x: MAP_SIZE / 2 + (Math.random() - 0.5) * 1400, y: 1500 + Math.random() * 800 },
+        { x: MAP_SIZE - 2500 + Math.random() * 1200, y: 2200 + Math.random() * 1200 },
+        { x: MAP_SIZE - 2000 + Math.random() * 1000, y: MAP_SIZE / 2 + (Math.random() - 0.5) * 1600 },
+        { x: MAP_SIZE - 2600 + Math.random() * 1200, y: MAP_SIZE - 2400 + Math.random() * 1200 },
+        { x: MAP_SIZE / 2 + (Math.random() - 0.5) * 1400, y: MAP_SIZE - 1600 + Math.random() * 600 },
+        { x: 1800 + Math.random() * 1200, y: MAP_SIZE - 2500 + Math.random() * 1200 },
+        { x: 1600 + Math.random() * 1200, y: 1800 + Math.random() * 1200 }
+      ];
+      for (let i = 0; i < 7; i++) {
+        relics.push({ id: i + 1, x: relicSpawns[i].x, y: relicSpawns[i].y, collected: false });
+      }
+
+      // Respawn mobs in Eastern Wilds X >= 7400 (far from safe village)
+      mobs = [];
+      for (let i = 0; i < 8; i++) {
+        let isWolf = Math.random() < 0.70;
+        let homeX = 7400 + Math.random() * (MAP_SIZE - 7900);
+        let homeY = 1000 + Math.random() * (MAP_SIZE - 2000);
+        mobs.push({
+          type: isWolf ? 'Wolf' : 'Yeti',
+          label: isWolf ? '🐺 Волк (в 2р медленнее)' : '❄️ Снежный Человек (в 10р медленнее)',
+          x: homeX, y: homeY, homeX: homeX, homeY: homeY,
+          hp: isWolf ? 30 : 60, maxHp: isWolf ? 30 : 60,
+          speed: isWolf ? 1.15 : 0.17,
+          aggroRadius: 220,
+          patrolRadius: 600,
+          patrolAngle: Math.random() * Math.PI * 2,
+          isAggro: false, color: isWolf ? '#ef4444' : '#06b6d4', radius: isWolf ? 12 : 16
+        });
+      }
+
+      showInventoryWarning(`🌀 ПЕРЕРОЖДЕНИЕ #${rebirthCount} ЗАВЕРШЕНО! Дом и вещи внутри дома сохранены!`);
+      saveGameState();
+      updateUI();
     }
 
     function dropActiveItemWithKeyG() {
@@ -899,32 +2456,375 @@
       }
     }
 
+    function upgradeWorkbench() {
+      if (workbenchLevel >= 5) return;
+      let cfg = WORKBENCH_CONFIG[workbenchLevel];
+      if (!cfg || !cfg.upgradeCost) return;
+
+      for (let mat in cfg.upgradeCost) {
+        if (getItemCount(mat) < cfg.upgradeCost[mat]) {
+          showInventoryWarning(`⚠️ Не хватает ресурсов для прокачки верстака: ${cfg.upgradeCostText}`);
+          return;
+        }
+      }
+
+      // Deduct materials
+      for (let mat in cfg.upgradeCost) {
+        removeItem(mat, cfg.upgradeCost[mat]);
+      }
+
+      workbenchLevel++;
+      createSparks(player.x, player.y, '#f59e0b');
+      showInventoryWarning(`🎉 Верстак улучшен до Уровня ${workbenchLevel}! Открыты новые чертежи!`);
+      saveGameState();
+      updateUI();
+      openWorkbench();
+    }
+
     function craftItem(type) {
-      if (type === 'Torch' && getItemCount('branches') >= 5 && getItemCount('fiber') >= 5) {
+      if (type === 'Spear') {
+        if (getItemCount('branches') >= 3 && getItemCount('stone') >= 2) {
+          removeItem('branches', 3); removeItem('stone', 2);
+          tryAddItemToInventory('spear', 1);
+          unlockedWeapons.spear = true;
+          createSparks(player.x, player.y, '#38bdf8');
+        }
+      } else if (type === 'Slingshot') {
+        if (workbenchLevel >= 2 && unlockedWeapons.spear && getItemCount('branches') >= 4 && getItemCount('fiber') >= 4) {
+          removeItem('branches', 4); removeItem('fiber', 4);
+          tryAddItemToInventory('slingshot', 1);
+          player.ammo.slingshot += 50;
+          unlockedWeapons.slingshot = true;
+          createSparks(player.x, player.y, '#eab308');
+          showInventoryWarning(`🏹 Скрафчена Рогатка! +50 снарядов добавлено в сумку (НЕ занимает слот)!`);
+        }
+      } else if (type === 'StoneAmmo') {
+        if (workbenchLevel >= 2 && unlockedWeapons.slingshot && getItemCount('stone') >= 2) {
+          removeItem('stone', 2);
+          player.ammo.slingshot += 50;
+          createSparks(player.x, player.y, '#94a3b8');
+          showInventoryWarning(`🪨 Скрафчено +50 снарядов! (Всего: ${player.ammo.slingshot} шт. в сумке)`);
+        }
+      } else if (type === 'Revolver') {
+        if (workbenchLevel >= 4 && unlockedWeapons.slingshot && getItemCount('planks') >= 4 && getItemCount('stone') >= 6 && getItemCount('fiber') >= 4 && getItemCount('parts') >= 2) {
+          removeItem('planks', 4); removeItem('stone', 6); removeItem('fiber', 4); removeItem('parts', 2);
+          tryAddItemToInventory('revolver', 1);
+          player.ammo.revolver += 20;
+          unlockedWeapons.revolver = true;
+          createSparks(player.x, player.y, '#ef4444');
+          showInventoryWarning(`🔫 Скрафчен Револьвер! +20 пуль добавлено в патронташ (НЕ занимает слот)!`);
+        }
+      } else if (type === 'RevolverAmmo') {
+        if (workbenchLevel >= 4 && unlockedWeapons.revolver && getItemCount('stone') >= 2 && getItemCount('branches') >= 2) {
+          removeItem('stone', 2); removeItem('branches', 2);
+          player.ammo.revolver += 20;
+          createSparks(player.x, player.y, '#f59e0b');
+          showInventoryWarning(`💥 Скрафчено +20 пуль! (Всего: ${player.ammo.revolver} шт. в патронташе)`);
+        }
+      } else if (type === 'Torch' && getItemCount('branches') >= 5 && getItemCount('fiber') >= 5) {
         removeItem('branches', 5); removeItem('fiber', 5);
         addItemToInventory('torch', 1);
         player.hasTorch = true;
-      } else if (type === 'Backpack7' && getItemCount('planks') >= 3 && getItemCount('fiber') >= 5) {
+      } else if (type === 'Backpack7' && workbenchLevel >= 2 && getItemCount('planks') >= 3 && getItemCount('fiber') >= 5 && getItemCount('wolf_pelt') >= 1) {
         if (player.maxSlots < 7) {
-          removeItem('planks', 3); removeItem('fiber', 5);
+          removeItem('planks', 3); removeItem('fiber', 5); removeItem('wolf_pelt', 1);
           setInventorySlots(7);
         }
-      } else if (type === 'Backpack9' && getItemCount('planks') >= 5 && getItemCount('fiber') >= 5 && getItemCount('stone') >= 5) {
+      } else if (type === 'Backpack9' && workbenchLevel >= 4 && getItemCount('planks') >= 5 && getItemCount('fiber') >= 5 && getItemCount('yeti_pelt') >= 2) {
         if (player.maxSlots < 9) {
-          removeItem('planks', 5); removeItem('fiber', 5); removeItem('stone', 5);
+          removeItem('planks', 5); removeItem('fiber', 5); removeItem('yeti_pelt', 2);
           setInventorySlots(9);
         }
-      } else if (type === 'Turret' && getItemCount('planks') >= 3 && getItemCount('stone') >= 5) {
-        removeItem('planks', 3); removeItem('stone', 5);
-        turrets.push({ x: player.x + 30, y: player.y, range: 220, fireCooldown: 0 });
-      } else if (type === 'Wall' && getItemCount('planks') >= 3) {
+      } else if (type === 'Turret' && workbenchLevel >= 3 && getItemCount('planks') >= 3 && getItemCount('stone') >= 5 && getItemCount('parts') >= 1) {
+        removeItem('planks', 3); removeItem('stone', 5); removeItem('parts', 1);
+        turrets.push({ x: player.x + 30, y: player.y, range: 220, fireCooldown: 0, damage: 20, isHeavy: false });
+        createSparks(player.x, player.y, '#38bdf8');
+      } else if (type === 'HeavyTurret' && workbenchLevel >= 5 && getItemCount('planks') >= 4 && getItemCount('stone') >= 6 && getItemCount('parts') >= 2 && getItemCount('yeti_pelt') >= 1) {
+        removeItem('planks', 4); removeItem('stone', 6); removeItem('parts', 2); removeItem('yeti_pelt', 1);
+        turrets.push({ x: player.x + 30, y: player.y, range: 260, fireCooldown: 0, damage: 35, isHeavy: true });
+        createSparks(player.x, player.y, '#f59e0b');
+      } else if (type === 'Wall' && workbenchLevel >= 3 && getItemCount('planks') >= 3) {
         removeItem('planks', 3);
         walls.push({ x: player.x + 30, y: player.y, hp: 100 });
+      } else if (type === 'WolfSuit' && workbenchLevel >= 3 && player.clothingLevel < 2 && getItemCount('wolf_pelt') >= 2 && getItemCount('fiber') >= 3) {
+        removeItem('wolf_pelt', 2); removeItem('fiber', 3);
+        player.clothingLevel = 2;
+        createSparks(player.x, player.y, '#22c55e');
+      } else if (type === 'YetiParka' && workbenchLevel >= 5 && player.clothingLevel < 4 && getItemCount('yeti_pelt') >= 3 && getItemCount('wolf_pelt') >= 3 && getItemCount('fiber') >= 5) {
+        removeItem('yeti_pelt', 3); removeItem('wolf_pelt', 3); removeItem('fiber', 5);
+        player.clothingLevel = 4;
+        createSparks(player.x, player.y, '#f59e0b');
       }
+      saveGameState();
       updateUI();
+      openWorkbench();
     }
 
-    function openWorkbench() { document.getElementById('workbench-modal').style.display = 'flex'; }
+    function openWorkbench() {
+      const wepContainer = document.getElementById('workbench-weapons-container');
+      const gearContainer = document.getElementById('workbench-gear-container');
+      const upgradeContainer = document.getElementById('wb-upgrade-container');
+      const lvlBadge = document.getElementById('wb-lvl-badge');
+      const descBadge = document.getElementById('wb-desc-badge');
+      if (!wepContainer || !gearContainer) return;
+
+      if (lvlBadge) lvlBadge.innerText = workbenchLevel;
+      let currentCfg = WORKBENCH_CONFIG[workbenchLevel] || WORKBENCH_CONFIG[1];
+      if (descBadge) descBadge.innerText = currentCfg.desc;
+
+      // Upgrade Button / Max Level Banner in Header
+      if (upgradeContainer) {
+        upgradeContainer.innerHTML = '';
+        if (workbenchLevel < 5) {
+          let nextCfg = WORKBENCH_CONFIG[workbenchLevel];
+          let canUpgrade = true;
+          for (let mat in nextCfg.upgradeCost) {
+            if (getItemCount(mat) < nextCfg.upgradeCost[mat]) canUpgrade = false;
+          }
+
+          let upBtn = document.createElement('button');
+          upBtn.className = 'action-btn';
+          upBtn.style.cssText = 'padding:6px 14px; font-size:11px; background:linear-gradient(135deg, #f59e0b, #d97706);';
+          upBtn.disabled = !canUpgrade;
+          upBtn.onclick = upgradeWorkbench;
+          upBtn.innerHTML = `
+            <div style="font-weight:900;">⬆️ Улучшить до Ур. ${workbenchLevel + 1}</div>
+            <div style="font-size:9.5px; opacity:0.9;">(${nextCfg.upgradeCostText})</div>
+          `;
+          upgradeContainer.appendChild(upBtn);
+        } else {
+          upgradeContainer.innerHTML = `<span style="color:#fde047; font-weight:900; font-size:12px; border:1px solid #fde047; padding:4px 10px; border-radius:8px;">👑 МАКС. УРОВЕНЬ 5</span>`;
+        }
+      }
+
+      wepContainer.innerHTML = '';
+      gearContainer.innerHTML = '';
+
+      // --- 1. WEAPONS SECTION ---
+      // Level 1: Spear
+      let canSpear = getItemCount('branches') >= 3 && getItemCount('stone') >= 2;
+      let spearBtn = document.createElement('button');
+      spearBtn.className = `craft-btn weapon-btn`;
+      spearBtn.disabled = !canSpear;
+      spearBtn.onclick = () => craftItem('Spear');
+      spearBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🗡️ Пика (Копье)</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 1]</span>
+        </div>
+        <span class="craft-cost">3 Ветки + 2 Камня</span>
+        <span class="craft-bonus">⚔️ Ближний бой (Урон: 30)</span>
+      `;
+      wepContainer.appendChild(spearBtn);
+
+      // Level 2: Slingshot
+      let canSlingshot = workbenchLevel >= 2 && unlockedWeapons.spear && getItemCount('branches') >= 4 && getItemCount('fiber') >= 4;
+      let slingBtn = document.createElement('button');
+      let slingLocked = (workbenchLevel < 2) || !unlockedWeapons.spear;
+      slingBtn.className = `craft-btn weapon-btn ${slingLocked ? 'locked' : ''}`;
+      slingBtn.disabled = !canSlingshot;
+      slingBtn.onclick = () => craftItem('Slingshot');
+      let slingSub = (workbenchLevel < 2)
+        ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Верстак Ур. 2</span>`
+        : (!unlockedWeapons.spear ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Пика</span>` : `<span class="craft-cost">4 Ветки + 4 Волокна</span><span class="craft-bonus">🎁 +50 снарядов в сумку (НЕ занимает слот!)</span>`);
+      slingBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🏹 Рогатка (Праща)</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 2]</span>
+        </div>
+        ${slingSub}
+      `;
+      wepContainer.appendChild(slingBtn);
+
+      // Level 2: Stone Ammo
+      let canStoneAmmo = workbenchLevel >= 2 && unlockedWeapons.slingshot && getItemCount('stone') >= 2;
+      let ammo1Btn = document.createElement('button');
+      let ammo1Locked = (workbenchLevel < 2) || !unlockedWeapons.slingshot;
+      ammo1Btn.className = `craft-btn ${ammo1Locked ? 'locked' : ''}`;
+      ammo1Btn.disabled = !canStoneAmmo;
+      ammo1Btn.onclick = () => craftItem('StoneAmmo');
+      let ammo1Sub = (workbenchLevel < 2)
+        ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Верстак Ур. 2</span>`
+        : (!unlockedWeapons.slingshot ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Рогатка</span>` : `<span class="craft-cost">2 Камня ➔ +50 снарядов</span><span class="craft-bonus">🪨 В сумку (Всего: ${player.ammo.slingshot} шт.)</span>`);
+      ammo1Btn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🪨 50x Снарядов</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 2]</span>
+        </div>
+        ${ammo1Sub}
+      `;
+      wepContainer.appendChild(ammo1Btn);
+
+      // Level 4: Revolver
+      let canRevolver = workbenchLevel >= 4 && unlockedWeapons.slingshot && getItemCount('planks') >= 4 && getItemCount('stone') >= 6 && getItemCount('fiber') >= 4 && getItemCount('parts') >= 2;
+      let revBtn = document.createElement('button');
+      let revLocked = (workbenchLevel < 4) || !unlockedWeapons.slingshot;
+      revBtn.className = `craft-btn weapon-btn ${revLocked ? 'locked' : ''}`;
+      revBtn.disabled = !canRevolver;
+      revBtn.onclick = () => craftItem('Revolver');
+      let revSub = (workbenchLevel < 4)
+        ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Верстак Ур. 4</span>`
+        : (!unlockedWeapons.slingshot ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Рогатка</span>` : `<span class="craft-cost">4 Доски + 6 Камней + 4 Волокна + 2 ⚙️ Детали</span><span class="craft-bonus">🎁 +20 пуль в патронташ (НЕ занимает слот!)</span>`);
+      revBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🔫 Револьвер</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 4]</span>
+        </div>
+        ${revSub}
+      `;
+      wepContainer.appendChild(revBtn);
+
+      // Level 4: Revolver Ammo
+      let canRevAmmo = workbenchLevel >= 4 && unlockedWeapons.revolver && getItemCount('stone') >= 2 && getItemCount('branches') >= 2;
+      let ammo2Btn = document.createElement('button');
+      let ammo2Locked = (workbenchLevel < 4) || !unlockedWeapons.revolver;
+      ammo2Btn.className = `craft-btn ${ammo2Locked ? 'locked' : ''}`;
+      ammo2Btn.disabled = !canRevAmmo;
+      ammo2Btn.onclick = () => craftItem('RevolverAmmo');
+      let ammo2Sub = (workbenchLevel < 4)
+        ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Верстак Ур. 4</span>`
+        : (!unlockedWeapons.revolver ? `<span style="color:#f87171; font-size:10px;">🔒 Требуется: Револьвер</span>` : `<span class="craft-cost">2 Камня + 2 Ветки ➔ +20 пуль</span><span class="craft-bonus">💥 В патронташ (Всего: ${player.ammo.revolver} шт.)</span>`);
+      ammo2Btn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">💥 20x Пуль револьвера</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 4]</span>
+        </div>
+        ${ammo2Sub}
+      `;
+      wepContainer.appendChild(ammo2Btn);
+
+      // --- 2. GEAR, DEFENSES & PELT CRAFTING ---
+      // Level 1: Torch
+      let canTorch = getItemCount('branches') >= 5 && getItemCount('fiber') >= 5;
+      let torchBtn = document.createElement('button');
+      torchBtn.className = 'craft-btn';
+      torchBtn.disabled = !canTorch;
+      torchBtn.onclick = () => craftItem('Torch');
+      torchBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🔥 Факел (x1)</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 1]</span>
+        </div>
+        <span class="craft-cost">5 Веток + 5 Волокна</span>
+        <span class="craft-bonus">Согревает в руке (+0.25)</span>
+      `;
+      gearContainer.appendChild(torchBtn);
+
+      // Level 2: Backpack 7
+      let canBp7 = workbenchLevel >= 2 && player.maxSlots < 7 && getItemCount('planks') >= 3 && getItemCount('fiber') >= 5 && getItemCount('wolf_pelt') >= 1;
+      let bp7Btn = document.createElement('button');
+      bp7Btn.className = `craft-btn ${workbenchLevel < 2 ? 'locked' : ''}`;
+      bp7Btn.disabled = !canBp7 || player.maxSlots >= 7;
+      bp7Btn.onclick = () => craftItem('Backpack7');
+      bp7Btn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🎒 Рюкзак (7 Слотов)</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 2]</span>
+        </div>
+        <span class="craft-cost">3 Доски + 5 Волокна + 1 🐺 Шкура</span>
+        <span class="craft-bonus">${workbenchLevel < 2 ? '🔒 Верстак Ур. 2' : (player.maxSlots >= 7 ? 'Уже улучшено' : '+2 слота инвентаря')}</span>
+      `;
+      gearContainer.appendChild(bp7Btn);
+
+      // Level 3: Wall
+      let canWall = workbenchLevel >= 3 && getItemCount('planks') >= 3;
+      let wallBtn = document.createElement('button');
+      wallBtn.className = `craft-btn ${workbenchLevel < 3 ? 'locked' : ''}`;
+      wallBtn.disabled = !canWall;
+      wallBtn.onclick = () => craftItem('Wall');
+      wallBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🛡️ Защитная Стена</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 3]</span>
+        </div>
+        <span class="craft-cost">3 Доски</span>
+        <span class="craft-bonus">${workbenchLevel < 3 ? '🔒 Верстак Ур. 3' : '100 HP прочности'}</span>
+      `;
+      gearContainer.appendChild(wallBtn);
+
+      // Level 3: Auto-Turret
+      let canTurret = workbenchLevel >= 3 && getItemCount('planks') >= 3 && getItemCount('stone') >= 5 && getItemCount('parts') >= 1;
+      let turretBtn = document.createElement('button');
+      turretBtn.className = `craft-btn ${workbenchLevel < 3 ? 'locked' : ''}`;
+      turretBtn.disabled = !canTurret;
+      turretBtn.onclick = () => craftItem('Turret');
+      turretBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🏹 Авто-Турель</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 3]</span>
+        </div>
+        <span class="craft-cost">3 Доски + 5 Камней + 1 ⚙️ Деталь</span>
+        <span class="craft-bonus">${workbenchLevel < 3 ? '🔒 Верстак Ур. 3' : 'Авто-стрельба (Урон 20)'}</span>
+      `;
+      gearContainer.appendChild(turretBtn);
+
+      // Level 3: Wolf Fur Vest (Suit Lvl 2)
+      let canWolfSuit = workbenchLevel >= 3 && player.clothingLevel < 2 && getItemCount('wolf_pelt') >= 2 && getItemCount('fiber') >= 3;
+      let wolfSuitBtn = document.createElement('button');
+      wolfSuitBtn.className = `craft-btn ${workbenchLevel < 3 ? 'locked' : ''}`;
+      wolfSuitBtn.disabled = !canWolfSuit || player.clothingLevel >= 2;
+      wolfSuitBtn.onclick = () => craftItem('WolfSuit');
+      wolfSuitBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🦺 Волчья жилетка</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 3]</span>
+        </div>
+        <span class="craft-cost">2 🐺 Шкуры волка + 3 Волокна</span>
+        <span class="craft-bonus">${workbenchLevel < 3 ? '🔒 Верстак Ур. 3' : (player.clothingLevel >= 2 ? 'Костюм Lvl ' + player.clothingLevel : '+20% защита от мороза (Lvl 2)')}</span>
+      `;
+      gearContainer.appendChild(wolfSuitBtn);
+
+      // Level 4: Backpack 9
+      let canBp9 = workbenchLevel >= 4 && player.maxSlots < 9 && getItemCount('planks') >= 5 && getItemCount('fiber') >= 5 && getItemCount('yeti_pelt') >= 2;
+      let bp9Btn = document.createElement('button');
+      bp9Btn.className = `craft-btn ${workbenchLevel < 4 ? 'locked' : ''}`;
+      bp9Btn.disabled = !canBp9 || player.maxSlots >= 9;
+      bp9Btn.onclick = () => craftItem('Backpack9');
+      bp9Btn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🎒 Рюкзак (9 Слотов)</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 4]</span>
+        </div>
+        <span class="craft-cost">5 Досок + 5 Волокна + 2 ❄️ Шкуры Йети</span>
+        <span class="craft-bonus">${workbenchLevel < 4 ? '🔒 Верстак Ур. 4' : (player.maxSlots >= 9 ? 'Максимум' : '+4 слота инвентаря')}</span>
+      `;
+      gearContainer.appendChild(bp9Btn);
+
+      // Level 5: Heavy Turret
+      let canHeavyTurret = workbenchLevel >= 5 && getItemCount('planks') >= 4 && getItemCount('stone') >= 6 && getItemCount('parts') >= 2 && getItemCount('yeti_pelt') >= 1;
+      let heavyTurretBtn = document.createElement('button');
+      heavyTurretBtn.className = `craft-btn ${workbenchLevel < 5 ? 'locked' : ''}`;
+      heavyTurretBtn.disabled = !canHeavyTurret;
+      heavyTurretBtn.onclick = () => craftItem('HeavyTurret');
+      heavyTurretBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">⚡ Тяжелая Сдвоенная Турель</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 5]</span>
+        </div>
+        <span class="craft-cost">4 Доски + 6 Камней + 2 ⚙️ Детали + 1 ❄️ Шкура</span>
+        <span class="craft-bonus">${workbenchLevel < 5 ? '🔒 Верстак Ур. 5' : '⚡ 2X скорострельность & 35 урон!'}</span>
+      `;
+      gearContainer.appendChild(heavyTurretBtn);
+
+      // Level 5: Yeti Fur Parka (Suit Lvl 4)
+      let canParka = workbenchLevel >= 5 && player.clothingLevel < 4 && getItemCount('yeti_pelt') >= 3 && getItemCount('wolf_pelt') >= 3 && getItemCount('fiber') >= 5;
+      let parkaBtn = document.createElement('button');
+      parkaBtn.className = `craft-btn ${workbenchLevel < 5 ? 'locked' : ''}`;
+      parkaBtn.disabled = !canParka || player.clothingLevel >= 4;
+      parkaBtn.onclick = () => craftItem('YetiParka');
+      parkaBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">🐻 Парка выживальщика</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 5]</span>
+        </div>
+        <span class="craft-cost">3 ❄️ Шкуры Йети + 3 🐺 Шкуры + 5 Волокна</span>
+        <span class="craft-bonus">${workbenchLevel < 5 ? '🔒 Верстак Ур. 5' : (player.clothingLevel >= 4 ? 'Костюм Lvl ' + player.clothingLevel : '+40% защита от мороза (Lvl 4)')}</span>
+      `;
+      gearContainer.appendChild(parkaBtn);
+
+      document.getElementById('workbench-modal').style.display = 'flex';
+    }
+
     function closeWorkbench() { document.getElementById('workbench-modal').style.display = 'none'; }
 
     function openShop() {
@@ -965,9 +2865,104 @@
       }
     }
 
+    // --- FOOD / GROCERY SHOP METHODS ---
+    function isPlayerNearFoodShop() {
+      return Math.hypot(player.x - (foodShop.x + foodShop.width/2), player.y - (foodShop.y + foodShop.height/2)) < 130;
+    }
+
+    function openFoodShop() {
+      const container = document.getElementById('food-shop-container');
+      container.innerHTML = '';
+      foodShop.items.forEach((item) => {
+        const info = ITEM_CONFIG[item.id];
+        const card = document.createElement('div');
+        card.className = 'food-card';
+
+        let canAfford = true;
+        for (let mat in item.cost) {
+          if (getItemCount(mat) < item.cost[mat]) canAfford = false;
+        }
+
+        let speedText = info.speedBoost ? `<div style="color:#38bdf8;">⚡ +35% Скорость (15с)</div>` : '';
+        let costHtml = item.free ? `<div style="color:#4ade80; font-weight:900;">🎉 БЕСПЛАТНО (0 🪵)</div>` : `<div>Цена: ${item.desc}</div>`;
+
+        card.innerHTML = `
+          <div class="food-icon">${info.icon}</div>
+          <div class="food-name">${info.name}</div>
+          <div class="food-effects">
+            <div style="color:#fbbf24; font-weight:800;">🍗 +${info.hunger || 20}% Сытости</div>
+            <div>❤️ +${info.hp} HP</div>
+            <div>🔥 +${info.warmth}% Тепла</div>
+            ${speedText}
+          </div>
+          <div class="food-cost">${costHtml}</div>
+          <button class="food-buy-btn" ${!canAfford ? 'disabled' : ''} onclick="buyFood('${item.id}')">
+            ${canAfford ? 'Купить ' + info.icon : 'Мало ресурсов'}
+          </button>
+        `;
+        container.appendChild(card);
+      });
+      document.getElementById('food-shop-modal').style.display = 'flex';
+    }
+
+    function closeFoodShop() {
+      document.getElementById('food-shop-modal').style.display = 'none';
+    }
+
+    function buyFood(foodId) {
+      const itemDef = foodShop.items.find(i => i.id === foodId);
+      if (!itemDef) return;
+
+      for (let mat in itemDef.cost) {
+        if (getItemCount(mat) < itemDef.cost[mat]) {
+          alert(`Недостаточно ресурсов! Требуется: ${itemDef.desc}`);
+          return;
+        }
+      }
+
+      if (tryAddItemToInventory(foodId, 1)) {
+        for (let mat in itemDef.cost) {
+          removeItem(mat, itemDef.cost[mat]);
+        }
+        createSparks(player.x, player.y, '#22c55e');
+        updateUI();
+        openFoodShop();
+      }
+    }
+
+    function openWelcomeModal(tabIdx = 0) {
+      switchWelcomeTab(tabIdx);
+      const overlay = document.getElementById('welcome-modal-overlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function switchWelcomeTab(tabIdx) {
+      for (let i = 0; i <= 4; i++) {
+        let btn = document.getElementById(`wtab-btn-${i}`);
+        let pane = document.getElementById(`wtab-content-${i}`);
+        if (btn) {
+          if (i === tabIdx) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+        if (pane) {
+          pane.style.display = (i === tabIdx) ? 'flex' : 'none';
+        }
+      }
+    }
+
+    function closeWelcomeModal() {
+      const overlay = document.getElementById('welcome-modal-overlay');
+      if (overlay) overlay.style.display = 'none';
+      localStorage.setItem('survive_welcome_shown', 'true');
+    }
+
+    function isPositionInsidePlayerHouse(x, y) {
+      return x >= playerHouse.x && x <= playerHouse.x + playerHouse.width &&
+             y >= playerHouse.y && y <= playerHouse.y + playerHouse.height;
+    }
+
     function isPlayerInsidePlayerHouse() {
-      return player.x >= playerHouse.x && player.x <= playerHouse.x + playerHouse.width &&
-             player.y >= playerHouse.y && player.y <= playerHouse.y + playerHouse.height;
+      return isPositionInsidePlayerHouse(player.x, player.y);
     }
 
     function isPlayerInsideAnyStructure() {
@@ -1004,11 +2999,20 @@
         if (slot) {
           let cfg = ITEM_CONFIG[slot.id];
           let limit = STACK_LIMITS[slot.id];
+          let countHtml = `${slot.count}/${limit}`;
+          if (slot.id === 'slingshot') {
+            countHtml = `<span style="color:#38bdf8; font-weight:900;">🪨 ${player.ammo.slingshot}</span>`;
+          } else if (slot.id === 'revolver') {
+            countHtml = `<span style="color:#f59e0b; font-weight:900;">💥 ${player.ammo.revolver}</span>`;
+          } else if (slot.id === 'spear') {
+            countHtml = `<span style="color:#94a3b8;">⚔️ 30</span>`;
+          }
+
           slotDiv.className = `inv-slot ${isSelected ? 'selected' : ''}`;
           slotDiv.onclick = () => selectSlotToggle(i);
           slotDiv.innerHTML = `
             <div class="slot-key-badge">${displayBadge}</div>
-            <div class="slot-count">${slot.count}/${limit}</div>
+            <div class="slot-count">${countHtml}</div>
             <div class="slot-icon">${cfg.icon}</div>
             <div class="slot-name">${cfg.name}</div>
           `;
@@ -1023,8 +3027,20 @@
         invContainer.appendChild(slotDiv);
       }
 
+      // Background Watermark Values
+      const bgRebirthEl = document.getElementById('bg-rebirth-val');
+      if (bgRebirthEl) bgRebirthEl.innerText = rebirthCount;
+      const bgCompletedEl = document.getElementById('bg-completed-val');
+      if (bgCompletedEl) bgCompletedEl.innerText = rebirthCount;
+
+      // HUD Badges
+      const rebirthBadge = document.getElementById('rebirth-counter-badge');
+      if (rebirthBadge) rebirthBadge.innerText = `#${rebirthCount}`;
       document.getElementById('slots-capacity-label').innerText = `${player.maxSlots} слотов`;
-      document.getElementById('relic-count').innerText = player.relics;
+      const ammoHudBadge = document.getElementById('ammo-hud-badge');
+      if (ammoHudBadge) ammoHudBadge.innerHTML = `🪨 ${player.ammo.slingshot} | 💥 ${player.ammo.revolver}`;
+      document.getElementById('altar-relic-badge').innerText = `${altar.placedRelics}/7 на Алтаре`;
+      document.getElementById('hand-relic-badge').innerText = `${player.relicsInHand} в руках`;
       document.getElementById('pet-count').innerText = rescuedPets.length;
 
       const clothingInfo = CLOTHING_TIERS[player.clothingLevel];
@@ -1032,27 +3048,188 @@
 
       document.getElementById('warmth-val').innerText = Math.round(player.warmth) + '%';
       document.getElementById('warmth-fill').style.width = player.warmth + '%';
+
+      const hungerValEl = document.getElementById('hunger-val');
+      const hungerFillEl = document.getElementById('hunger-fill');
+      if (hungerValEl && hungerFillEl) {
+        let hVal = Math.round(player.hunger);
+        if (player.hunger <= 0) {
+          hungerValEl.innerHTML = '<span style="color:#ef4444; font-weight:900;">⚠️ ГОЛОДАЕТ!</span>';
+          hungerFillEl.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+        } else if (player.hunger < 25) {
+          hungerValEl.innerHTML = `<span style="color:#f59e0b; font-weight:800;">${hVal}% (Голоден)</span>`;
+          hungerFillEl.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+        } else {
+          hungerValEl.innerText = hVal + '%';
+          hungerFillEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+        }
+        hungerFillEl.style.width = player.hunger + '%';
+      }
       
       document.getElementById('health-val').innerText = Math.round(player.health) + '%';
       document.getElementById('health-fill').style.width = player.health + '%';
 
+      const staminaValEl = document.getElementById('stamina-val');
+      const staminaFillEl = document.getElementById('stamina-fill');
+      if (staminaValEl && staminaFillEl) {
+        if (player.isExhausted) {
+          staminaValEl.innerHTML = `<span style="color:#f87171; font-weight:900;">⚠️ Одышка ${Math.round(player.stamina)}%</span>`;
+          staminaFillEl.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+        } else {
+          staminaValEl.innerText = Math.round(player.stamina) + '%';
+          staminaFillEl.style.background = 'linear-gradient(90deg, #06b6d4, #38bdf8)';
+        }
+        staminaFillEl.style.width = player.stamina + '%';
+      }
+
       document.getElementById('fire-fuel-val').innerText = Math.round(playerHouse.fireFuelSeconds) + ' сек';
 
-      const distToShop = Math.round(Math.hypot(player.x - (shop.x + shop.width/2), player.y - (shop.y + shop.height/2)));
-      document.getElementById('shop-dist-val').innerText = `${distToShop}m`;
+      // Waypoint Distances
+      const distToFoodShop = Math.round(Math.hypot(player.x - (foodShop.x + foodShop.width/2), player.y - (foodShop.y + foodShop.height/2)));
+      const foodShopDistEl = document.getElementById('foodshop-dist-val');
+      if (foodShopDistEl) foodShopDistEl.innerText = `${distToFoodShop}м`;
 
+      const distToShop = Math.round(Math.hypot(player.x - (shop.x + shop.width/2), player.y - (shop.y + shop.height/2)));
+      document.getElementById('shop-dist-val').innerText = `${distToShop}м`;
+
+      const distToAltar = Math.round(Math.hypot(player.x - altar.x, player.y - altar.y));
+      const altarDistEl = document.getElementById('altar-dist-val');
+      if (altarDistEl) altarDistEl.innerText = `${distToAltar}м (${altar.placedRelics}/7)`;
+
+      let bunkerCenterX = bunker.x + bunker.width / 2;
+      let bunkerCenterY = bunker.y + bunker.height / 2;
+      const distToBunker = Math.round(Math.hypot(player.x - bunkerCenterX, player.y - bunkerCenterY));
+      const bunkerDistEl = document.getElementById('bunker-dist-val');
+      if (bunkerDistEl) {
+        if (bunker.isOpen) {
+          bunkerDistEl.innerHTML = `<span style="color:#10b981;">${distToBunker}м [🟢 ОТКРЫТ]</span>`;
+        } else {
+          bunkerDistEl.innerHTML = `<span style="color:#f87171;">${distToBunker}м [🔒 ${altar.placedRelics}/7]</span>`;
+        }
+      }
+
+      const distToHouse = Math.round(Math.hypot(player.x - (playerHouse.x + playerHouse.width/2), player.y - (playerHouse.y + playerHouse.height/2)));
+      const houseDistEl = document.getElementById('house-dist-val');
+      if (houseDistEl) houseDistEl.innerText = `${distToHouse}м`;
+
+      // House & Fire Prompts
       const housePrompt = document.getElementById('house-prompt');
       const firePrompt = document.getElementById('fire-prompt');
 
-      if (!playerHouse.isRepaired && Math.hypot(player.x - (playerHouse.x + playerHouse.width/2), player.y - (playerHouse.y + playerHouse.height/2)) < 160) {
+      let fireX = playerHouse.x + playerHouse.width / 2;
+      let fireY = playerHouse.y + playerHouse.height / 2;
+      let distToFire = Math.hypot(player.x - fireX, player.y - fireY);
+
+      if (!playerHouse.isRepaired && distToHouse < 160) {
         housePrompt.style.display = 'block'; firePrompt.style.display = 'none';
       } else {
         housePrompt.style.display = 'none';
-        if (isPlayerInsidePlayerHouse()) { firePrompt.style.display = 'block'; } else { firePrompt.style.display = 'none'; }
+        if (isPlayerInsidePlayerHouse() && distToFire < 70) {
+          firePrompt.style.display = 'block';
+        } else {
+          firePrompt.style.display = 'none';
+        }
       }
 
-      if (isPlayerNearShop()) {
-        if (document.getElementById('shop-modal').style.display !== 'flex') openShop();
+      // Altar Prompt
+      const altarPrompt = document.getElementById('altar-prompt');
+      if (altarPrompt) {
+        if (distToAltar < altar.radius + 40) {
+          document.getElementById('altar-prompt-placed').innerText = altar.placedRelics;
+          document.getElementById('altar-prompt-hand').innerText = player.relicsInHand;
+          altarPrompt.style.display = 'block';
+        } else {
+          altarPrompt.style.display = 'none';
+        }
+      }
+
+      // Bunker Prompt
+      const bunkerPrompt = document.getElementById('bunker-prompt');
+      if (bunkerPrompt) {
+        if (distToBunker < 115) {
+          bunkerPrompt.style.display = 'block';
+          const bTitle = document.getElementById('bunker-prompt-title');
+          const bSub = document.getElementById('bunker-prompt-sub');
+          const bBtn = document.getElementById('bunker-prompt-btn');
+          if (bunker.isOpen) {
+            bTitle.innerText = '🚪 БУНКЕР ЭВАКУАЦИИ И ПЕРЕРОЖДЕНИЯ [🟢 ДОСТУП РАЗРЕШЕН]';
+            bTitle.style.color = '#10b981';
+            bSub.innerText = 'Капсула гиперсна готова! Нажмите E для перерождения!';
+            bBtn.style.display = 'inline-block';
+          } else {
+            bTitle.innerText = '🚪 БУНКЕР ЭВАКУАЦИИ [🔒 ЗАБЛОКИРОВАН]';
+            bTitle.style.color = '#f87171';
+            bSub.innerText = `Требуется освятить 7 реликвий на Алтаре! (${altar.placedRelics}/7)`;
+            bBtn.style.display = 'none';
+          }
+        } else {
+          bunkerPrompt.style.display = 'none';
+        }
+      }
+
+      if (!isPlayerNearShop() && document.getElementById('shop-modal').style.display === 'flex') {
+        closeShop();
+      }
+
+      if (!isPlayerNearFoodShop() && document.getElementById('food-shop-modal').style.display === 'flex') {
+        closeFoodShop();
+      }
+
+      // Render Pets HUD Panel
+      const petsHudEl = document.getElementById('pets-hud');
+      const petsContainer = document.getElementById('pets-container');
+      if (petsHudEl && petsContainer) {
+        if (rescuedPets.length === 0) {
+          petsHudEl.style.display = 'none';
+        } else {
+          petsHudEl.style.display = 'flex';
+          let html = '';
+          for (let i = 0; i < rescuedPets.length; i++) {
+            let p = rescuedPets[i];
+            let cfg = PET_CONFIG[p.id] || PET_CONFIG.fox;
+            let satPercent = Math.round(p.satiety);
+            let barColor = satPercent > 50 ? '#22c55e' : (satPercent > 20 ? '#f59e0b' : '#ef4444');
+            let isHungry = satPercent <= 0;
+            let isFollowing = (p.mode === 'follow');
+            let remainingSec = Math.max(0, Math.ceil((STARVATION_LIMIT_FRAMES - (p.starveTimerFrames || 0)) / 60));
+
+            let cardBorder = isHungry 
+              ? 'border-color:rgba(239,68,68,0.8); background:rgba(69,10,10,0.45);'
+              : (isFollowing ? 'border-color:#22c55e; background:rgba(20,83,45,0.25); box-shadow:0 0 10px rgba(34,197,94,0.25);' : '');
+
+            let companionBadge = isFollowing
+              ? `<div style="background:linear-gradient(90deg, #15803d, #16a34a); color:#fff; font-size:9px; font-weight:900; padding:2px 6px; border-radius:4px; text-align:center; margin-top:2px;">⭐ АКТИВНЫЙ СПУТНИК В ПОХОДЕ</div>`
+              : `<div style="background:rgba(51,65,85,0.6); color:#cbd5e1; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; text-align:center; margin-top:2px;">🛏️ Дома на лежанке (+Обогрев дома)</div>`;
+
+            let modeBtnLabel = isFollowing ? '🏡 Оставить дома' : '⭐ Выбрать (T)';
+            let modeBtnStyle = isFollowing ? 'background:rgba(100,116,139,0.3); color:#e2e8f0;' : 'background:linear-gradient(135deg, #16a34a, #15803d); color:#fff; font-weight:900;';
+
+            html += `
+              <div class="pet-card" style="${cardBorder}">
+                <div class="pet-header">
+                  <span>${cfg.icon} ${cfg.name}</span>
+                  <span class="pet-buff-tag" style="${isHungry ? 'color:#fca5a5; background:rgba(220,38,38,0.3); border-color:#ef4444;' : ''}">
+                    ${isHungry ? `⚠️ УХОДИТ ЧЕРЕЗ ${remainingSec}с!` : cfg.buffName}
+                  </span>
+                </div>
+                ${companionBadge}
+                <div class="pet-satiety-wrapper" style="margin-top:4px;">
+                  <span>Сытость:</span>
+                  ${isHungry ? `<b style="color:#ef4444;">0% (Голодает ${remainingSec}с)</b>` : `<b style="color:${barColor};">${satPercent}%</b>`}
+                </div>
+                <div class="pet-satiety-bg">
+                  <div class="pet-satiety-fill" style="width:${isHungry ? 100 : satPercent}%; background:${isHungry ? 'linear-gradient(90deg, #ef4444, #991b1b)' : barColor};"></div>
+                </div>
+                <div style="font-size:9.5px; color:#cbd5e1;">${cfg.buffDesc}</div>
+                <div class="pet-controls-row">
+                  <button class="pet-action-btn feed-btn" style="${isHungry ? 'box-shadow:0 0 10px rgba(239,68,68,0.6); animation:pulse 1s infinite;' : ''}" onclick="feedPet(${i})">🍖 Покормить (F)</button>
+                  <button class="pet-action-btn" style="${modeBtnStyle}" onclick="selectActiveCompanion(${i})">${modeBtnLabel}</button>
+                </div>
+              </div>
+            `;
+          }
+          petsContainer.innerHTML = html;
+        }
       }
 
       const vignette = document.getElementById('frost-vignette');
@@ -1064,17 +3241,17 @@
       }
     }
 
-    // BIGFOOT SPEED 10X SLOWER (1.3 -> 0.13)
+    // BIGFOOT SPEED 10X SLOWER (1.3 -> 0.13) (Spawns in Eastern Wilderness X >= 7600)
     function spawnPostBlizzardBigfoot() {
-      let spawnX = shop.x + (Math.random() - 0.5) * 200;
-      let spawnY = shop.y + (Math.random() - 0.5) * 200;
+      let spawnX = 7600 + Math.random() * 2500;
+      let spawnY = 2000 + Math.random() * (MAP_SIZE - 4000);
       mobs.push({
         type: 'Bigfoot', label: '🦍 БИГФУТ (в 10р медленнее)',
         x: spawnX, y: spawnY, homeX: spawnX, homeY: spawnY,
         hp: 120, maxHp: 120,
-        speed: 0.13, // 10X SLOWER SPEED (1.3 -> 0.13)!
+        speed: 0.13,
         aggroRadius: 280,
-        patrolRadius: 800,
+        patrolRadius: 600,
         patrolAngle: Math.random() * Math.PI * 2,
         isAggro: false, color: '#b91c1c', radius: 20
       });
@@ -1084,6 +3261,11 @@
     let tickCounter = 0;
     function update() {
       tickCounter++;
+
+      // Periodic Auto-save every 3 seconds (180 frames)
+      if (tickCounter % 180 === 0) {
+        saveGameState();
+      }
 
       respawnTimerFrames++;
       if (respawnTimerFrames >= RESPAWN_INTERVAL_FRAMES) {
@@ -1100,26 +3282,92 @@
       if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
 
       if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
-      player.x = Math.max(30, Math.min(MAP_SIZE - 30, player.x + dx * PLAYER_SPEED));
-      player.y = Math.max(30, Math.min(MAP_SIZE - 30, player.y + dy * PLAYER_SPEED));
+      
+      let isMoving = (dx !== 0 || dy !== 0);
+      let isShiftPressed = !!(keys['ShiftLeft'] || keys['ShiftRight']);
+      let sprintMultiplier = 1.0;
 
-      if (playerHouse.fireFuelSeconds > 0 && tickCounter % 60 === 0) {
+      // Exhaustion threshold check: once stamina hits 0, player can only sprint again after recovering to >= 20%
+      if (player.stamina <= 0) {
+        player.isExhausted = true;
+      } else if (player.isExhausted && player.stamina >= 20) {
+        player.isExhausted = false;
+      }
+
+      if (isShiftPressed && isMoving && !player.isExhausted && player.stamina > 0) {
+        player.isSprinting = true;
+        sprintMultiplier = 1.70;
+        player.stamina = Math.max(0, player.stamina - 0.52);
+        
+        if (player.stamina <= 0) {
+          player.isExhausted = true;
+          player.isSprinting = false;
+          sprintMultiplier = 1.0;
+        }
+
+        // Spawn sprint snow trail particles
+        if (tickCounter % 3 === 0) {
+          particles.push({
+            x: player.x - dx * 10 + (Math.random() - 0.5) * 6,
+            y: player.y - dy * 10 + (Math.random() - 0.5) * 6,
+            vx: -dx * 1.5 + (Math.random() - 0.5) * 1.5,
+            vy: -dy * 1.5 + (Math.random() - 0.5) * 1.5,
+            life: 14,
+            color: '#e0f2fe'
+          });
+        }
+      } else {
+        player.isSprinting = false;
+        let recoveryRate = isPlayerInsideAnyStructure() ? 0.85 : 0.42;
+        let foxBuffActive = rescuedPets.some(p => p.id === 'fox' && p.mode === 'follow' && p.satiety > 0);
+        if (foxBuffActive) recoveryRate *= 1.35; // ⚡ Fox stamina regen buff!
+        if (player.hunger < 25) recoveryRate *= 0.75; // Low hunger penalty
+        player.stamina = Math.min(player.maxStamina, player.stamina + recoveryRate);
+      }
+
+      let wolfBuffActive = rescuedPets.some(p => p.id === 'wolf' && p.mode === 'follow' && p.satiety > 0);
+      let bearBuffActive = rescuedPets.some(p => p.id === 'bear' && p.mode === 'follow' && p.satiety > 0);
+      let homePetsCount = rescuedPets.filter(p => p.mode === 'stay_home' && p.satiety > 0).length;
+
+      // Player Hunger Drain (~5-6 mins of survival from 100 to 0)
+      let hungerDrain = 0.0055;
+      if (player.isSprinting) hungerDrain *= 1.75;
+      if (weatherState === 'Blizzard') hungerDrain *= 1.30;
+      if (isPlayerInsideAnyStructure()) hungerDrain *= 0.60;
+      player.hunger = Math.max(0, Math.min(player.maxHunger, player.hunger - hungerDrain));
+
+      if (player.speedBuffTimer > 0) player.speedBuffTimer--;
+      const coffeeMultiplier = player.speedBuffTimer > 0 ? 1.35 : 1.0;
+      const petSpeedMultiplier = wolfBuffActive ? 1.10 : 1.0; // 🐺 Wolf speed buff!
+      const effectiveSpeed = (PLAYER_SPEED + (rebirthCount * 0.18)) * coffeeMultiplier * sprintMultiplier * petSpeedMultiplier;
+
+      player.x = Math.max(30, Math.min(MAP_SIZE - 30, player.x + dx * effectiveSpeed));
+      player.y = Math.max(30, Math.min(MAP_SIZE - 30, player.y + dy * effectiveSpeed));
+
+      // Fireplace burn interval (burns 30% slower if pets guard the home!)
+      let fireBurnInterval = homePetsCount > 0 ? 80 : 60;
+      if (playerHouse.fireFuelSeconds > 0 && tickCounter % fireBurnInterval === 0) {
         playerHouse.fireFuelSeconds = Math.max(0, playerHouse.fireFuelSeconds - 1);
       }
 
       weatherTimer++;
       prevWeatherState = weatherState;
 
-      if (weatherTimer < weatherDuration.Clear) {
-        weatherState = 'Clear'; document.getElementById('alert-banner').style.display = 'none';
-      } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog) {
-        weatherState = 'Fog'; document.getElementById('alert-banner').style.display = 'block';
-        document.getElementById('alert-banner').innerText = '⚠️ ПРИБЛИЖАЕТСЯ СНЕЖНАЯ БУРЯ!';
-      } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog + weatherDuration.Blizzard) {
-        weatherState = 'Blizzard'; document.getElementById('alert-banner').style.display = 'block';
-        document.getElementById('alert-banner').innerText = '🌪️ СНЕЖНАЯ БУРЯ В РАЗГАРЕ!';
+      if (altar.isFullyActivated) {
+        weatherState = 'Clear';
+        document.getElementById('alert-banner').style.display = 'none';
       } else {
-        weatherTimer = 0;
+        if (weatherTimer < weatherDuration.Clear) {
+          weatherState = 'Clear'; document.getElementById('alert-banner').style.display = 'none';
+        } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog) {
+          weatherState = 'Fog'; document.getElementById('alert-banner').style.display = 'block';
+          document.getElementById('alert-banner').innerText = '⚠️ ПРИБЛИЖАЕТСЯ СНЕЖНАЯ БУРЯ!';
+        } else if (weatherTimer < weatherDuration.Clear + weatherDuration.Fog + weatherDuration.Blizzard) {
+          weatherState = 'Blizzard'; document.getElementById('alert-banner').style.display = 'block';
+          document.getElementById('alert-banner').innerText = '🌪️ СНЕЖНАЯ БУРЯ В РАЗГАРЕ!';
+        } else {
+          weatherTimer = 0;
+        }
       }
 
       if (prevWeatherState === 'Blizzard' && weatherState === 'Clear') {
@@ -1128,47 +3376,206 @@
 
       let ambientDecay = weatherState === 'Blizzard' ? 0.35 : (weatherState === 'Fog' ? 0.15 : 0.05);
       const clothingProtection = CLOTHING_TIERS[player.clothingLevel].protection;
-      ambientDecay = ambientDecay * (1 - clothingProtection);
+      const rebirthProtection = Math.min(0.40, rebirthCount * 0.05);
+      ambientDecay = ambientDecay * (1 - clothingProtection) * (1 - rebirthProtection);
 
       let heatGain = player.hasTorch ? 0.25 : 0;
       if (isPlayerInsidePlayerHouse() && playerHouse.fireFuelSeconds > 0) heatGain += 0.8;
       if (isPlayerInsideAnyStructure()) ambientDecay = 0;
-      heatGain += rescuedPets.length * 0.08;
+
+      // Bear warmth buff
+      if (bearBuffActive) {
+        heatGain += 0.35;
+        ambientDecay *= 0.75;
+      }
+
+      // Home pets coziness bonus
+      if (isPlayerInsidePlayerHouse() && homePetsCount > 0) {
+        heatGain += homePetsCount * 0.20;
+      }
+
+      // Altar Warmth Aura (increases with each consecrated relic!)
+      let distToAltar = Math.hypot(player.x - altar.x, player.y - altar.y);
+      if (distToAltar < 160) {
+        heatGain += 0.3 + (altar.placedRelics * 0.15);
+      }
+
+      // Food Shop warm hearth area
+      let distToFoodShop = Math.hypot(player.x - (foodShop.x + foodShop.width/2), player.y - (foodShop.y + foodShop.height/2));
+      if (distToFoodShop < 140) {
+        heatGain += 0.9;
+        ambientDecay = 0;
+      }
+
+      // Inside Bunker Warmth
+      let bunkerCenterX = bunker.x + bunker.width / 2;
+      let bunkerCenterY = bunker.y + bunker.height / 2;
+      let distToBunker = Math.hypot(player.x - bunkerCenterX, player.y - bunkerCenterY);
+      if (distToBunker < 85 && bunker.isOpen) {
+        ambientDecay = 0;
+        heatGain += 1.2;
+      }
 
       player.warmth = Math.max(0, Math.min(player.maxWarmth, player.warmth + (heatGain - ambientDecay)));
+      
+      // Cold Damage
       if (player.warmth <= 0) {
         player.health = Math.max(0, player.health - 0.15);
         if (player.health <= 0) gameOver();
       }
 
+      // Starvation Damage & Well-Fed Health Regeneration
+      if (player.hunger <= 0) {
+        player.health = Math.max(0, player.health - 0.12);
+        if (tickCounter % 90 === 0) {
+          createSparks(player.x, player.y, '#f59e0b');
+        }
+        if (player.health <= 0) gameOver();
+      } else if (player.hunger > 65 && player.warmth > 60 && player.health < player.maxHealth) {
+        // Well-fed passive healing
+        player.health = Math.min(player.maxHealth, player.health + 0.015);
+      }
+
+      // Thaw and Rescue Frozen Pets
       for (let pet of frozenPets) {
-        if (!pet.isRescued && Math.hypot(player.x - pet.x, player.y - pet.y) < 40) {
+        if (!pet.isRescued && Math.hypot(player.x - pet.x, player.y - pet.y) < 45) {
           if (player.hasTorch || heatGain > 0.3) {
             pet.isRescued = true;
-            rescuedPets.push({ x: pet.x, y: pet.y, type: pet.type });
-            createSparks(pet.x, pet.y, '#a855f7'); updateUI();
+            let cfg = PET_CONFIG[pet.id] || PET_CONFIG.fox;
+            rescuedPets.push({
+              id: pet.id,
+              x: pet.x,
+              y: pet.y,
+              satiety: 100,
+              mode: 'follow',
+              loveTimer: 50
+            });
+            createSparks(pet.x, pet.y, '#a855f7');
+            const warn = document.getElementById('inventory-warning');
+            warn.innerText = `🎉 ВЫ СПАСЛИ ПИТОМЦА: ${cfg.icon} ${cfg.name}!`;
+            warn.style.color = '#c084fc';
+            warn.style.borderColor = '#c084fc';
+            warn.style.display = 'block';
+            setTimeout(() => { warn.style.display = 'none'; }, 3500);
+            updateUI();
           }
         }
       }
 
+      // Update Rescued Pets (Movement, Hunger, Starvation & Leaving, Home Resting)
       for (let i = 0; i < rescuedPets.length; i++) {
         let p = rescuedPets[i];
-        let targetX = player.x + (i + 1) * -22;
-        let targetY = player.y + (i + 1) * 15;
-        p.x += (targetX - p.x) * 0.1; p.y += (targetY - p.y) * 0.1;
+        let cfg = PET_CONFIG[p.id] || PET_CONFIG.fox;
+
+        // Hunger decay (slower at home)
+        let decay = p.mode === 'stay_home' ? 0.008 : 0.024;
+        p.satiety = Math.max(0, p.satiety - decay);
+        if (p.loveTimer > 0) p.loveTimer--;
+
+        if (!p.starveTimerFrames) p.starveTimerFrames = 0;
+
+        if (p.satiety <= 0) {
+          p.starveTimerFrames++;
+
+          // Critical starvation warning alert
+          if (p.starveTimerFrames === 1 || p.starveTimerFrames % (60 * 15) === 0) {
+            let remainingSec = Math.max(0, Math.ceil((STARVATION_LIMIT_FRAMES - p.starveTimerFrames) / 60));
+            const warn = document.getElementById('inventory-warning');
+            if (warn) {
+              warn.innerText = `⚠️ [${cfg.icon} ${cfg.name}] сильно голодает и уйдёт в лес через ${remainingSec}с! Нажмите F, чтобы покормить!`;
+              warn.style.color = '#ef4444';
+              warn.style.borderColor = '#ef4444';
+              warn.style.display = 'block';
+              setTimeout(() => { warn.style.display = 'none'; }, 3000);
+            }
+          }
+
+          // If starving too long (60 seconds at 0% satiety), the pet leaves!
+          if (p.starveTimerFrames >= STARVATION_LIMIT_FRAMES) {
+            createSparks(p.x, p.y, '#94a3b8');
+            for (let k = 0; k < 25; k++) {
+              particles.push({
+                x: p.x + (Math.random() - 0.5) * 25,
+                y: p.y + (Math.random() - 0.5) * 25,
+                vx: (Math.random() - 0.5) * 4,
+                vy: -Math.random() * 3 - 1,
+                life: 35,
+                color: '#cbd5e1'
+              });
+            }
+
+            const warn = document.getElementById('inventory-warning');
+            if (warn) {
+              warn.innerText = `💨 [${cfg.icon} ${cfg.name}] ушёл в дикие леса из-за сильного голода...`;
+              warn.style.color = '#fca5a5';
+              warn.style.borderColor = '#ef4444';
+              warn.style.display = 'block';
+              setTimeout(() => { warn.style.display = 'none'; }, 4000);
+            }
+
+            let originalFrozen = frozenPets.find(f => f.id === p.id);
+            if (originalFrozen) originalFrozen.isRescued = false;
+
+            rescuedPets.splice(i, 1);
+            i--;
+            updateUI();
+            continue;
+          }
+        } else {
+          p.starveTimerFrames = 0;
+        }
+
+        let targetX, targetY;
+        if (p.mode === 'stay_home') {
+          // Resting on the cozy pet bed in the house
+          let petBedX = playerHouse.x + 50 + (i * 24);
+          let petBedY = playerHouse.y + playerHouse.height - 40;
+          targetX = petBedX;
+          targetY = petBedY;
+        } else {
+          // Following player
+          if (isPlayerInsidePlayerHouse()) {
+            let fireX = playerHouse.x + playerHouse.width / 2;
+            let fireY = playerHouse.y + playerHouse.height / 2;
+            targetX = fireX + (cfg.homeOffsetX || 0);
+            targetY = fireY + (cfg.homeOffsetY || 0);
+          } else {
+            targetX = player.x + (i + 1) * -24;
+            targetY = player.y + (i + 1) * 16;
+          }
+        }
+
+        let moveSpeed = p.satiety > 0 ? 0.12 : 0.05;
+        p.x += (targetX - p.x) * moveSpeed;
+        p.y += (targetY - p.y) * moveSpeed;
       }
 
+      // Collect Relics on map into hand (Strict 1-per-pickup)
       for (let rel of relics) {
-        if (!rel.collected && Math.hypot(player.x - rel.x, rel.y - rel.y) < 30) {
-          rel.collected = true; player.relics++; createSparks(rel.x, rel.y, '#38bdf8');
-          updateUI(); if (player.relics >= 7) victory();
+        if (!rel.collected && Math.hypot(player.x - rel.x, player.y - rel.y) < 36) {
+          rel.collected = true;
+          player.relicsInHand++;
+          createSparks(rel.x, rel.y, '#38bdf8');
+          for (let k = 0; k < 12; k++) {
+            particles.push({
+              x: rel.x, y: rel.y,
+              vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5 - 2,
+              life: 30, color: '#06b6d4'
+            });
+          }
+          updateUI();
+          break;
         }
       }
 
       for (let mob of mobs) {
         let distToPlayer = Math.hypot(player.x - mob.x, player.y - mob.y);
-        if (distToPlayer <= mob.aggroRadius) { mob.isAggro = true; }
-        else if (distToPlayer > mob.aggroRadius * 1.3) { mob.isAggro = false; }
+        // Only aggro if player enters the eastern wilderness (X >= 6500) and within aggro radius
+        if (player.x >= 6500 && distToPlayer <= mob.aggroRadius) {
+          mob.isAggro = true;
+        } else if (distToPlayer > mob.aggroRadius * 1.3 || player.x < 6500) {
+          mob.isAggro = false;
+        }
 
         let targetX, targetY;
         if (mob.isAggro) {
@@ -1184,6 +3591,13 @@
         let angle = Math.atan2(targetY - mob.y, targetX - mob.x);
         let nextX = mob.x + Math.cos(angle) * mob.speed;
         let nextY = mob.y + Math.sin(angle) * mob.speed;
+
+        // Prevent crossing into western safe region
+        if (nextX < 6600) {
+          nextX = 6600;
+          mob.patrolAngle += Math.PI * 0.8;
+          mob.isAggro = false;
+        }
 
         if (isInsideAnyStructure(nextX, nextY)) {
           mob.x -= Math.cos(angle) * mob.speed; mob.y -= Math.sin(angle) * mob.speed;
@@ -1208,17 +3622,45 @@
             if (d < minDist) { minDist = d; closestMob = m; }
           }
           if (closestMob) {
-            tur.fireCooldown = 40;
-            projectiles.push({ x: tur.x, y: tur.y, tx: closestMob.x, ty: closestMob.y, targetMob: closestMob, life: 15 });
+            tur.fireCooldown = tur.isHeavy ? 20 : 40;
+            projectiles.push({
+              x: tur.x, y: tur.y,
+              tx: closestMob.x, ty: closestMob.y,
+              targetMob: closestMob,
+              damage: tur.damage || 20,
+              isHeavy: tur.isHeavy,
+              life: 15
+            });
           }
         }
       }
 
       for (let p of projectiles) {
         p.life--;
-        if (p.targetMob && Math.hypot(p.targetMob.x - p.x, p.targetMob.y - p.y) < 20) {
-          p.targetMob.hp -= 20;
-          if (p.targetMob.hp <= 0) mobs = mobs.filter(m => m !== p.targetMob);
+        if (p.isPlayerShot) {
+          p.x += p.vx;
+          p.y += p.vy;
+          for (let mob of mobs) {
+            if (Math.hypot(mob.x - p.x, mob.y - p.y) < mob.radius + (p.radius || 4)) {
+              mob.hp -= p.damage;
+              mob.isAggro = true;
+              createSparks(mob.x, mob.y, '#ef4444');
+              if (mob.hp <= 0) {
+                mobs = mobs.filter(m => m !== mob);
+                handleMobDeath(mob);
+              }
+              p.life = 0;
+              break;
+            }
+          }
+        } else if (p.targetMob && Math.hypot(p.targetMob.x - p.x, p.targetMob.y - p.y) < 20) {
+          p.targetMob.hp -= (p.damage || 20);
+          p.targetMob.isAggro = true;
+          createSparks(p.targetMob.x, p.targetMob.y, '#ef4444');
+          if (p.targetMob.hp <= 0) {
+            mobs = mobs.filter(m => m !== p.targetMob);
+            handleMobDeath(p.targetMob);
+          }
           p.life = 0;
         }
       }
@@ -1238,19 +3680,26 @@
       ctx.save();
       ctx.translate(cameraX, cameraY);
 
+      // World Boundary
       ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 4;
       ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.04)'; ctx.fillRect(MAP_SIZE/2, 0, MAP_SIZE/2, MAP_SIZE);
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.2)'; ctx.setLineDash([12, 12]);
-      ctx.strokeRect(MAP_SIZE/2, 0, MAP_SIZE/2, MAP_SIZE); ctx.setLineDash([]);
+      // Enemy Zone (Eastern Wilds X >= 6800)
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.04)'; ctx.fillRect(6800, 0, MAP_SIZE - 6800, MAP_SIZE);
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)'; ctx.setLineDash([12, 12]);
+      ctx.strokeRect(6800, 0, MAP_SIZE - 6800, MAP_SIZE); ctx.setLineDash([]);
       ctx.fillStyle = '#f87171'; ctx.font = 'bold 13px Inter';
-      ctx.fillText('🔴 ЗОНА ВРАГОВ (ПРАВАЯ ЧАСТЬ КАРТЫ)', MAP_SIZE/2 + 20, 40);
+      ctx.fillText('🔴 ОПАСНАЯ ЗОНА ДИКИХ ВРАГОВ (ВОСТОЧНЫЙ РЕГИОН, X >= 6800)', 6820, 40);
 
+      // Safe Haven Label in West
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 13px Inter';
+      ctx.fillText('🛡️ БЕЗОПАСНЫЙ РЕГИОН ВЫЖИВШИХ (ЗАПАД)', 300, 40);
+
+      // Clothing Shop
       ctx.fillStyle = 'rgba(30, 58, 138, 0.45)'; ctx.fillRect(shop.x, shop.y, shop.width, shop.height);
       ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(shop.x, shop.y, shop.width, shop.height);
       ctx.fillStyle = '#93c5fd'; ctx.font = 'bold 12px Inter';
-      ctx.fillText('🏪 ДАЛЬНИЙ МАГАЗИН (БЕСПЛАТНЫЕ КОСТЮМЫ)', shop.x + 4, shop.y + 20);
+      ctx.fillText('🏪 МАГАЗИН ОДЕЖДЫ (БЕСПЛАТНЫЕ КОСТЮМЫ)', shop.x + 4, shop.y + 20);
 
       for (let i = 0; i < shop.mannequins.length; i++) {
         let m = shop.mannequins[i];
@@ -1260,6 +3709,38 @@
         ctx.fillRect(mx, my, 18, 30);
       }
 
+      // --- FOOD / GROCERY SHOP RENDERING ---
+      ctx.fillStyle = 'rgba(22, 101, 52, 0.45)';
+      ctx.fillRect(foodShop.x, foodShop.y, foodShop.width, foodShop.height);
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(foodShop.x, foodShop.y, foodShop.width, foodShop.height);
+      ctx.fillStyle = '#86efac';
+      ctx.font = 'bold 12px Inter';
+      ctx.fillText('🥫 ПРОДУКТОВЫЙ МАГАЗИН (E)', foodShop.x + 6, foodShop.y + 20);
+
+      // Grocery counter and items display
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(foodShop.x + 10, foodShop.y + 55, foodShop.width - 20, 24);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(foodShop.x + 10, foodShop.y + 55, foodShop.width - 20, 24);
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 11px Inter';
+      ctx.fillText('🍫 🍞 🥔 🥫 🌶️ ☕ 🥩', foodShop.x + 12, foodShop.y + 72);
+
+      // Warm Stove Chimney / Fireplace at Food Shop
+      let foodOvenX = foodShop.x + foodShop.width - 25;
+      let foodOvenY = foodShop.y + 28;
+      ctx.beginPath();
+      ctx.arc(foodOvenX, foodOvenY, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff7b00';
+      ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 9px Inter';
+      ctx.fillText('🔥 Печь', foodOvenX - 14, foodOvenY - 14);
+
+      // Player Residential House
       if (playerHouse.isRepaired) {
         ctx.fillStyle = 'rgba(180, 83, 9, 0.45)'; ctx.fillRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
         ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 6; ctx.strokeRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
@@ -1268,11 +3749,23 @@
         ctx.fillStyle = 'rgba(120, 53, 15, 0.2)'; ctx.fillRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height);
         ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4; ctx.setLineDash([8, 8]);
         ctx.strokeRect(playerHouse.x, playerHouse.y, playerHouse.width, playerHouse.height); ctx.setLineDash([]);
-        ctx.fillStyle = '#fca5a5'; ctx.font = 'bold 13px Inter'; ctx.fillText('🏚️ ДЫРЯВЫЙ ЖИЛОЙ ДОМ', playerHouse.x + 8, playerHouse.y + 24);
+        ctx.fillStyle = '#fca5a5'; ctx.font = 'bold 13px Inter'; ctx.fillText('🏚️ ДЫРЯВЫЙ ЖИЛОЙ ДОМ (3 Доски)', playerHouse.x + 8, playerHouse.y + 24);
       }
 
       ctx.fillStyle = '#b45309'; ctx.fillRect(playerHouse.workbenchX - 14, playerHouse.workbenchY - 10, 32, 22);
-      ctx.fillStyle = '#fef08a'; ctx.font = 'bold 10px Inter'; ctx.fillText('🛠️ ВЕРСТАК (E)', playerHouse.workbenchX - 26, playerHouse.workbenchY - 14);
+      ctx.fillStyle = '#fef08a'; ctx.font = 'bold 10px Inter'; ctx.fillText(`🛠️ ВЕРСТАК [Ур.${workbenchLevel}/5] (E)`, playerHouse.workbenchX - 45, playerHouse.workbenchY - 14);
+
+      // Cozy Pet Bed in House
+      let petBedX = playerHouse.x + 60;
+      let petBedY = playerHouse.y + playerHouse.height - 40;
+      ctx.fillStyle = 'rgba(147, 51, 234, 0.35)';
+      ctx.fillRect(petBedX - 30, petBedY - 18, 60, 36);
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(petBedX - 30, petBedY - 18, 60, 36);
+      ctx.fillStyle = '#e9d5ff';
+      ctx.font = 'bold 10px Inter';
+      ctx.fillText('🛏️ Лежанка питомцев', petBedX - 48, petBedY - 22);
 
       let fireX = playerHouse.x + playerHouse.width / 2;
       let fireY = playerHouse.y + playerHouse.height / 2;
@@ -1286,6 +3779,7 @@
         ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 10px Inter'; ctx.fillText('💨 ПОГАС (E)', fireX - 16, fireY + 24);
       }
 
+      // Hunter Cabins
       for (let cabin of hunterCabins) {
         ctx.fillStyle = 'rgba(100, 116, 139, 0.35)'; ctx.fillRect(cabin.x, cabin.y, cabin.width, cabin.height);
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.strokeRect(cabin.x, cabin.y, cabin.width, cabin.height);
@@ -1293,6 +3787,144 @@
         ctx.fillText(`🏚️ ${cabin.name}`, cabin.x + 6, cabin.y + 18);
       }
 
+      // --- ANCIENT ALTAR RENDERING ---
+      // Altar Warmth Aura
+      ctx.beginPath();
+      ctx.arc(altar.x, altar.y, 140, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(6, 182, 212, ${0.05 + altar.placedRelics * 0.02})`;
+      ctx.fill();
+
+      // Outer Runic Ring
+      ctx.beginPath();
+      ctx.arc(altar.x, altar.y, altar.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.fill();
+      ctx.strokeStyle = altar.isFullyActivated ? '#38bdf8' : '#06b6d4';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Inner Altar Core
+      ctx.beginPath();
+      ctx.arc(altar.x, altar.y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = altar.isFullyActivated ? '#38bdf8' : '#0e7490';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Celestial Beacon if 7/7 relics placed
+      if (altar.isFullyActivated) {
+        let grad = ctx.createLinearGradient(altar.x, altar.y, altar.x, altar.y - 300);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(altar.x - 16, altar.y - 300, 32, 300);
+      }
+
+      // 7 Relic Pedestals in Circle
+      for (let i = 0; i < 7; i++) {
+        let angle = (i / 7) * Math.PI * 2 - Math.PI / 2;
+        let px = altar.x + Math.cos(angle) * (altar.radius - 12);
+        let py = altar.y + Math.sin(angle) * (altar.radius - 12);
+
+        if (i < altar.placedRelics) {
+          // Consecrated Relic Crystal
+          ctx.beginPath();
+          ctx.arc(px, py, 7, 0, Math.PI * 2);
+          ctx.fillStyle = '#38bdf8';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Sparkle line
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(altar.x, altar.y);
+          ctx.lineTo(px, py);
+          ctx.stroke();
+        } else {
+          // Empty Stone Socket
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fillStyle = '#334155';
+          ctx.fill();
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 12px Inter';
+      ctx.fillText(`⛩️ ДРЕВНИЙ АЛТАРЬ [${altar.placedRelics}/7]`, altar.x - 65, altar.y + altar.radius + 18);
+
+      // --- BUNKER RENDERING ---
+      let bunkerCenterX = bunker.x + bunker.width / 2;
+      let bunkerCenterY = bunker.y + bunker.height / 2;
+
+      // Bunker Structure
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+      ctx.fillRect(bunker.x, bunker.y, bunker.width, bunker.height);
+      ctx.strokeStyle = bunker.isOpen ? '#10b981' : '#475569';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(bunker.x, bunker.y, bunker.width, bunker.height);
+
+      // Hazard Stripes Entrance Pad
+      let padHeight = 22;
+      let padY = bunker.y + bunker.height - padHeight;
+      for (let sx = 0; sx < bunker.width; sx += 14) {
+        ctx.fillStyle = (Math.floor(sx / 14) % 2 === 0) ? '#eab308' : '#0f172a';
+        ctx.fillRect(bunker.x + sx, padY, 14, padHeight);
+      }
+
+      // Blast Door Portal
+      let doorW = 54, doorH = 50;
+      let doorX = bunkerCenterX - doorW / 2;
+      let doorY = bunker.y + 20;
+
+      if (bunker.isOpen) {
+        // Open Cyber-Portal (Green Glow)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(doorX, doorY, doorW, doorH);
+
+        // Blinking Green Beacon
+        ctx.beginPath();
+        ctx.arc(bunkerCenterX, bunker.y + 10, 6, 0, Math.PI * 2);
+        ctx.fillStyle = (tickCounter % 30 < 15) ? '#10b981' : '#34d399';
+        ctx.fill();
+
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 11px Inter';
+        ctx.fillText('🟢 ОТКРЫТ (E)', doorX + 2, doorY + 30);
+      } else {
+        // Locked Heavy Steel Blast Door
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(doorX, doorY, doorW, doorH);
+
+        // Red Warning Beacon
+        ctx.beginPath();
+        ctx.arc(bunkerCenterX, bunker.y + 10, 5, 0, Math.PI * 2);
+        ctx.fillStyle = (tickCounter % 40 < 20) ? '#ef4444' : '#7f1d1d';
+        ctx.fill();
+
+        ctx.fillStyle = '#f87171';
+        ctx.font = 'bold 10px Inter';
+        ctx.fillText('🔒 ЗАКРЫТ', doorX + 4, doorY + 30);
+      }
+
+      ctx.fillStyle = bunker.isOpen ? '#34d399' : '#cbd5e1';
+      ctx.font = 'bold 12px Inter';
+      ctx.fillText('🚪 БУНКЕР ЭВАКУАЦИИ', bunker.x + 8, bunker.y - 8);
+
+      // Dropped items
       for (let dr of droppedGroundItems) {
         let cfg = ITEM_CONFIG[dr.id];
         ctx.fillStyle = dr.ownerId ? 'rgba(234, 179, 8, 0.2)' : 'rgba(56, 189, 248, 0.2)';
@@ -1304,6 +3936,7 @@
         ctx.fillText(dr.ownerId ? `🔒 Личное (E)` : `🌐 Общий (E)`, dr.x - 14, dr.y + 18);
       }
 
+      // Resources
       for (let br of groundBranches) {
         ctx.strokeStyle = '#b45309'; ctx.lineWidth = 4; ctx.beginPath();
         ctx.moveTo(br.x - 8, br.y - 4); ctx.lineTo(br.x + 8, br.y + 4);
@@ -1338,29 +3971,153 @@
         ctx.fillText(`🪨 [${5 - r.hitsLeft}/4]`, r.x - 14, r.y - 16);
       }
 
+      // Part Chests (Сундучки Деталей)
+      for (let chest of partChests) {
+        if (!chest.opened) {
+          ctx.fillStyle = '#b45309';
+          ctx.fillRect(chest.x - 14, chest.y - 12, 28, 24);
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(chest.x - 14, chest.y - 12, 28, 24);
+
+          ctx.fillStyle = '#f59e0b';
+          ctx.font = '12px Inter';
+          ctx.fillText('⚙️', chest.x - 7, chest.y + 4);
+
+          if (Math.hypot(player.x - chest.x, player.y - chest.y) < 65) {
+            ctx.fillStyle = '#fef08a';
+            ctx.font = 'bold 9.5px Inter';
+            ctx.fillText('📦 Сундук Деталей (E/Клик)', chest.x - 55, chest.y - 16);
+          }
+        } else {
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(chest.x - 14, chest.y - 8, 28, 18);
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(chest.x - 14, chest.y - 8, 28, 18);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '9px Inter';
+          ctx.fillText('(Пуст)', chest.x - 12, chest.y + 4);
+        }
+      }
+
+      // Pets Rendering
       for (let pet of frozenPets) {
         if (!pet.isRescued) {
-          ctx.fillStyle = 'rgba(168, 85, 247, 0.3)'; ctx.fillRect(pet.x - 14, pet.y - 14, 28, 28);
-          ctx.strokeStyle = '#c084fc'; ctx.strokeRect(pet.x - 14, pet.y - 14, 28, 28);
-          ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 10px Inter'; ctx.fillText(pet.type, pet.x - 30, pet.y - 18);
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.22)'; ctx.fillRect(pet.x - 18, pet.y - 18, 36, 36);
+          ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.strokeRect(pet.x - 18, pet.y - 18, 36, 36);
+          ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 11px Inter'; ctx.fillText(pet.type, pet.x - 45, pet.y - 22);
+          ctx.fillStyle = '#38bdf8'; ctx.font = '9px Inter'; ctx.fillText('🧊 Замёрз в глыбе (Отогрейте факелом)', pet.x - 65, pet.y + 30);
         }
       }
 
       for (let pet of rescuedPets) {
-        ctx.beginPath(); ctx.arc(pet.x, pet.y, 10, 0, Math.PI * 2);
-        ctx.fillStyle = '#c084fc'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+        let cfg = PET_CONFIG[pet.id] || PET_CONFIG.fox;
+        let isBuffActive = pet.satiety > 0;
+
+        // Aura when fed & buff active
+        if (isBuffActive) {
+          ctx.beginPath();
+          ctx.arc(pet.x, pet.y, 16, 0, Math.PI * 2);
+          ctx.fillStyle = cfg.auraColor;
+          ctx.fill();
+        }
+
+        // Pet Circle
+        ctx.beginPath(); ctx.arc(pet.x, pet.y, 11, 0, Math.PI * 2);
+        ctx.fillStyle = cfg.color; ctx.fill();
+        ctx.strokeStyle = isBuffActive ? '#ffffff' : '#64748b'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Icon / Emoji
+        ctx.font = '12px Inter';
+        ctx.fillText(cfg.icon, pet.x - 7, pet.y + 4);
+
+        // Name & Satiety Label
+        let isHungry = pet.satiety <= 0;
+        let remainingSec = Math.max(0, Math.ceil((STARVATION_LIMIT_FRAMES - (pet.starveTimerFrames || 0)) / 60));
+        ctx.fillStyle = isHungry ? '#f87171' : '#ffffff';
+        ctx.font = 'bold 10px Inter';
+        let statusText = pet.mode === 'stay_home' ? '💤 Дома' : (isHungry ? `⚠️ Уходит через ${remainingSec}с! [F]` : `🍖 ${Math.round(pet.satiety)}%`);
+        ctx.fillText(`${cfg.name} [${statusText}]`, pet.x - (isHungry ? 55 : 35), pet.y - 16);
+
+        // Heart above pet if recently fed
+        if (pet.loveTimer > 0) {
+          ctx.font = '13px Inter';
+          ctx.fillText('❤️', pet.x - 5, pet.y - 28);
+        }
+
+        // Nearby interaction prompt
+        if (Math.hypot(player.x - pet.x, player.y - pet.y) < 80) {
+          ctx.fillStyle = '#fde047';
+          ctx.font = 'bold 9px Inter';
+          ctx.fillText('🍖 [Клик / F] Покормить', pet.x - 45, pet.y + 24);
+        }
       }
 
+      // Fox Relic Locator Compass Line (if Fox is rescued, following, and fed!)
+      let activeFox = rescuedPets.find(p => p.id === 'fox' && p.mode === 'follow' && p.satiety > 0);
+      if (activeFox) {
+        let uncollected = relics.filter(r => !r.collected);
+        if (uncollected.length > 0) {
+          let closestRelic = uncollected[0];
+          let minD = Math.hypot(player.x - closestRelic.x, player.y - closestRelic.y);
+          for (let r of uncollected) {
+            let d = Math.hypot(player.x - r.x, player.y - r.y);
+            if (d < minD) { minD = d; closestRelic = r; }
+          }
+          let angle = Math.atan2(closestRelic.y - player.y, closestRelic.x - player.x);
+          let arrowDist = 55;
+          let ax = player.x + Math.cos(angle) * arrowDist;
+          let ay = player.y + Math.sin(angle) * arrowDist;
+
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.75)';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(player.x, player.y);
+          ctx.lineTo(ax, ay);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 10px Inter';
+          ctx.fillText(`🦊 Нюх: Реликвия #${closestRelic.id} (${Math.round(minD)}м)`, ax - 45, ay - 10);
+        }
+      }
+
+      // Relics on Ground (Glowing Animated Crystals)
       for (let rel of relics) {
         if (!rel.collected) {
-          ctx.beginPath(); ctx.arc(rel.x, rel.y, 12, 0, Math.PI * 2);
-          ctx.fillStyle = '#06b6d4'; ctx.fill(); ctx.strokeStyle = '#cffaff'; ctx.lineWidth = 3; ctx.stroke();
+          let floatY = rel.y + Math.sin(tickCounter * 0.08 + rel.id) * 4;
+          ctx.beginPath(); ctx.arc(rel.x, floatY, 14, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(6, 182, 212, 0.25)'; ctx.fill();
+          ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+
+          ctx.beginPath(); ctx.arc(rel.x, floatY, 8, 0, Math.PI * 2);
+          ctx.fillStyle = '#06b6d4'; ctx.fill();
+
+          ctx.fillStyle = '#cffaff'; ctx.font = 'bold 10px Inter';
+          ctx.fillText(`💎 Реликвия #${rel.id}`, rel.x - 32, floatY - 16);
         }
       }
 
       for (let tur of turrets) {
-        ctx.fillStyle = '#334155'; ctx.fillRect(tur.x - 12, tur.y - 12, 24, 24);
-        ctx.fillStyle = '#0284c7'; ctx.beginPath(); ctx.arc(tur.x, tur.y, 8, 0, Math.PI * 2); ctx.fill();
+        if (tur.isHeavy) {
+          // Heavy double-barrel turret
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(tur.x - 14, tur.y - 14, 28, 28);
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(tur.x - 14, tur.y - 14, 28, 28);
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath(); ctx.arc(tur.x, tur.y, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fef08a';
+          ctx.font = 'bold 9px Inter';
+          ctx.fillText('⚡ Тяжелая (35)', tur.x - 28, tur.y - 18);
+        } else {
+          ctx.fillStyle = '#334155'; ctx.fillRect(tur.x - 12, tur.y - 12, 24, 24);
+          ctx.fillStyle = '#0284c7'; ctx.beginPath(); ctx.arc(tur.x, tur.y, 8, 0, Math.PI * 2); ctx.fill();
+        }
       }
 
       for (let m of mobs) {
@@ -1377,8 +4134,18 @@
       }
 
       for (let p of projectiles) {
-        ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; ctx.beginPath();
-        ctx.moveTo(p.x, p.y); ctx.lineTo(p.targetMob ? p.targetMob.x : p.tx, p.targetMob ? p.targetMob.y : p.ty); ctx.stroke();
+        if (p.isPlayerShot) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius || 4, 0, Math.PI * 2);
+          ctx.fillStyle = p.color || '#fde047';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; ctx.beginPath();
+          ctx.moveTo(p.x, p.y); ctx.lineTo(p.targetMob ? p.targetMob.x : p.tx, p.targetMob ? p.targetMob.y : p.ty); ctx.stroke();
+        }
       }
 
       for (let p of particles) { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 4, 4); }
@@ -1388,21 +4155,45 @@
         ctx.fillStyle = 'rgba(255, 120, 0, 0.18)'; ctx.fill();
       }
 
+      // Player circle & sprint aura
+      if (player.isSprinting) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
       ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = player.clothingLevel === 0 ? '#64748b' : (player.clothingLevel === 5 ? '#10b981' : (player.clothingLevel >= 3 ? '#a855f7' : '#38bdf8'));
       ctx.fill();
       ctx.strokeStyle = player.clothingLevel === 5 ? '#34d399' : '#ffffff';
       ctx.lineWidth = 3; ctx.stroke();
 
+      // In hands text
+      if (player.relicsInHand > 0) {
+        ctx.fillStyle = '#06b6d4'; ctx.font = 'bold 11px Inter';
+        ctx.fillText(`💎 В руках: ${player.relicsInHand} реликвий`, player.x - 45, player.y - 34);
+      }
+
       if (player.selectedSlotIdx >= 0) {
         let equipped = player.inventory[player.selectedSlotIdx];
         if (equipped && ITEM_CONFIG[equipped.id]) {
           let cfg = ITEM_CONFIG[equipped.id];
+          let extraInfo = '';
+          if (cfg.isWeapon) {
+            if (cfg.id === 'slingshot') {
+              extraInfo = ` [🪨 ${player.ammo.slingshot}]`;
+            } else if (cfg.id === 'revolver') {
+              extraInfo = ` [💥 ${player.ammo.revolver}]`;
+            }
+          }
           ctx.fillStyle = '#fef08a'; ctx.font = 'bold 11px Inter';
-          ctx.fillText(`В руках: ${cfg.icon} ${cfg.name}`, player.x - 25, player.y - 20);
+          ctx.fillText(`В руках: ${cfg.icon} ${cfg.name}${extraInfo}`, player.x - 32, player.y - 20);
         }
       }
 
+      // Blizzard / Fog overlay
       if (weatherState === 'Fog' || weatherState === 'Blizzard') {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         let density = weatherState === 'Blizzard' ? 120 : 40;
@@ -1420,20 +4211,68 @@
     gameLoop();
 
     function victory() {
-      document.getElementById('modal-title').innerText = '🏆 ПОБЕДА!';
-      document.getElementById('modal-desc').innerText = 'Вы успешно выжили в заснеженном лесу!';
-      document.getElementById('modal-overlay').style.display = 'flex';
+      openRebirthModal();
     }
 
     function gameOver() {
-      document.getElementById('modal-title').innerText = '💀 ВЫ ЗАМЕРЗЛИ ИЛИ ПОГИБЛИ!';
-      document.getElementById('modal-desc').innerText = 'Укрывайтесь в жилом доме или заимках!';
+      document.getElementById('modal-title').innerText = '💀 ВЫ ПОГИБЛИ!';
+      document.getElementById('modal-desc').innerHTML = `
+        <div style="font-size:13px; color:#cbd5e1; line-height:1.5;">
+          Все предметы в рюкзаке и одежда утеряны в снегах.<br>
+          <span style="color:#4ade80; font-weight:700;">🏡 Всё, что находилось внутри вашего дома (вещи на полу, дом и питомцы на лежанке) — сохранено!</span>
+        </div>
+      `;
+      let restartBtn = document.querySelector('#modal-box .action-btn');
+      if (restartBtn) restartBtn.innerText = '🔥 Возродиться в доме';
       document.getElementById('modal-overlay').style.display = 'flex';
     }
 
     function restartGame() {
       document.getElementById('modal-overlay').style.display = 'none';
-      initWorld();
+
+      // Player loses all backpack items and clothing
+      player.inventory = Array(player.maxSlots).fill(null);
+      player.selectedSlotIdx = -1;
+      player.ammo = { slingshot: 0, revolver: 0 };
+      player.clothingLevel = 0;
+      player.relicsInHand = 0;
+      player.hasTorch = false;
+      player.speedBuffTimer = 0;
+      player.isSprinting = false;
+      player.isExhausted = false;
+      player.health = 100;
+      player.warmth = 100;
+      player.hunger = 100;
+      player.stamina = 100;
+
+      // Keep only items inside the house
+      droppedGroundItems = droppedGroundItems.filter(it => isPositionInsidePlayerHouse(it.x, it.y));
+
+      // Rescued pets return safely to the house bed
+      for (let p of rescuedPets) {
+        p.mode = 'stay_home';
+      }
+
+      // Respawn player inside house
+      player.x = playerHouse.x + playerHouse.width / 2;
+      player.y = playerHouse.y + playerHouse.height / 2;
+
+      createSparks(player.x, player.y, '#38bdf8');
+      showInventoryWarning(`💀 Возрождение: Рюкзак пуст, одежда утеряна. Дом и вещи в доме сохранены!`);
+      saveGameState();
+      updateUI();
+    }
+
+    // Save game on browser close, reload, tab switch, or backgrounding
+    window.addEventListener('beforeunload', () => { saveGameState(); });
+    window.addEventListener('pagehide', () => { saveGameState(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) saveGameState();
+    });
+
+    // Check if new player onboarding should be shown on startup
+    if (!localStorage.getItem('survive_welcome_shown')) {
+      setTimeout(() => { openWelcomeModal(0); }, 300);
     }
   </script>
 </body>

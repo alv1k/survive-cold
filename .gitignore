@@ -3,3 +3,4 @@ scratch/
 *.metadata.json
 *.tmp
 .DS_Store
+*.lock

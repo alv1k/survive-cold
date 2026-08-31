@@ -1,6 +1,6 @@
 --[[
     CraftingRecipes.luau
-    Конфигурация Верстака (5 Уровней), Оружия, Боеприпасов и Рецептов для Roblox.
+    Конфигурация Верстака (5 Уровней), Оружия, Боеприпасов, Защиты и Рецептов для Roblox.
 --]]
 
 local CraftingRecipes = {}
@@ -21,34 +21,39 @@ CraftingRecipes.StackLimits = {
 	Soup = 3,
 	Pepper = 3,
 	Coffee = 3,
-	Steak = 3
+	Steak = 3,
+	RawMeat = 5,
+	RabbitFur = 5,
+	CampfireKit = 2,
+	RabbitTrap = 3,
+	SpikeTrap = 5
 }
 
 -- Конфигурация 5 уровней верстака
 CraftingRecipes.WorkbenchTiers = {
 	[1] = {
 		Name = "Уровень 1: Базовый",
-		Desc = "Базовые инструменты выживания: Факел, Копье",
+		Desc = "Базовые инструменты выживания: Факел, Копье, Походный костер, Капкан",
 		UpgradeCost = { Parts = 2, Planks = 3 },
-		UpgradeCostText = "2 ⚙️ Детали + 3 🪵 Доски"
+		UpgradeCostText = "2 ⚙️ + 3 🌲"
 	},
 	[2] = {
 		Name = "Уровень 2: Продвинутый",
 		Desc = "Дальний бой и расширение инвентаря: Рогатка, 7 Слотов",
 		UpgradeCost = { Parts = 3, WolfPelt = 2, Planks = 4 },
-		UpgradeCostText = "3 ⚙️ Детали + 2 🐺 Шкуры + 4 🪵 Доски"
+		UpgradeCostText = "3 ⚙️ + 2 🐺 + 4 🌲"
 	},
 	[3] = {
 		Name = "Уровень 3: Инженерный",
-		Desc = "Оборона и турели: Авто-Турель, Стена, Волчья жилетка",
+		Desc = "Оборона и турели: Авто-Турель, Шипастые полы, Стена, Волчья жилетка",
 		UpgradeCost = { Parts = 4, YetiPelt = 2, Planks = 5 },
-		UpgradeCostText = "4 ⚙️ Детали + 2 ❄️ Шкуры + 5 🪵 Досок"
+		UpgradeCostText = "4 ⚙️ + 2 ❄️ + 5 🌲"
 	},
 	[4] = {
 		Name = "Уровень 4: Оружейный",
 		Desc = "Огнестрельное оружие: Револьвер, Патроны, 9 Слотов",
 		UpgradeCost = { Parts = 5, YetiPelt = 3, Stone = 6 },
-		UpgradeCostText = "5 ⚙️ Деталей + 3 ❄️ Шкуры + 6 🪨 Камней"
+		UpgradeCostText = "5 ⚙️ + 3 ❄️ + 6 ⚪"
 	},
 	[5] = {
 		Name = "Уровень 5: Мастерский",
@@ -61,6 +66,24 @@ CraftingRecipes.WorkbenchTiers = {
 -- Чертежи крафта
 CraftingRecipes.Recipes = {
 	-- Уровень 1
+	CampfireKit = {
+		Tier = 1,
+		Category = "Gear",
+		DisplayName = "🔥 Походный костер",
+		Ingredients = { Branches = 3, Stone = 2 },
+		ResultItem = "CampfireKit",
+		ResultCount = 1,
+		Desc = "3 Ветки + 2 Камня (Согрев в поле на 90с + жарка мяса)"
+	},
+	RabbitTrap = {
+		Tier = 1,
+		Category = "Gear",
+		DisplayName = "🪤 Охотничий капкан",
+		Ingredients = { Branches = 3, Fiber = 2 },
+		ResultItem = "RabbitTrap",
+		ResultCount = 1,
+		Desc = "3 Ветки + 2 Волокна (Авто-ловля зайцев в лесу)"
+	},
 	Spear = {
 		Tier = 1,
 		Category = "Weapons",
@@ -102,7 +125,7 @@ CraftingRecipes.Recipes = {
 	StoneAmmo = {
 		Tier = 2,
 		Category = "Ammo",
-		DisplayName = "🪨 50x Снарядов",
+		DisplayName = "⚪ 50x Снарядов",
 		Ingredients = { Stone = 2 },
 		RequiredWeapon = "Slingshot",
 		IsDirectAmmo = true,
@@ -121,6 +144,16 @@ CraftingRecipes.Recipes = {
 	},
 
 	-- Уровень 3
+	SpikeTrap = {
+		Tier = 3,
+		Category = "Structures",
+		DisplayName = "📌 Шипастый Пол",
+		Ingredients = { Planks = 2, Stone = 2 },
+		ResultItem = "SpikeTrap",
+		ResultCount = 1,
+		Damage = 25,
+		Desc = "2 Доски + 2 Камня (Наносит урон и замедляет мобов)"
+	},
 	Wall = {
 		Tier = 3,
 		Category = "Structures",

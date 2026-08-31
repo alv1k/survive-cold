@@ -531,6 +531,146 @@
       font-size: 11px; color: #94a3b8; background: rgba(15, 23, 42, 0.6);
       padding: 8px 12px; border-radius: 8px;
     }
+  
+    /* Radar Minimap Container */
+    #minimap-container {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(56, 189, 248, 0.6);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 20px rgba(2, 132, 199, 0.4), inset 0 0 15px rgba(0,0,0,0.6);
+      z-index: 40;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #minimap-canvas {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+    }
+    #minimap-north {
+      position: absolute;
+      top: 3px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #38bdf8;
+      pointer-events: none;
+      text-shadow: 0 0 4px #000;
+    }
+
+    /* Sound Control Button */
+    #sound-toggle-btn {
+      position: absolute;
+      top: 162px;
+      right: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      transition: all 0.2s;
+    }
+    #sound-toggle-btn:hover {
+      background: rgba(2, 132, 199, 0.4);
+      border-color: #38bdf8;
+    }
+
+    /* Mobile Touch Controls */
+    #mobile-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100vw;
+      height: 200px;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+    }
+    #touch-joystick-zone {
+      position: absolute;
+      bottom: 20px;
+      left: 25px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.45);
+      border: 2px dashed rgba(56, 189, 248, 0.4);
+      pointer-events: auto;
+      touch-action: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #touch-joystick-knob {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+      transform: translate(0, 0);
+      pointer-events: none;
+    }
+    #touch-buttons-zone {
+      position: absolute;
+      bottom: 20px;
+      right: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .touch-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .touch-action-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(56, 189, 248, 0.5);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      user-select: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+    .touch-action-btn:active {
+      transform: scale(0.92);
+      background: #0284c7;
+      border-color: #38bdf8;
+    }
+    .touch-action-btn.attack {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      border-color: #f87171;
+    }
+
   </style>
 </head>
 <body>
@@ -662,9 +802,59 @@
       </div>
     </div>
 
+    
+    <!-- Radar Minimap -->
+    <div id="minimap-container">
+      <canvas id="minimap-canvas" width="140" height="140"></canvas>
+      <div id="minimap-north">N</div>
+    </div>
+
+    
+    <!-- Multiplayer Network Badge (Top Right) -->
+    <div id="net-status-badge" style="position:absolute; top:12px; right:170px; background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:6px 14px; font-size:11px; font-weight:800; color:#38bdf8; display:flex; align-items:center; gap:8px; z-index:30; pointer-events:auto; backdrop-filter:blur(8px);">
+      <span id="net-indicator" style="width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e;"></span>
+      <span id="net-status-text">🟢 Мультиплеер (1 онлайн)</span>
+      <button class="action-btn" style="padding:2px 8px; font-size:10px; background:#334155; margin-left:4px;" onclick="changePlayerNickname()">✏️ Ник</button>
+    </div>
+
+    <!-- In-game Multiplayer Chat UI (Bottom Left) -->
+    <div id="chat-container" style="position:absolute; bottom:140px; left:20px; width:340px; max-height:220px; z-index:35; pointer-events:auto; display:flex; flex-direction:column; gap:6px;">
+      <div id="chat-messages" style="display:flex; flex-direction:column; gap:4px; max-height:160px; overflow-y:auto; padding:6px 10px; background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.1); border-radius:10px; backdrop-filter:blur(6px); font-size:11.5px; color:#e2e8f0; pointer-events:auto;">
+        <div style="color:#94a3b8; font-style:italic;">💬 Нажмите Enter, чтобы открыть чат...</div>
+      </div>
+      <div id="chat-input-row" style="display:none; gap:6px;">
+        <input type="text" id="chat-input" placeholder="Напишите сообщение..." maxlength="90" style="flex:1; background:rgba(15,23,42,0.9); border:1px solid #38bdf8; border-radius:8px; padding:6px 12px; font-size:12px; color:#fff; outline:none;" />
+        <button class="action-btn" style="padding:6px 12px; font-size:11px; background:#0284c7;" onclick="sendChatMessage()">Отправить</button>
+      </div>
+    </div>
+
+    <!-- Sound Toggle Button -->
+    <button id="sound-toggle-btn" onclick="toggleSound()">
+      <span id="sound-icon">🔊</span> <span id="sound-text">Звук: ВКЛ</span>
+    </button>
+
+    <!-- Mobile Virtual Controls (Activated on touch devices) -->
+    <div id="mobile-controls">
+      <div id="touch-joystick-zone">
+        <div id="touch-joystick-knob"></div>
+      </div>
+      <div id="touch-buttons-zone">
+        <div class="touch-btn-row">
+          <div class="touch-action-btn" id="mbtn-sprint">⚡<span>Бег</span></div>
+          <div class="touch-action-btn" id="mbtn-feed">🍖<span>Корм</span></div>
+          <div class="touch-action-btn" id="mbtn-pet">🐾<span>Спутник</span></div>
+        </div>
+        <div class="touch-btn-row">
+          <div class="touch-action-btn" id="mbtn-drop">📦<span>Выброс</span></div>
+          <div class="touch-action-btn" id="mbtn-interact">🖐️<span>Действие</span></div>
+          <div class="touch-action-btn attack" id="mbtn-attack">⚔️<span>Удар</span></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Mannequin Clothing Shop Modal -->
     <div id="shop-modal">
-      <div class="shop-title">🏪 МАГАЗИН ОДЕЖДЫ (ВСЕ КОСТЮМЫ 1-4 БЕСПЛАТНЫЕ!)</div>
+      <div class="shop-title">🏪 МАГАЗИН ОДЕЖДЫ И СНАРЯЖЕНИЯ</div>
       <div class="mannequins-grid" id="mannequins-container"></div>
       <button class="action-btn" style="padding:6px 20px; font-size:12px;" onclick="closeShop()">Закрыть магазин</button>
     </div>
@@ -677,6 +867,26 @@
       <button class="action-btn" style="padding:6px 20px; font-size:12px;" onclick="closeFoodShop()">Закрыть магазин</button>
     </div>
 
+    
+    <!-- Rebirth Perk Tree Modal -->
+    <div id="perks-modal" style="position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(11,15,25,0.92); backdrop-filter:blur(16px); z-index:100; display:none; justify-content:center; align-items:center;">
+      <div style="background:rgba(15,23,42,0.96); border:2px solid #a855f7; border-radius:24px; padding:24px 32px; text-align:center; max-width:760px; width:92vw; box-shadow:0 0 60px rgba(168,85,247,0.4); max-height:88vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px; margin-bottom:16px;">
+          <div style="text-align:left;">
+            <div style="font-size:22px; font-weight:900; color:#c084fc;">🎖️ ДЕРЕВО ТАЛАНТОВ ПЕРЕРОЖДЕНИЙ</div>
+            <div style="font-size:12px; color:#94a3b8;">Всего циклов: <b id="perk-rebirth-level" style="color:#38bdf8;">#0 / 15</b> • Доступно очков: <b id="perk-points-count" style="color:#fde047; font-size:14px;">0</b></div>
+          </div>
+          <button class="action-btn" style="padding:5px 14px; font-size:11px; background:#475569;" onclick="resetAllPerks()">🔄 Сбросить очки</button>
+        </div>
+
+        <div id="perks-tree-container" style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px; text-align:left;">
+          <!-- Generated dynamically by renderPerksTree() -->
+        </div>
+
+        <button class="action-btn" style="padding:10px 30px; font-size:13px; background:#334155;" onclick="closePerksModal()">Закрыть дерево талантов</button>
+      </div>
+    </div>
+    
     <!-- Bunker Rebirth / Completion Modal -->
     <div id="rebirth-modal" style="position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(11,15,25,0.92); backdrop-filter:blur(16px); z-index:100; display:none; justify-content:center; align-items:center;">
       <div style="background:rgba(15,23,42,0.95); border:2px solid #06b6d4; border-radius:20px; padding:32px 42px; text-align:center; max-width:520px; box-shadow:0 0 60px rgba(6,182,212,0.4);">
@@ -689,7 +899,7 @@
           <div style="display:flex; justify-content:space-between;"><span>🧥 Уровень экипировки:</span><b id="rebirth-stat-cloth" style="color:#34d399;">Lvl 0</b></div>
           <div style="border-top:1px solid rgba(255,255,255,0.15); margin-top:4px; padding-top:10px; display:flex; justify-content:space-between; font-weight:800;">
             <span>👑 Завершено прохождений: <b id="rebirth-stat-current">0</b></span>
-            <span style="color:#10b981;">➔ Следующий Цикл: <b id="rebirth-stat-next">#1</b></span>
+            <span style="color:#10b981;">➔ Следующий Цикл: <b id="rebirth-stat-next">#1 / 15</b></span>
           </div>
           <div style="font-size:11px; color:#67e8f9; background:rgba(6,182,212,0.12); padding:10px; border-radius:8px; border:1px solid rgba(6,182,212,0.3); line-height:1.4;">
             ✨ <b>Постоянные бонусы перерождения:</b> +5% к базовой скорости, +10% к стойкости против мороза и бонусные стартовые припасы!
@@ -924,6 +1134,73 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
+    // --- Web Audio FX Synthesizer ---
+    let audioCtx = null;
+    let isSoundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleSound() {
+      isSoundEnabled = !isSoundEnabled;
+      const icon = document.getElementById('sound-icon');
+      const text = document.getElementById('sound-text');
+      if (icon && text) {
+        icon.innerText = isSoundEnabled ? '🔊' : '🔇';
+        text.innerText = isSoundEnabled ? 'Звук: ВКЛ' : 'Звук: ВЫКЛ';
+      }
+    }
+
+    function playSoundTone(freq, type, duration, gainVal, rampTime = 0.01) {
+      if (!isSoundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal || 0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playEatFoodAudio() {
+      playSoundTone(440, 'triangle', 0.12, 0.15);
+      setTimeout(() => playSoundTone(587, 'triangle', 0.18, 0.15), 90);
+    }
+
+    function playRelicChimeAudio() {
+      playSoundTone(523, 'sine', 0.3, 0.25);
+      setTimeout(() => playSoundTone(659, 'sine', 0.35, 0.25), 100);
+      setTimeout(() => playSoundTone(784, 'sine', 0.45, 0.3), 200);
+    }
+
+    function playMeleeAttackAudio() {
+      playSoundTone(160, 'sawtooth', 0.08, 0.2);
+    }
+
+    function playRangedAttackAudio(isGun = false) {
+      if (isGun) {
+        playSoundTone(90, 'square', 0.15, 0.35);
+      } else {
+        playSoundTone(320, 'sine', 0.09, 0.2);
+      }
+    }
+
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -946,6 +1223,11 @@
       bar: 3,
       bread: 3,
       chips: 3,
+      campfire_kit: 2,
+      spike_trap: 5,
+      raw_meat: 5,
+      rabbit_trap: 3,
+      rabbit_fur: 5,
       soup: 3,
       pepper: 3,
       coffee: 3,
@@ -1035,6 +1317,296 @@
     let rebirthCount = parseInt(localStorage.getItem('survive_the_cold_rebirths') || '0', 10);
     let runTimerSeconds = 0;
     let runTimerInterval = null;
+    let isGameStarted = false;
+
+    // --- REBALANCED 15-REBIRTH PERK TREE (5 PTS PER TIER) ---
+    const MAX_REBIRTH_LEVEL = 15;
+
+    const TALENT_CONFIG = {
+      // --- 🌱 ТИР 1: Базовые навыки выживания (Rebirth 0+, макс 5 очков в тире) ---
+      lumberjack: {
+        name: 'Лесоруб-Добытчик',
+        icon: '🪵',
+        tier: 1,
+        minRebirth: 0,
+        maxRank: 3,
+        color: '#4ade80',
+        ranks: [
+          { desc: '+20% шанс получить +1 бонусный ресурс при рубке и сборе.' },
+          { desc: '+30% шанс получить +1 бонусный ресурс при рубке и сборе.' },
+          { desc: '+40% шанс получить +1 бонусный ресурс при рубке и сборе.' }
+        ]
+      },
+      warmblood: {
+        name: 'Горячая Кровь',
+        icon: '🔥',
+        tier: 1,
+        minRebirth: 0,
+        maxRank: 3,
+        color: '#f97316',
+        ranks: [
+          { desc: '+5% постоянная защита от холода.' },
+          { desc: '+10% постоянная защита от холода.' },
+          { desc: '+15% постоянная защита от холода.' }
+        ]
+      },
+      deep_pockets: {
+        name: 'Глубокие Карманы',
+        icon: '🎒',
+        tier: 1,
+        minRebirth: 0,
+        maxRank: 1,
+        color: '#38bdf8',
+        ranks: [
+          { desc: 'Лимит стака природных ресурсов +1 шт., еды +1 шт.' }
+        ]
+      },
+
+      // --- ❄️ ТИР 2: Ветеранские таланты тайги (Rebirth 5+, макс 5 очков в тире) ---
+      sharpshooter: {
+        name: 'Меткий Охотник',
+        icon: '🏹',
+        tier: 2,
+        minRebirth: 5,
+        maxRank: 3,
+        color: '#38bdf8',
+        ranks: [
+          { desc: 'Урон всего оружия (копье, рогатка, револьвер) +20%.' },
+          { desc: 'Урон всего оружия +40%, 25% шанс не потратить боеприпас при выстреле.' },
+          { desc: 'Урон всего оружия +65%, 40% шанс сохранить боеприпас при выстреле!' }
+        ]
+      },
+      beastmaster: {
+        name: 'Повелитель Зверей',
+        icon: '🦊',
+        tier: 2,
+        minRebirth: 5,
+        maxRank: 3,
+        color: '#c084fc',
+        ranks: [
+          { desc: 'Сытость питомцев падает на 15% медленнее.' },
+          { desc: 'Сытость питомцев падает на 30% медленнее.' },
+          { desc: 'Питомцы НИКОГДА не убегают в лес (иммунитет к побегу), а при голоде просто отключается бафф!' }
+        ]
+      },
+
+      // --- ⛩️ ТИР 3: Элитная фортификация и оборона (Rebirth 10+, макс 5 очков в тире) ---
+      fortress: {
+        name: 'Инженер-Фортификатор',
+        icon: '🛡️',
+        tier: 3,
+        minRebirth: 10,
+        maxRank: 3,
+        color: '#eab308',
+        ranks: [
+          { desc: 'Прочность защитных стен и турелей +50%, урон турелей +25%.' },
+          { desc: 'Турели стреляют на 35% дальше и на 30% быстрее.' },
+          { desc: 'Турели наносят двойной урон (x2) и автоматически восстанавливают здоровье!' }
+        ]
+      },
+      spike_master: {
+        name: 'Шипастые Полы',
+        icon: '📌',
+        tier: 3,
+        minRebirth: 10,
+        maxRank: 3,
+        color: '#f43f5e',
+        ranks: [
+          { desc: 'Шипастые полы наносят 25 урона врагам при наступлении.' },
+          { desc: 'Шипастые полы наносят 45 урона и замедляют мобов на 40%.' },
+          { desc: 'Шипастые полы наносят 75 урона и никогда не ломаются от врагов!' }
+        ]
+      }
+    };
+
+    let playerPerks = JSON.parse(localStorage.getItem('survive_the_cold_perks') || '{}');
+
+    function getTotalSpentPerkPoints() {
+      let sum = 0;
+      for (let k in playerPerks) {
+        if (typeof playerPerks[k] === 'number') sum += playerPerks[k];
+        else if (playerPerks[k] === true) sum += 1;
+      }
+      return sum;
+    }
+
+    function getPointsSpentInTier(tierId) {
+      let sum = 0;
+      for (let k in playerPerks) {
+        let cfg = TALENT_CONFIG[k];
+        if (cfg && cfg.tier === tierId) {
+          if (typeof playerPerks[k] === 'number') sum += playerPerks[k];
+          else if (playerPerks[k] === true) sum += 1;
+        }
+      }
+      return sum;
+    }
+
+    function getAvailablePerkPoints() {
+      return Math.max(0, Math.min(MAX_REBIRTH_LEVEL, rebirthCount) - getTotalSpentPerkPoints());
+    }
+
+    function renderPerksTree() {
+      const container = document.getElementById('perks-tree-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const availablePts = getAvailablePerkPoints();
+      const ptsEl = document.getElementById('perk-points-count');
+      const rebEl = document.getElementById('perk-rebirth-level');
+      if (ptsEl) ptsEl.innerText = availablePts;
+      if (rebEl) rebEl.innerText = '#' + Math.min(MAX_REBIRTH_LEVEL, rebirthCount) + ' / ' + MAX_REBIRTH_LEVEL + (rebirthCount >= MAX_REBIRTH_LEVEL ? ' (МАКС 👑)' : '');
+
+      const tiers = [
+        { id: 1, title: '🌱 ТИР 1: Базовые навыки выживания (Rebirth 0+)', minRebirth: 0, maxTierPts: 5 },
+        { id: 2, title: '❄️ ТИР 2: Ветеранские таланты тайги (Требуется Rebirth 5+)', minRebirth: 5, maxTierPts: 5 },
+        { id: 3, title: '⛩️ ТИР 3: Элитная фортификация и оборона (Требуется Rebirth 10+)', minRebirth: 10, maxTierPts: 5 }
+      ];
+
+      tiers.forEach(tier => {
+        const isTierUnlocked = rebirthCount >= tier.minRebirth;
+        const spentInTier = getPointsSpentInTier(tier.id);
+        const tierBlock = document.createElement('div');
+        tierBlock.style.background = isTierUnlocked ? 'rgba(30,41,59,0.7)' : 'rgba(15,23,42,0.6)';
+        tierBlock.style.border = isTierUnlocked ? '1px solid rgba(255,255,255,0.15)' : '1px dashed rgba(239,68,68,0.3)';
+        tierBlock.style.borderRadius = '14px';
+        tierBlock.style.padding = '14px';
+
+        const tierHeader = document.createElement('div');
+        tierHeader.style.display = 'flex';
+        tierHeader.style.justifyContent = 'space-between';
+        tierHeader.style.alignItems = 'center';
+        tierHeader.style.marginBottom = '10px';
+        tierHeader.innerHTML = `
+          <span style="font-weight:800; font-size:13px; color:${isTierUnlocked ? '#e2e8f0' : '#f87171'};">${tier.title} ${isTierUnlocked ? '🔓' : '🔒'}</span>
+          <span style="font-size:11px; font-weight:800; color:${spentInTier >= tier.maxTierPts ? '#fde047' : '#94a3b8'};">Очков вложено: ${spentInTier} / ${tier.maxTierPts}</span>
+        `;
+        tierBlock.appendChild(tierHeader);
+
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = '1fr 1fr';
+        grid.style.gap = '10px';
+
+        for (let perkKey in TALENT_CONFIG) {
+          const cfg = TALENT_CONFIG[perkKey];
+          if (cfg.tier !== tier.id) continue;
+
+          let curRank = 0;
+          if (typeof playerPerks[perkKey] === 'number') curRank = playerPerks[perkKey];
+          else if (playerPerks[perkKey] === true) curRank = 1;
+
+          const isMaxed = curRank >= cfg.maxRank;
+          const nextRankDesc = isMaxed ? cfg.ranks[cfg.maxRank - 1].desc : cfg.ranks[curRank].desc;
+
+          let pipsHtml = '';
+          for (let p = 1; p <= cfg.maxRank; p++) {
+            pipsHtml += p <= curRank ? '★ ' : '☆ ';
+          }
+
+          const card = document.createElement('div');
+          card.style.background = 'rgba(15,23,42,0.85)';
+          card.style.border = '1px solid ' + (curRank > 0 ? cfg.color : 'rgba(255,255,255,0.08)');
+          card.style.borderRadius = '10px';
+          card.style.padding = '12px';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.justifyContent = 'space-between';
+
+          let btnText = '';
+          let btnDisabled = false;
+          let btnBg = cfg.color;
+
+          if (!isTierUnlocked) {
+            btnText = 'Нужен Rebirth ' + cfg.minRebirth + '+ 🔒';
+            btnDisabled = true;
+            btnBg = '#334155';
+          } else if (isMaxed) {
+            btnText = '✅ МАКСИМУМ (' + curRank + '/' + cfg.maxRank + ')';
+            btnDisabled = true;
+            btnBg = '#475569';
+          } else if (spentInTier >= tier.maxTierPts) {
+            btnText = 'Лимит тира (5/5) 🔒';
+            btnDisabled = true;
+            btnBg = '#334155';
+          } else if (availablePts <= 0) {
+            btnText = '+ Прокачать (Нужно 1 Очко)';
+            btnDisabled = true;
+            btnBg = '#334155';
+          } else {
+            btnText = '+ Изучить Ранг ' + (curRank + 1) + ' (1 Очко)';
+            btnDisabled = false;
+          }
+
+          card.innerHTML = 
+            '<div>' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+                '<span style="font-weight:800; color:' + cfg.color + '; font-size:13px;">' + cfg.icon + ' ' + cfg.name + '</span>' +
+                '<span style="font-size:11px; color:#fde047; font-weight:800;">' + pipsHtml + ' (' + curRank + '/' + cfg.maxRank + ')</span>' +
+              '</div>' +
+              '<div style="font-size:11px; color:#cbd5e1; line-height:1.4; margin-bottom:8px;">' +
+                (curRank > 0 ? '<span style="color:#a7f3d0;">Текущий: ' + cfg.ranks[curRank - 1].desc + '</span><br>' : '') +
+                (!isMaxed ? '<span style="color:#94a3b8;">' + (curRank > 0 ? 'Следующий: ' : '') + nextRankDesc + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<button class="action-btn" style="padding:6px 12px; font-size:11px; background:' + btnBg + ';" ' + (btnDisabled ? 'disabled' : '') + ' onclick="buyPerk(\'' + perkKey + '\')">' +
+              btnText +
+            '</button>';
+
+          grid.appendChild(card);
+        }
+
+        tierBlock.appendChild(grid);
+        container.appendChild(tierBlock);
+      });
+    }
+
+    function openPerksModal() {
+      renderPerksTree();
+      document.getElementById('perks-modal').style.display = 'flex';
+    }
+
+    function closePerksModal() {
+      document.getElementById('perks-modal').style.display = 'none';
+    }
+
+    function buyPerk(perkKey) {
+      const cfg = TALENT_CONFIG[perkKey];
+      if (!cfg) return;
+      if (rebirthCount < cfg.minRebirth) return;
+
+      const spentInTier = getPointsSpentInTier(cfg.tier);
+      if (spentInTier >= 5) {
+        showInventoryWarning('⚠️ В этом Тире уже вложен максимум (5 из 5 очков)!');
+        return;
+      }
+
+      let curRank = typeof playerPerks[perkKey] === 'number' ? playerPerks[perkKey] : (playerPerks[perkKey] ? 1 : 0);
+      if (curRank >= cfg.maxRank) return;
+
+      const availablePts = getAvailablePerkPoints();
+      if (availablePts <= 0) return;
+
+      playerPerks[perkKey] = curRank + 1;
+      localStorage.setItem('survive_the_cold_perks', JSON.stringify(playerPerks));
+      playRelicChimeAudio();
+      createSparks(player.x, player.y, cfg.color || '#c084fc');
+      showInventoryWarning('🎖️ Талант ' + cfg.name + ' прокачан до Ранга ' + (curRank + 1) + '/' + cfg.maxRank + '!');
+      renderPerksTree();
+      updateUI();
+    }
+
+    function resetAllPerks() {
+      if (Object.keys(playerPerks).length === 0) return;
+      if (confirm('Сбросить все очки талантов и вернуть их для перераспределения?')) {
+        playerPerks = {};
+        localStorage.removeItem('survive_the_cold_perks');
+        createSparks(player.x, player.y, '#38bdf8');
+        showInventoryWarning('🔄 Все очки талантов сброшены и возвращены!');
+        renderPerksTree();
+        updateUI();
+      }
+    }
 
     let player = {
       id: 'Player_1',
@@ -1065,6 +1637,8 @@
       relicsInHand: 0,
       hasTorch: false,
       clothingLevel: 0,
+      hasSnowshoes: false,
+      hasHuntingSkis: false,
       speedBuffTimer: 0,
       isSprinting: false,
       isExhausted: false
@@ -1171,12 +1745,20 @@
     let weatherTimer = 0;
     let weatherState = 'Clear';
     let prevWeatherState = 'Clear';
-    let weatherDuration = { Clear: 2400, Fog: 600, Blizzard: 1000 };
+    let weatherDuration = { Clear: 2400, Fog: 600, Blizzard: 1000,
+      Aurora: 800 };
 
     let respawnTimerFrames = 0;
     const RESPAWN_INTERVAL_FRAMES = 600 * 60;
 
     let droppedGroundItems = [];
+    let fieldCampfires = []; // Временные походные костры в диком поле
+    let fieldTraps = []; // Охотничьи капканы-силки
+    let spikeTraps = []; // Шипастые полы
+    let wildRabbits = []; // Дикие полярные зайчики
+    let activeAirDrops = []; // Активные сброшенные аирдропы
+    let airDropTimerFrames = 0;
+    const AIRDROP_INTERVAL_FRAMES = 60 * 300; // Раз в 5 минут (300 сек)
     let groundBranches = [], bushes = [], rocks = [], groundPlanks = [], groundFood = [], relics = [], heatSources = [], turrets = [], walls = [], mobs = [], frozenPets = [], rescuedPets = [], particles = [], projectiles = [];
     let partChests = [];
     let workbenchLevel = 1;
@@ -1555,7 +2137,29 @@
       updateUI();
     }
 
+    
+    // Spawn Wild Rabbits across the safe west grove
+    function spawnWildRabbits() {
+      wildRabbits = [];
+      for (let i = 0; i < 16; i++) {
+        wildRabbits.push({
+          id: i + 1,
+          x: 1200 + Math.random() * 4500,
+          y: 1200 + Math.random() * (MAP_SIZE - 2400),
+          hp: 15,
+          maxHp: 15,
+          speed: 2.6,
+          hopTimer: Math.random() * 60,
+          hopOffset: 0,
+          angle: Math.random() * Math.PI * 2,
+          isFleeing: false
+        });
+      }
+    }
+    spawnWildRabbits();
+
     function spawnWorldResourcesHalfDensity() {
+      spawnWildRabbits();
       groundBranches = []; bushes = []; rocks = []; groundPlanks = [];
 
       let houseCenterX = playerHouse.x + playerHouse.width / 2;
@@ -1736,6 +2340,7 @@
     }
 
     window.addEventListener('click', (e) => {
+      initAudio();
       const worldClickX = e.clientX - (canvas.width/2 - player.x);
       const worldClickY = e.clientY - (canvas.height/2 - player.y);
       
@@ -1787,7 +2392,33 @@
         }
 
         // Check hits on mobs
+        // Tick and trigger Spike Traps
+      let smRank = playerPerks.spike_master || 0;
+      let spikeDamage = smRank >= 3 ? 75 : (smRank >= 2 ? 45 : 25);
+      let spikeSlow = smRank >= 2 ? 0.60 : 1.0;
+
+      for (let i = 0; i < spikeTraps.length; i++) {
+        let st = spikeTraps[i];
         for (let mob of mobs) {
+          if (mob.hp > 0 && Math.hypot(mob.x - st.x, mob.y - st.y) < 32) {
+            if (tickCounter % 30 === 0) {
+              mob.hp -= spikeDamage;
+              mob.speed *= spikeSlow;
+              createSparks(mob.x, mob.y, '#ef4444');
+              if (smRank < 3) {
+                st.durability--;
+                if (st.durability <= 0) {
+                  spikeTraps.splice(i, 1);
+                  i--;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      for (let mob of mobs) {
           let dist = Math.hypot(mob.x - attackX, mob.y - attackY);
           if (dist < mob.radius + 35) {
             mob.hp -= effectiveDamage;
@@ -2292,7 +2923,7 @@
         document.getElementById('rebirth-stat-pets').innerText = `${rescuedPets.length} спасенных`;
         document.getElementById('rebirth-stat-cloth').innerText = `Lvl ${player.clothingLevel} (${CLOTHING_TIERS[player.clothingLevel].name})`;
         document.getElementById('rebirth-stat-current').innerText = `${rebirthCount}`;
-        document.getElementById('rebirth-stat-next').innerText = `#${rebirthCount + 1}`;
+        document.getElementById('rebirth-stat-next').innerText = rebirthCount >= MAX_REBIRTH_LEVEL ? 'МАКС (15/15 👑)' : `#${rebirthCount + 1} / 15`;
         document.getElementById('rebirth-modal').style.display = 'flex';
       }
     }
@@ -2726,6 +3357,31 @@
       `;
       gearContainer.appendChild(bp7Btn);
 
+      // Level 3: Spike Trap
+      let canSpike = workbenchLevel >= 3 && getItemCount('planks') >= 2 && getItemCount('stone') >= 2;
+      let spikeBtn = document.createElement('button');
+      spikeBtn.className = `craft-btn ${workbenchLevel < 3 ? 'locked' : ''}`;
+      spikeBtn.disabled = !canSpike;
+      spikeBtn.onclick = () => {
+        if (getItemCount('planks') >= 2 && getItemCount('stone') >= 2) {
+          removeItem('planks', 2); removeItem('stone', 2);
+          tryAddItemToInventory('spike_trap', 1);
+          createSparks(player.x, player.y, '#f43f5e');
+          showInventoryWarning('📌 Скрафчен Шипастый пол! Установите через хотбар.');
+          updateUI();
+          openWorkbench();
+        }
+      };
+      spikeBtn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-weight:900; font-size:12px;">📌 Шипастый Пол</span>
+          <span style="font-size:9px; color:#38bdf8;">[Ур. 3]</span>
+        </div>
+        <span class="craft-cost">2 Доски + 2 Камня</span>
+        <span class="craft-bonus">${workbenchLevel < 3 ? '🔒 Верстак Ур. 3' : 'Наносит урон и замедляет мобов'}</span>
+      `;
+      gearContainer.appendChild(spikeBtn);
+
       // Level 3: Wall
       let canWall = workbenchLevel >= 3 && getItemCount('planks') >= 3;
       let wallBtn = document.createElement('button');
@@ -3040,7 +3696,10 @@
       const ammoHudBadge = document.getElementById('ammo-hud-badge');
       if (ammoHudBadge) ammoHudBadge.innerHTML = `🪨 ${player.ammo.slingshot} | 💥 ${player.ammo.revolver}`;
       document.getElementById('altar-relic-badge').innerText = `${altar.placedRelics}/7 на Алтаре`;
-      document.getElementById('hand-relic-badge').innerText = `${player.relicsInHand} в руках`;
+      document.getElementById('hand-relic-badge').innerText = `${player.relicsInHand}/7 в руках`;
+      let curAvailPts = getAvailablePerkPoints();
+      const hudPerkEl = document.getElementById('hud-perk-pts');
+      if (hudPerkEl) hudPerkEl.innerText = curAvailPts;
       document.getElementById('pet-count').innerText = rescuedPets.length;
 
       const clothingInfo = CLOTHING_TIERS[player.clothingLevel];
@@ -3136,7 +3795,7 @@
       if (altarPrompt) {
         if (distToAltar < altar.radius + 40) {
           document.getElementById('altar-prompt-placed').innerText = altar.placedRelics;
-          document.getElementById('altar-prompt-hand').innerText = player.relicsInHand;
+          document.getElementById('altar-prompt-hand').innerText = `${player.relicsInHand} (макс. ${getMaxRelicsCapacity()})`;
           altarPrompt.style.display = 'block';
         } else {
           altarPrompt.style.display = 'none';
@@ -3339,7 +3998,7 @@
       if (player.speedBuffTimer > 0) player.speedBuffTimer--;
       const coffeeMultiplier = player.speedBuffTimer > 0 ? 1.35 : 1.0;
       const petSpeedMultiplier = wolfBuffActive ? 1.10 : 1.0; // 🐺 Wolf speed buff!
-      const effectiveSpeed = (PLAYER_SPEED + (rebirthCount * 0.18)) * coffeeMultiplier * sprintMultiplier * petSpeedMultiplier;
+      const effectiveSpeed = (PLAYER_SPEED + (Math.min(15, rebirthCount) * 0.04)) * coffeeMultiplier * sprintMultiplier * petSpeedMultiplier;
 
       player.x = Math.max(30, Math.min(MAP_SIZE - 30, player.x + dx * effectiveSpeed));
       player.y = Math.max(30, Math.min(MAP_SIZE - 30, player.y + dy * effectiveSpeed));
@@ -3374,9 +4033,11 @@
         spawnPostBlizzardBigfoot();
       }
 
-      let ambientDecay = weatherState === 'Blizzard' ? 0.35 : (weatherState === 'Fog' ? 0.15 : 0.05);
+      let ambientDecay = weatherState === 'Blizzard' ? 0.35 : (weatherState === 'Fog' ? 0.15 : (weatherState === 'Aurora' ? -0.15 : 0.05));
       const clothingProtection = CLOTHING_TIERS[player.clothingLevel].protection;
-      const rebirthProtection = Math.min(0.40, rebirthCount * 0.05);
+      const wRank = playerPerks.warmblood || 0;
+      const perkColdProt = wRank >= 3 ? 0.15 : (wRank >= 2 ? 0.10 : (wRank >= 1 ? 0.05 : 0));
+      const rebirthProtection = Math.min(0.40, (Math.min(15, rebirthCount) * 0.02) + perkColdProt);
       ambientDecay = ambientDecay * (1 - clothingProtection) * (1 - rebirthProtection);
 
       let heatGain = player.hasTorch ? 0.25 : 0;
@@ -3642,7 +4303,10 @@
           p.y += p.vy;
           for (let mob of mobs) {
             if (Math.hypot(mob.x - p.x, mob.y - p.y) < mob.radius + (p.radius || 4)) {
-              mob.hp -= p.damage;
+              let ssRank = playerPerks.sharpshooter || 0;
+              let ssMult = ssRank >= 3 ? 1.65 : (ssRank >= 2 ? 1.40 : (ssRank >= 1 ? 1.20 : 1.0));
+              let totalDmg = Math.floor(p.damage * ssMult);
+              mob.hp -= totalDmg;
               mob.isAggro = true;
               createSparks(mob.x, mob.y, '#ef4444');
               if (mob.hp <= 0) {
@@ -3699,7 +4363,7 @@
       ctx.fillStyle = 'rgba(30, 58, 138, 0.45)'; ctx.fillRect(shop.x, shop.y, shop.width, shop.height);
       ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(shop.x, shop.y, shop.width, shop.height);
       ctx.fillStyle = '#93c5fd'; ctx.font = 'bold 12px Inter';
-      ctx.fillText('🏪 МАГАЗИН ОДЕЖДЫ (БЕСПЛАТНЫЕ КОСТЮМЫ)', shop.x + 4, shop.y + 20);
+      ctx.fillText('🏪 МАГАЗИН ОДЕЖДЫ И СНАРЯЖЕНИЯ', shop.x + 4, shop.y + 20);
 
       for (let i = 0; i < shop.mannequins.length; i++) {
         let m = shop.mannequins[i];
@@ -4173,7 +4837,7 @@
       // In hands text
       if (player.relicsInHand > 0) {
         ctx.fillStyle = '#06b6d4'; ctx.font = 'bold 11px Inter';
-        ctx.fillText(`💎 В руках: ${player.relicsInHand} реликвий`, player.x - 45, player.y - 34);
+        ctx.fillText(`💎 В руках: ${player.relicsInHand}/7 реликвий`, player.x - 45, player.y - 34);
       }
 
       if (player.selectedSlotIdx >= 0) {

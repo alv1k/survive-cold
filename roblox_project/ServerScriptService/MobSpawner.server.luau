@@ -91,7 +91,7 @@ local function spawnMob(mobType, spawnPos)
 			local prompt = Instance.new("ProximityPrompt", lootPart)
 			prompt.ActionText = string.format("Подобрать %s (x%d)", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count)
 			prompt.ObjectText = "Трофей с монстра"
-			prompt.HoldDuration = 0.3
+			prompt.HoldDuration = 0
 
 			prompt.Triggered:Connect(function(player)
 				local currentCount = player:GetAttribute(cfg.Loot.Item) or 0

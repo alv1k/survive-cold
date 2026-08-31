@@ -53,7 +53,7 @@ UpgradeWorkbenchRemote.OnServerEvent:Connect(function(player)
 	end
 end)
 
--- 4. Обработка крафта предметов
+-- 4. Обработка крафта предметов на верстаке
 CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition)
 	local recipe = CraftingRecipes.Recipes[recipeKey]
 	if not recipe then return end
@@ -84,31 +84,7 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 			return
 		end
 
-		-- Б) Разблокировка оружия и выдача бонуса патронов
-		if recipe.IsWeapon then
-			player:SetAttribute("UnlockedWeapon_" .. recipeKey, true)
-			if recipe.BonusAmmo then
-				local currentAmmo = player:GetAttribute(recipe.BonusAmmo.AmmoType) or 0
-				player:SetAttribute(recipe.BonusAmmo.AmmoType, currentAmmo + recipe.BonusAmmo.Count)
-			end
-			-- Выдача Tool в рюкзак игрока
-			local backpack = player:FindFirstChildOfClass("Backpack")
-			if backpack then
-				local weaponTool = Instance.new("Tool")
-				weaponTool.Name = recipe.DisplayName
-				weaponTool:SetAttribute("IsWeapon", true)
-				weaponTool:SetAttribute("WeaponType", recipe.WeaponType)
-				weaponTool:SetAttribute("Damage", recipe.Damage)
-				if recipe.AmmoType then
-					weaponTool:SetAttribute("AmmoType", recipe.AmmoType)
-				end
-				weaponTool.Parent = backpack
-			end
-			print(string.format("⚔️ %s скрафтил оружие: %s!", player.Name, recipe.DisplayName))
-			return
-		end
-
-		-- В) Расширение рюкзака (7 или 9 слотов)
+		-- Б) Расширение рюкзака (7 или 9 слотов)
 		if recipe.SlotsUpgrade then
 			local currentSlots = player:GetAttribute("MaxSlots") or 5
 			if recipe.SlotsUpgrade > currentSlots then
@@ -118,7 +94,7 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 			return
 		end
 
-		-- Г) Меховая одежда
+		-- В) Меховая одежда
 		if recipe.ClothingLevel then
 			local currentCloth = player:GetAttribute("ClothingLevel") or 0
 			if recipe.ClothingLevel > currentCloth then
@@ -129,12 +105,12 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 			return
 		end
 
-		-- Д) Постройка Турелей и Стен в мире
-		local char = player.Character
-		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-		local spawnPos = targetPosition or (char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -6)).Position
+		-- Г) Постройка Турелей и Стен в мире
+		if recipe.Category == "Turrets" or (recipe.Category == "Structures" and recipe.ResultItem ~= "SpikeTrap") then
+			local char = player.Character
+			if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+			local spawnPos = targetPosition or (char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -6)).Position
 
-		if recipe.Category == "Turrets" or recipe.Category == "Structures" then
 			local newModel = Instance.new("Model")
 			newModel.Name = recipe.DisplayName
 
@@ -159,52 +135,162 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 				newModel.Parent = workspace:FindFirstChild("Walls") or workspace
 			end
 			print(string.format("🛠️ %s построил: %s!", player.Name, recipe.DisplayName))
+			return
 		end
+
+		-- Д) Выдача любых предметов, инструментов, капканов и оружия в рюкзак (RabbitTrap, Torch, Spear, Slingshot, etc.)
+		local resultKey = recipe.ResultItem or recipeKey
+		local resultCount = recipe.ResultCount or 1
+
+		if recipe.IsWeapon then
+			player:SetAttribute("UnlockedWeapon_" .. recipeKey, true)
+			if recipe.BonusAmmo then
+				local currentAmmo = player:GetAttribute(recipe.BonusAmmo.AmmoType) or 0
+				player:SetAttribute(recipe.BonusAmmo.AmmoType, currentAmmo + recipe.BonusAmmo.Count)
+			end
+		end
+
+		local given = false
+		if _G.GiveItemToPlayer then
+			given = _G.GiveItemToPlayer(player, resultKey, resultCount)
+		end
+
+		if not given then
+			if _G.DropItemOnGround then
+				_G.DropItemOnGround(player, resultKey, resultCount)
+			end
+			local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
+			if ShowNotificationRemote then
+				ShowNotificationRemote:FireClient(player, string.format("⚠️ Рюкзак полон! %s упал на землю.", recipe.DisplayName))
+			end
+		end
+
+		print(string.format("🛠️ %s успешно скрафтил: %s (x%d)!", player.Name, recipe.DisplayName, resultCount))
 	end
 end)
 
--- 5. Инициализация 16 Сундучков Деталей (Part Chests) по всей карте
+-- 5. Инициализация 16 Сундучков Деталей (Part Chests) с точной посадкой на рельеф
 local PartChestsFolder = workspace:FindFirstChild("PartChests") or Instance.new("Folder", workspace)
 PartChestsFolder.Name = "PartChests"
 
 local CHEST_LOCATIONS = {
-	Vector3.new(-220, 2, -180), Vector3.new(-150, 2, 240), Vector3.new(-320, 2, 80), Vector3.new(-90, 2, -310),
-	Vector3.new(180, 2, -260),  Vector3.new(280, 2, 190),  Vector3.new(350, 2, -120), Vector3.new(120, 2, 340),
-	Vector3.new(-420, 2, -140), Vector3.new(-260, 2, -400), Vector3.new(-380, 2, 310), Vector3.new(420, 2, 280),
-	Vector3.new(480, 2, -220),  Vector3.new(210, 2, -450), Vector3.new(-180, 2, 440), Vector3.new(360, 2, 420)
+	Vector3.new(-220, 20, -180), Vector3.new(-150, 20, 240), Vector3.new(-320, 20, 80), Vector3.new(-90, 20, -310),
+	Vector3.new(180, 20, -260),  Vector3.new(280, 20, 190),  Vector3.new(350, 20, -120), Vector3.new(120, 20, 340),
+	Vector3.new(-420, 20, -140), Vector3.new(-260, 20, -400), Vector3.new(-380, 20, 310), Vector3.new(420, 20, 280),
+	Vector3.new(480, 20, -220),  Vector3.new(210, 20, -450), Vector3.new(-180, 20, 440), Vector3.new(360, 20, 420)
 }
 
-for i, loc in ipairs(CHEST_LOCATIONS) do
-	local chestPart = Instance.new("Part")
-	chestPart.Name = "PartChest_" .. i
-	chestPart.Size = Vector3.new(3, 2.5, 2.5)
-	chestPart.Position = loc
-	chestPart.Anchored = true
-	chestPart.Material = Enum.Material.Metal
-	chestPart.BrickColor = BrickColor.new("Cyan")
-	chestPart.Parent = PartChestsFolder
+local function getGroundHeight(pos)
+	local rayOrigin = Vector3.new(pos.X, 100, pos.Z)
+	local rayDirection = Vector3.new(0, -200, 0)
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Include
+	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
 
-	local prompt = Instance.new("ProximityPrompt", chestPart)
-	prompt.ActionText = "Взломать кованый замок и открыть"
-	prompt.ObjectText = "📦 [⚙️ Сундук Деталей]"
-	prompt.HoldDuration = 0.8
+	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+	if result then
+		return result.Position.Y
+	end
+	return 3.0
+end
+
+local function buildPartChest(index, loc)
+	local groundY = getGroundHeight(loc)
+	local chestPos = Vector3.new(loc.X, groundY + 1.2, loc.Z)
+
+	local chestModel = Instance.new("Model")
+	chestModel.Name = "PartChest_" .. index
+
+	-- 1. Корпус сундука (Ровный деревянный короб)
+	local base = Instance.new("Part")
+	base.Name = "Base"
+	base.Size = Vector3.new(3.8, 2.2, 2.6)
+	base.Position = chestPos
+	base.Anchored = true
+	base.CanCollide = true
+	base.Material = Enum.Material.WoodPlanks
+	base.BrickColor = BrickColor.new("Dark orange")
+	base.Parent = chestModel
+
+	-- 2. Крышка с металлической кованой отделкой
+	local lid = Instance.new("Part")
+	lid.Name = "Lid"
+	lid.Size = Vector3.new(4.0, 0.7, 2.8)
+	lid.Position = chestPos + Vector3.new(0, 1.35, 0)
+	lid.Anchored = true
+	lid.CanCollide = true
+	lid.Material = Enum.Material.Metal
+	lid.BrickColor = BrickColor.new("Dark stone grey")
+	lid.Parent = chestModel
+
+	-- 3. Светящийся неоновый замок деталей (Cyan)
+	local lock = Instance.new("Part")
+	lock.Name = "Lock"
+	lock.Size = Vector3.new(0.8, 0.8, 0.4)
+	lock.Position = chestPos + Vector3.new(0, 0.3, 1.35)
+	lock.Anchored = true
+	lock.CanCollide = false
+	lock.Material = Enum.Material.Neon
+	lock.BrickColor = BrickColor.new("Cyan")
+	lock.Parent = chestModel
+
+	local light = Instance.new("PointLight", lock)
+	light.Color = Color3.fromRGB(56, 189, 248)
+	light.Range = 12
+	light.Brightness = 1.5
+
+	-- 4. Стабильный ProximityPrompt (Всегда виден, без сбоев видимости)
+	local prompt = Instance.new("ProximityPrompt", base)
+	prompt.ActionText = "Открыть сундук деталей"
+	prompt.ObjectText = "⚙️ Кованый сундук"
+	prompt.HoldDuration = 0 -- Моментальное открытие
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false -- 100% стабильность показа подсказки!
 
 	prompt.Triggered:Connect(function(player)
 		local partsCount = math.random(1, 2)
-		local currentParts = player:GetAttribute("Parts") or 0
-		player:SetAttribute("Parts", currentParts + partsCount)
-		print(string.format("📦 %s открыл сундучок и нашел %dx ⚙️ Деталей! (Всего: %d)", player.Name, partsCount, currentParts + partsCount))
-		
+		local given = false
+
+		if _G.GiveItemToPlayer then
+			given = _G.GiveItemToPlayer(player, "Parts", partsCount)
+		end
+
+		if not given then
+			-- Рюкзак полон! Сбрасываем найденные детали на землю прямо у сундука
+			if _G.DropItemOnGround then
+				_G.DropItemOnGround(player, "Parts", partsCount, chestPos + Vector3.new(0, 0.5, 2.5))
+			end
+			local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
+			if ShowNotificationRemote then
+				ShowNotificationRemote:FireClient(player, string.format("⚠️ Рюкзак полон! ⚙️ Детали (x%d) упали на землю у сундука.", partsCount))
+			end
+			print(string.format("📦 %s открыл сундук (рюкзак полон), детали (x%d) упали на землю!", player.Name, partsCount))
+		else
+			print(string.format("📦 %s открыл сундучок и нашел %dx ⚙️ Деталей в рюкзак!", player.Name, partsCount))
+		end
+
 		prompt.Enabled = false
-		chestPart.Transparency = 0.6
-		chestPart.BrickColor = BrickColor.new("Dark stone grey")
-		
+		base.Transparency = 0.5
+		lid.Transparency = 0.5
+		lock.Transparency = 0.8
+		light.Enabled = false
+
 		-- Респавн сундука через 3 минуты
 		task.delay(180, function()
-			chestPart.Transparency = 0
-			chestPart.BrickColor = BrickColor.new("Cyan")
-			prompt.Enabled = true
+			if base and base.Parent then
+				base.Transparency = 0
+				lid.Transparency = 0
+				lock.Transparency = 0
+				light.Enabled = true
+				prompt.Enabled = true
+			end
 		end)
 	end)
+
+	chestModel.PrimaryPart = base
+	chestModel.Parent = PartChestsFolder
 end
 
+for i, loc in ipairs(CHEST_LOCATIONS) do
+	buildPartChest(i, loc)
+end

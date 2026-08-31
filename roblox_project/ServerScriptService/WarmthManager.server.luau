@@ -1,63 +1,68 @@
 --[[
     WarmthManager.server.luau
-    Серверная система моделирования Тепла (Warmth), Голода (Hunger), Здоровья и Костра в жилом доме.
+    Серверная система выживания, тепла, голода и восстановления дома:
+    - 🔒 До нажатия "Начать" счетчики заблокированы (новичок читает гайд).
+    - 🚀 После нажатия "Начать" запускается таймер выживания и шкала тепла.
+    - 🍗 Шкала сытости начинает тикать СТРОГО СПУСТЯ 60 СЕКУНД после нажатия "Начать".
+    - 🔥 Очаг в жилом доме: согревает (+6 тепла/сек) и требует дрова (1 ветка = +60 сек).
 --]]
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
--- Папка Remotes
 local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
 RemotesFolder.Name = "Remotes"
 
-local FeedFireRemote = RemotesFolder:FindFirstChild("FeedFire") or Instance.new("RemoteEvent", RemotesFolder)
-FeedFireRemote.Name = "FeedFire"
+local StartGameRemote = RemotesFolder:FindFirstChild("StartGame") or Instance.new("RemoteEvent", RemotesFolder)
+StartGameRemote.Name = "StartGame"
 
 local RepairHouseRemote = RemotesFolder:FindFirstChild("RepairHouse") or Instance.new("RemoteEvent", RemotesFolder)
 RepairHouseRemote.Name = "RepairHouse"
 
--- Параметры Жилого Дома
+local FeedFireRemote = RemotesFolder:FindFirstChild("FeedFire") or Instance.new("RemoteEvent", RemotesFolder)
+FeedFireRemote.Name = "FeedFire"
+
+local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
+ShowNotificationRemote.Name = "ShowNotification"
+
+-- Конфигурация жилого дома игрока
 local PLAYER_HOUSE = {
 	Position = Vector3.new(0, 5, 0),
 	Size = Vector3.new(45, 10, 30),
+	FirePosition = Vector3.new(0, 2, 0),
+	FireRadius = 18,
 	IsRepaired = false,
 	RepairCostPlanks = 3,
-	FireFuelSeconds = 120,
-	MaxFuelSeconds = 360
+	FireFuelSeconds = 180,
+	MaxFuelSeconds = 600
 }
 
--- Параметры 3 Охотничьих Домиков
-local HUNTER_CABINS = {
-	{ Position = Vector3.new(-300, 4, 300), Size = Vector3.new(22.5, 8, 15) },
-	{ Position = Vector3.new(300, 4, -300), Size = Vector3.new(22.5, 8, 15) },
-	{ Position = Vector3.new(0, 4, 350), Size = Vector3.new(22.5, 8, 15) }
-}
-
--- Проверка нахождения персонажа внутри дома
 local function isInsidePlayerHouse(pos)
-	local minBounds = PLAYER_HOUSE.Position - (PLAYER_HOUSE.Size / 2)
-	local maxBounds = PLAYER_HOUSE.Position + (PLAYER_HOUSE.Size / 2)
-	return pos.X >= minBounds.X and pos.X <= maxBounds.X and
-	       pos.Z >= minBounds.Z and pos.Z <= maxBounds.Z
+	local minB = PLAYER_HOUSE.Position - (PLAYER_HOUSE.Size / 2)
+	local maxB = PLAYER_HOUSE.Position + (PLAYER_HOUSE.Size / 2)
+	return pos.X >= minB.X and pos.X <= maxB.X and pos.Z >= minB.Z and pos.Z <= maxB.Z and pos.Y >= (PLAYER_HOUSE.Position.Y - 2) and pos.Y <= (PLAYER_HOUSE.Position.Y + PLAYER_HOUSE.Size.Y + 2)
 end
 
--- Проверка нахождения персонажа в любом укрытии
 local function isInsideAnyStructure(pos)
 	if isInsidePlayerHouse(pos) then return true end
-	for _, cabin in ipairs(HUNTER_CABINS) do
-		local minB = cabin.Position - (cabin.Size / 2)
-		local maxB = cabin.Position + (cabin.Size / 2)
-		if pos.X >= minB.X and pos.X <= maxB.X and pos.Z >= minB.Z and pos.Z <= maxB.Z then
-			return true
+	local cabins = workspace:FindFirstChild("HunterCabins")
+	if cabins then
+		for _, cabin in ipairs(cabins:GetChildren()) do
+			local cPart = cabin:FindFirstChild("Floor") or cabin.PrimaryPart
+			if cPart and (cPart.Position - pos).Magnitude < 18 then
+				return true
+			end
 		end
 	end
 	return false
 end
 
--- 1. Инициализация характеристик игрока при входе/спавне
+-- 1. Инициализация характеристик игрока при спавне
 local function onPlayerSpawn(player, character)
-	-- Всегда гарантированно 100% сытости, тепла и выносливости при старте!
+	player:SetAttribute("IsGameStarted", false)
+	player:SetAttribute("StartGameTimestamp", 0)
+	player:SetAttribute("SurvivalTimeSeconds", 0)
 	player:SetAttribute("Warmth", 100)
 	player:SetAttribute("Hunger", 100)
 	player:SetAttribute("Stamina", 100)
@@ -73,7 +78,6 @@ local function onPlayerSpawn(player, character)
 	humanoid.Health = 100
 
 	humanoid.Died:Connect(function()
-		-- Правило гибели: потеря рюкзака и одежды, но дом и всё внутри сохраняется!
 		player:SetAttribute("ClothingLevel", 0)
 		player:SetAttribute("ClothingProtection", 0)
 		player:SetAttribute("CarriedRelics", 0)
@@ -84,7 +88,7 @@ local function onPlayerSpawn(player, character)
 		if backpack then
 			backpack:ClearAllChildren()
 		end
-		print(string.format("💀 %s погиб! Рюкзак и одежда утеряны. Дом и питомцы на базе сохранены.", player.Name))
+		print(string.format("💀 %s погиб! Рюкзак и одежда утеряны. Дом и верстак сохранены.", player.Name))
 	end)
 end
 
@@ -95,6 +99,13 @@ Players.PlayerAdded:Connect(function(player)
 	if player.Character then
 		onPlayerSpawn(player, player.Character)
 	end
+end)
+
+-- 1.5. Обработка старта игры (нажатие кнопки "Начать!" в туториале)
+StartGameRemote.OnServerEvent:Connect(function(player)
+	player:SetAttribute("IsGameStarted", true)
+	player:SetAttribute("StartGameTimestamp", os.clock())
+	print(string.format("🚀 %s нажал 'Начать!' — выживание запущено (льгота сытости 60с)!", player.Name))
 end)
 
 -- 2. Обработка починки дома (3 Доски)
@@ -140,6 +151,18 @@ task.spawn(function()
 				local hrp = char.HumanoidRootPart
 				local humanoid = char.Humanoid
 				if humanoid.Health > 0 then
+					-- Защита игрока ДО нажатия "Начать!"
+					if player:GetAttribute("IsGameStarted") ~= true then
+						player:SetAttribute("Warmth", 100)
+						player:SetAttribute("Hunger", 100)
+						humanoid.Health = humanoid.MaxHealth
+						continue
+					end
+
+					-- Тикаем живой таймер выживания
+					local survSecs = (player:GetAttribute("SurvivalTimeSeconds") or 0) + 1
+					player:SetAttribute("SurvivalTimeSeconds", survSecs)
+
 					local pos = hrp.Position
 					local insideHouse = isInsidePlayerHouse(pos)
 					local insideStructure = isInsideAnyStructure(pos)
@@ -151,16 +174,12 @@ task.spawn(function()
 					local effectiveColdRate = baseColdRate * (1 - clothingProt)
 
 					local heatSourcesGain = 0
-					-- Очаг в доме
 					if insideHouse and PLAYER_HOUSE.FireFuelSeconds > 0 then
 						heatSourcesGain = heatSourcesGain + 6.0
 					end
-					-- Факел в руках
-					local equippedTool = char:FindFirstChildOfClass("Tool")
-					if equippedTool and equippedTool.Name:find("Факел") or equippedTool and equippedTool.Name:find("Torch") then
+					if player:GetAttribute("HasTorchInHand") == true then
 						heatSourcesGain = heatSourcesGain + 1.5
 					end
-					-- Бафф Медвежонка
 					local bearBuff = player:GetAttribute("BearWarmthBuff") or 0
 					heatSourcesGain = heatSourcesGain + bearBuff
 
@@ -171,28 +190,36 @@ task.spawn(function()
 					end
 					player:SetAttribute("Warmth", math.floor(warmth))
 
-					-- Б) Расчет Голода (Hunger - 100% хватает на 5-6 минут)
-					local hunger = player:GetAttribute("Hunger") or 100
-					local hungerDrain = 0.30
-					if player:GetAttribute("IsSprinting") then
-						hungerDrain = hungerDrain * 1.75
+					-- Б) Расчет Сытости (Hunger): НАЧИНАЕТ ТИКАТЬ СТРОГО ЧЕРЕЗ 60 СЕКУНД ПОСЛЕ СТАРТА
+					local startTs = player:GetAttribute("StartGameTimestamp") or os.clock()
+					local elapsed = os.clock() - startTs
+
+					if elapsed >= 60 then
+						local hunger = player:GetAttribute("Hunger") or 100
+						local hungerDrain = 0.30
+						if player:GetAttribute("IsSprinting") then
+							hungerDrain = hungerDrain * 1.75
+						end
+						if isBlizzard then
+							hungerDrain = hungerDrain * 1.30
+						end
+						if insideStructure then
+							hungerDrain = hungerDrain * 0.60
+						end
+						hunger = math.max(0, hunger - hungerDrain)
+						player:SetAttribute("Hunger", math.floor(hunger))
+					else
+						player:SetAttribute("Hunger", 100)
 					end
-					if isBlizzard then
-						hungerDrain = hungerDrain * 1.30
-					end
-					if insideStructure then
-						hungerDrain = hungerDrain * 0.60
-					end
-					hunger = math.max(0, hunger - hungerDrain)
-					player:SetAttribute("Hunger", math.floor(hunger))
 
 					-- В) Урон и Пассивная регенерация
+					local curHunger = player:GetAttribute("Hunger") or 100
 					if warmth <= 0 then
 						humanoid:TakeDamage(5) -- Замерзание
 					end
-					if hunger <= 0 then
+					if curHunger <= 0 then
 						humanoid:TakeDamage(4) -- Голодание
-					elseif hunger > 65 and warmth > 60 and humanoid.Health < humanoid.MaxHealth then
+					elseif curHunger > 65 and warmth > 60 and humanoid.Health < humanoid.MaxHealth then
 						humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + 1) -- Сытое исцеление
 					end
 				end
@@ -200,4 +227,3 @@ task.spawn(function()
 		end
 	end
 end)
-

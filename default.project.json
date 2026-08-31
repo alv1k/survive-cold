@@ -1,0 +1,23 @@
+{
+  "name": "SurviveTheCold",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "CraftingRecipes": {
+        "$path": "roblox_project/ReplicatedStorage/CraftingRecipes.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "roblox_project/ServerScriptService"
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "roblox_project/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}

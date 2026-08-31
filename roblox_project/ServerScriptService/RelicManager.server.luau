@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local TOTAL_RELICS = 7
+local MAX_REBIRTH_CYCLES = 15
 workspace:SetAttribute("AltarPlacedRelics", 0)
 workspace:SetAttribute("IsBunkerOpen", false)
 
@@ -86,10 +87,30 @@ end)
 BunkerPrompt.Triggered:Connect(function(player)
 	if workspace:GetAttribute("IsBunkerOpen") then
 		local currentRebirths = player:GetAttribute("Rebirths") or 0
-		player:SetAttribute("Rebirths", currentRebirths + 1)
+		local nextRebirth = currentRebirths + 1
+		player:SetAttribute("Rebirths", nextRebirth)
 		player:SetAttribute("CarriedRelics", 0)
-		
-		print(string.format("🚀 %s успешно переродился! Уровень перерождения: #%d", player.Name, currentRebirths + 1))
+		player:SetAttribute("ClothingLevel", 0)
+		player:SetAttribute("ClothingProtection", 0)
+		player:SetAttribute("Ammo_Slingshot", 0)
+		player:SetAttribute("Ammo_Revolver", 0)
+
+		-- Очистка рюкзака
+		local backpack = player:FindFirstChildOfClass("Backpack")
+		if backpack then backpack:ClearAllChildren() end
+
+		-- Постоянные бонусы перерождения: +5% скорости, +10% защиты от холода
+		local char = player.Character
+		local humanoid = char and char:FindFirstChild("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = 16 * (1 + (nextRebirth * 0.05))
+			humanoid.Health = humanoid.MaxHealth
+		end
+		player:SetAttribute("Warmth", 100)
+		player:SetAttribute("Hunger", 100)
+		player:SetAttribute("RebirthColdProtection", math.min(0.40, nextRebirth * 0.10))
+
+		print(string.format("🚀 %s успешно переродился! Новый цикл: #%d (+%d%% скорости бега, +%d%% стойкости к буре)", player.Name, nextRebirth, nextRebirth * 5, nextRebirth * 10))
 	end
 end)
 

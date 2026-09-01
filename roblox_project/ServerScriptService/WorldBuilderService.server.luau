@@ -174,7 +174,8 @@ local function buildPlayerHouse()
 	local fireplace = Instance.new("Part")
 	fireplace.Name = "HouseFireplace"
 	fireplace.Size = Vector3.new(6, 4, 6)
-	fireplace.Position = HOUSE_POS + Vector3.new(0, 2.5, -9)
+	-- Точное приземление на пол (высота пола 1.2, половина высоты камина 2.0 -> Y = 3.2)
+	fireplace.Position = HOUSE_POS + Vector3.new(0, 3.2, -9)
 	fireplace.Anchored = true
 	fireplace.Material = Enum.Material.Cobblestone
 	fireplace.BrickColor = BrickColor.new("Dark stone grey")
@@ -209,8 +210,9 @@ local function buildPlayerHouse()
 
 	local workbench = Instance.new("Part")
 	workbench.Name = "Workbench"
-	workbench.Size = Vector3.new(5, 3.5, 3.5)
-	workbench.Position = HOUSE_POS + Vector3.new(-12, 2.2, 8)
+	workbench.Size = Vector3.new(5, 3.0, 3.5)
+	-- Точное приземление на пол (пол 1.2, половина высоты верстака 1.5 -> Y = 2.7)
+	workbench.Position = HOUSE_POS + Vector3.new(-12, 2.7, 8)
 	workbench.Anchored = true
 	workbench.Material = Enum.Material.Wood
 	workbench.BrickColor = BrickColor.new("Lapis")
@@ -223,8 +225,9 @@ local function buildPlayerHouse()
 
 	local petBed = Instance.new("Part")
 	petBed.Name = "PetBed"
-	petBed.Size = Vector3.new(6, 1, 4)
-	petBed.Position = HOUSE_POS + Vector3.new(11, 1, 8)
+	petBed.Size = Vector3.new(6, 0.8, 4)
+	-- Точное приземление на пол (пол 1.2, половина лежанки 0.4 -> Y = 1.6)
+	petBed.Position = HOUSE_POS + Vector3.new(11, 1.6, 8)
 	petBed.Anchored = true
 	petBed.Material = Enum.Material.Fabric
 	petBed.BrickColor = BrickColor.new("Lilac")
@@ -301,7 +304,8 @@ local function buildHunterCabins()
 		local stove = Instance.new("Part")
 		stove.Name = "CabinStove_" .. i
 		stove.Size = Vector3.new(4, 4, 4)
-		stove.Position = c.Pos + Vector3.new(-5, 2.5, -5)
+		-- Точное приземление на пол заимки (пол 1.2, половина печи 2.0 -> Y = 3.2)
+		stove.Position = c.Pos + Vector3.new(-5, 3.2, -5)
 		stove.Anchored = true
 		stove.Material = Enum.Material.Brick
 		stove.BrickColor = BrickColor.new("Dark stone grey")

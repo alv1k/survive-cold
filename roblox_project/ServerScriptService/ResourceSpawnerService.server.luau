@@ -27,15 +27,18 @@ local function isInsideHouseZone(pos)
 end
 
 local function getGroundHeight(pos)
-	local rayOrigin = Vector3.new(pos.X, 80, pos.Z)
-	local rayDirection = Vector3.new(0, -160, 0)
+	local rayOrigin = Vector3.new(pos.X, 120, pos.Z)
+	local rayDirection = Vector3.new(0, -200, 0)
 	local raycastParams = RaycastParams.new()
 	raycastParams.FilterType = Enum.RaycastFilterType.Include
 	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
 
 	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then return result.Position.Y end
-	return 3.2
+	if result then
+		return result.Position.Y
+	end
+	-- Точная базовая высота снежного покрова Smooth Terrain
+	return 0
 end
 
 -- 1. Создание красивой 3D-модели ВЕТОК (🌿 Скрещенные ветви сосны)

@@ -158,15 +158,32 @@ local function renderRecipes()
 
 	local sortedList = {}
 	for rKey, rData in pairs(CraftingRecipes.Recipes) do
-		table.insert(sortedList, { Key = rKey, Data = rData })
-	end
-	table.sort(sortedList, function(a, b)
-		if a.Data.Tier == b.Data.Tier then
-			return a.Data.DisplayName < b.Data.DisplayName
+		-- Проверяем, доступен ли крафт прямо сейчас (хватает уровня верстака и ингредиентов)
+		local canCraft = (curWbLvl >= rData.Tier)
+		for ingKey, ingAmount in pairs(rData.Ingredients) do
+			local cur = player:GetAttribute(ingKey) or 0
+			if cur < ingAmount then
+				canCraft = false
+			end
 		end
-		return a.Data.Tier < b.Data.Tier
-	end)
 
+		table.insert(sortedList, {
+			Key = rKey,
+			Data = rData,
+			CanCraft = canCraft
+		})
+	end
+
+	-- СОРТИРОВКА: Сначала все ДОСТУПНЫЕ крафты (по уровням 1..5), затем недоступные (по уровням 1..5)
+	table.sort(sortedList, function(a, b)
+		if a.CanCraft ~= b.CanCraft then
+			return a.CanCraft == true -- Доступные первыми!
+		end
+		if a.Data.Tier ~= b.Data.Tier then
+			return a.Data.Tier < b.Data.Tier -- Начиная от 1 уровня
+		end
+		return a.Data.DisplayName < b.Data.DisplayName
+	end)
 	for _, item in ipairs(sortedList) do
 		local rKey = item.Key
 		local rData = item.Data

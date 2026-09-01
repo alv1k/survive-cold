@@ -191,8 +191,19 @@ RunService.RenderStepped:Connect(function()
 	local placedRelics = workspace:GetAttribute("AltarPlacedRelics") or 0
 	local handRelics = player:GetAttribute("CarriedRelics") or 0
 
+	local buffTag = ""
+	if placedRelics >= 7 then
+		buffTag = " 🚀 [БУНКЕР ОТКРЫТ!]"
+	elseif placedRelics >= 5 then
+		buffTag = string.format(" ⚡ [+%d%% скорость]", 12)
+	elseif placedRelics >= 3 then
+		buffTag = " 📦 [+20% добыча]"
+	elseif placedRelics >= 1 then
+		buffTag = " 🔥 [Тепло-Алтарь]"
+	end
+
 	questLabel.Text = string.format(
-		"⏱️ %s | 👑 Цикл: #%d | 🎒 %d слотов | 🧥 Lvl %d | 🏹 ⛏️ %d 💥 %d | 🗿 Алтарь: %d/7 (%d в руках)",
-		timeFormatted, rebirths, maxSlots, clothLvl, ammoSling, ammoRev, placedRelics, handRelics
+		"⏱️ %s | 👑 Цикл: #%d | 🎒 %d слотов | 🧥 Lvl %d | 🏹 ⛏️ %d 💥 %d | ⛩️ Алтарь: %d/7 (%d в руках)%s",
+		timeFormatted, rebirths, maxSlots, clothLvl, ammoSling, ammoRev, placedRelics, handRelics, buffTag
 	)
 end)

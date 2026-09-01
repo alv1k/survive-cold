@@ -140,8 +140,9 @@ task.spawn(function()
 				local cfg = mobConfigs[mobType]
 				local spawnPos = mob:GetAttribute("SpawnPos") or hrp.Position
 
-				-- Поиск ближайшего игрока в радиусе агро (только если игрок зашел в восточную зону X >= 170)
-				local targetPlayer = nil
+				-- Поиск ближайшего игрока или активной турели в радиусе агро
+				local targetTarget = nil
+				local targetIsPlayer = false
 				local closestDist = cfg.AggroRadius
 
 				for _, player in ipairs(Players:GetPlayers()) do
@@ -152,17 +153,37 @@ task.spawn(function()
 							local dist = (pHrp.Position - hrp.Position).Magnitude
 							if dist < closestDist then
 								closestDist = dist
-								targetPlayer = pHrp
+								targetTarget = pHrp
+								targetIsPlayer = true
 							end
 						end
 					end
 				end
 
-				if targetPlayer then
-					-- Атака игрока
-					humanoid:MoveTo(targetPlayer.Position)
-					if closestDist < 5 then
-						local pChar = targetPlayer.Parent
+				if not targetTarget then
+					local turretsFolder = workspace:FindFirstChild("Turrets")
+					if turretsFolder then
+						for _, turret in ipairs(turretsFolder:GetChildren()) do
+							if not turret:GetAttribute("IsBroken") then
+								local base = turret:FindFirstChild("Base") or turret.PrimaryPart
+								if base then
+									local tDist = (base.Position - hrp.Position).Magnitude
+									if tDist < closestDist then
+										closestDist = tDist
+										targetTarget = base
+										targetIsPlayer = false
+									end
+								end
+							end
+						end
+					end
+				end
+
+				if targetTarget then
+					-- Движение и атака цели
+					humanoid:MoveTo(targetTarget.Position)
+					if targetIsPlayer and closestDist < 5 then
+						local pChar = targetTarget.Parent
 						local pHumanoid = pChar and pChar:FindFirstChild("Humanoid")
 						if pHumanoid then
 							pHumanoid:TakeDamage(cfg.Damage)

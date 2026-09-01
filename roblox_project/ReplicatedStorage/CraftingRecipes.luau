@@ -22,11 +22,11 @@ CraftingRecipes.StackLimits = {
 	Pepper = 3,
 	Coffee = 3,
 	Steak = 3,
-	RawMeat = 5,
+	RawMeat = 3,
 	RabbitFur = 5,
 	CampfireKit = 2,
 	RabbitTrap = 3,
-	SpikeTrap = 5
+	SpikeTrap = 3
 }
 
 -- Конфигурация 5 уровней верстака
@@ -39,7 +39,7 @@ CraftingRecipes.WorkbenchTiers = {
 	},
 	[2] = {
 		Name = "Уровень 2: Продвинутый",
-		Desc = "Дальний бой и расширение инвентаря: Рогатка, 7 Слотов",
+		Desc = "Дальний бой и расширение инвентаря: Праща, 7 Слотов",
 		UpgradeCost = { Parts = 3, WolfPelt = 2, Planks = 4 },
 		UpgradeCostText = "3 ⚙️ + 2 🐺 + 4 🌲"
 	},
@@ -94,23 +94,24 @@ CraftingRecipes.Recipes = {
 		IsWeapon = true,
 		WeaponType = "Melee",
 		Damage = 30,
-		Desc = "3 Ветки + 2 Камня (Ближний бой, урон: 30)"
+		FireRate = 0.8,
+		Desc = "3 Ветки + 2 Камня (Ближний бой, урон: 30, темп: 0.8с)"
 	},
 	Torch = {
 		Tier = 1,
 		Category = "Gear",
 		DisplayName = "🔥 Факел",
-		Ingredients = { Branches = 5, Fiber = 5 },
+		Ingredients = { Branches = 1, Fiber = 1 },
 		ResultItem = "Torch",
 		ResultCount = 1,
-		Desc = "5 Веток + 5 Волокна (Согревает в руке +0.25)"
+		Desc = "1 Ветка + 1 Волокно (Согревает в руке +0.25)"
 	},
 
 	-- Уровень 2
 	Slingshot = {
 		Tier = 2,
 		Category = "Weapons",
-		DisplayName = "🏹 Рогатка (Праща)",
+		DisplayName = "🏹 Праща",
 		Ingredients = { Branches = 4, Fiber = 4 },
 		RequiredWeapon = "Spear",
 		ResultItem = "Slingshot",
@@ -120,7 +121,8 @@ CraftingRecipes.Recipes = {
 		WeaponType = "Ranged",
 		AmmoType = "Ammo_Slingshot",
 		Damage = 20,
-		Desc = "4 Ветки + 4 Волокна (+50 снарядов в сумку боеприпасов)"
+		FireRate = 0.6,
+		Desc = "4 Ветки + 4 Волокна (+50 снарядов, темп: 0.6с)"
 	},
 	StoneAmmo = {
 		Tier = 2,
@@ -152,7 +154,7 @@ CraftingRecipes.Recipes = {
 		ResultItem = "SpikeTrap",
 		ResultCount = 1,
 		Damage = 25,
-		Desc = "2 Доски + 2 Камня (Наносит урон и замедляет мобов)"
+		Desc = "2 Доски + 2 Камня (Урон мобам, 10 срабатываний, ремонт: 3 ⚙️)"
 	},
 	Wall = {
 		Tier = 3,
@@ -173,7 +175,7 @@ CraftingRecipes.Recipes = {
 		Damage = 20,
 		FireRate = 1.0,
 		IsHeavy = false,
-		Desc = "3 Доски + 5 Камней + 1 ⚙️ Деталь (Авто-стрельба, урон: 20)"
+		Desc = "3 Доски + 5 Камней + 1 ⚙️ Деталь (Авто-стрельба, 10 ударов, ремонт: 3 ⚙️)"
 	},
 	WolfVest = {
 		Tier = 3,
@@ -190,7 +192,7 @@ CraftingRecipes.Recipes = {
 		Tier = 4,
 		Category = "Weapons",
 		DisplayName = "🔫 Револьвер",
-		Ingredients = { Planks = 4, Stone = 6, Fiber = 4, Parts = 2 },
+		Ingredients = { Planks = 4, Stone = 6, Fiber = 4, Parts = 7 },
 		RequiredWeapon = "Slingshot",
 		ResultItem = "Revolver",
 		ResultCount = 1,
@@ -199,7 +201,8 @@ CraftingRecipes.Recipes = {
 		WeaponType = "Ranged",
 		AmmoType = "Ammo_Revolver",
 		Damage = 55,
-		Desc = "4 Доски + 6 Камней + 4 Волокна + 2 ⚙️ Детали (+20 пуль в патронташ)"
+		FireRate = 0.35,
+		Desc = "4 Доски + 6 Камней + 4 Волокна + 7 ⚙️ Деталей (+20 пуль, темп: 0.35с)"
 	},
 	RevolverAmmo = {
 		Tier = 4,
@@ -233,16 +236,16 @@ CraftingRecipes.Recipes = {
 		Damage = 35,
 		FireRate = 0.5, -- Двойная скорострельность!
 		IsHeavy = true,
-		Desc = "4 Доски + 6 Камней + 2 ⚙️ Детали + 1 ❄️ Шкура (⚡ 2X скорострельность, урон: 35)"
+		Desc = "4 Доски + 6 Камней + 2 ⚙️ Детали + 1 ❄️ Шкура (⚡ 2X урон: 35, 10 ударов, ремонт: 3 ⚙️)"
 	},
 	YetiParka = {
 		Tier = 5,
 		Category = "Gear",
 		DisplayName = "🐻 Парка выживальщика",
-		Ingredients = { YetiPelt = 3, WolfPelt = 3, Fiber = 5 },
+		Ingredients = { YetiPelt = 5, WolfPelt = 10, Fiber = 5 },
 		ClothingLevel = 4,
 		ClothingProtection = 0.40,
-		Desc = "3 ❄️ Шкуры + 3 🐺 Шкуры + 5 Волокна (Костюм Lvl 4, +40% защиты)"
+		Desc = "5 ❄️ Шкур + 10 🐺 Шкур + 5 Волокна (Костюм Lvl 4, +40% защиты)"
 	}
 }
 

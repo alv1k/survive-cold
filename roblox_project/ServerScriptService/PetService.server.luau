@@ -143,7 +143,40 @@ TogglePetModeRemote.OnServerEvent:Connect(function(player, petId)
 	end
 end)
 
--- Цикл обновления состояния и баффов питомцев (каждую 1 сек)
+-- Сохранение и перемещение питомца к хозяину при воскрешении союзником или за Robux
+_G.PreservePlayerPetOnRevive = function(player, targetPos)
+	for _, pet in ipairs(PetsFolder:GetChildren()) do
+		if pet:GetAttribute("OwnerUserId") == player.UserId then
+			local primary = pet.PrimaryPart or pet:FindFirstChildWhichIsA("BasePart")
+			if primary and targetPos then
+				primary.CFrame = CFrame.new(targetPos + Vector3.new(3, 1, 3))
+			end
+			pet:SetAttribute("Mode", "follow")
+			pet:SetAttribute("StarveTimer", 0)
+			pet:SetAttribute("Satiety", math.max(60, pet:GetAttribute("Satiety") or 60))
+			print(string.format("🐾 Питомец %s сохранен и телепортирован к воскресшему хозяину %s!", pet.Name, player.Name))
+			break
+		end
+	end
+end
+
+-- Отправка питомца домой на лежанку при обычном возрождении в доме
+_G.SendPlayerPetHome = function(player)
+	for _, pet in ipairs(PetsFolder:GetChildren()) do
+		if pet:GetAttribute("OwnerUserId") == player.UserId then
+			local primary = pet.PrimaryPart or pet:FindFirstChildWhichIsA("BasePart")
+			if primary then
+				primary.CFrame = CFrame.new(Vector3.new(8, 2, 8))
+			end
+			pet:SetAttribute("Mode", "stay_home")
+			pet:SetAttribute("StarveTimer", 0)
+			print(string.format("🐾 Питомец %s отправлен отдыхать на лежанку в дом хозяина %s!", pet.Name, player.Name))
+			break
+		end
+	end
+end
+
+-- Цикл обновления состояния, следования и баффов питомцев (каждую 1 сек)
 task.spawn(function()
 	while true do
 		task.wait(1.0)
@@ -170,6 +203,19 @@ task.spawn(function()
 					end
 				else
 					pet:SetAttribute("StarveTimer", 0)
+				end
+
+				-- Следование за хозяином в режиме "follow"
+				if owner and owner.Character and mode == "follow" then
+					local hrp = owner.Character:FindFirstChild("HumanoidRootPart")
+					local primary = pet.PrimaryPart or pet:FindFirstChildWhichIsA("BasePart")
+					if hrp and primary then
+						local dist = (primary.Position - hrp.Position).Magnitude
+						if dist > 8 then
+							local targetPos = hrp.Position - hrp.CFrame.LookVector * 5 + Vector3.new(2, 0, 0)
+							primary.CFrame = primary.CFrame:Lerp(CFrame.new(targetPos, hrp.Position), 0.35)
+						end
+					end
 				end
 
 				-- Наложение баффов на владельца

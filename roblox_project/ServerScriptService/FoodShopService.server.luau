@@ -1,9 +1,11 @@
 --[[
     FoodShopService.server.luau
-    Серверный сервис Продуктовой Лавки выживальщика:
-    - Теплая хижина с печью и прилавком
-    - Обработка покупки еды через RemoteFunction/RemoteEvent
-    - Выдача реальных Tool в Backpack игрока с нативными эффектами
+    Серверный сервис Продуктового Домика-Магазина:
+    - Полноценное уютное здание с открытым входом для игроков
+    - Стеллажи полок как в магазине (по 4 штуки 3D-модели каждого вида еды)
+    - ВСЯ ЕДА ПОЛНОСТЬЮ БЕСПЛАТНАЯ (бери свободно с полок)
+    - Без костров/печей внутри
+    - Единые характеристики: +60 Сытости, +50% Тепла, +25 Здоровья
 --]]
 
 local Players = game:GetService("Players")
@@ -24,104 +26,255 @@ local FOOD_SHOP_POSITION = Vector3.new(-380, 4.0, -450)
 local FoodShopFolder = workspace:FindFirstChild("FoodShop") or Instance.new("Folder", workspace)
 FoodShopFolder.Name = "FoodShop"
 
+-- ВСЯ ЕДА БЕСПЛАТНАЯ (+60 Сытости, +50% Тепла, +25 Здоровья)
 local FOOD_CATALOG = {
-	Bar = { Key = "Bar", Name = "🍫 Энергетический батончик", Cost = {}, Desc = "🎉 БЕСПЛАТНЫЙ ПАЁК", Warmth = 10, Hunger = 30, Health = 15 },
-	Bread = { Key = "Bread", Name = "🍞 Питательный хлеб", Cost = { Branches = 2 }, Desc = "2 Ветки", Warmth = 15, Hunger = 50, Health = 25 },
-	Chips = { Key = "Chips", Name = "🥔 Хрустящие чипсы", Cost = { Fiber = 2 }, Desc = "2 Волокна", Warmth = 8, Hunger = 25, Health = 15 },
-	Soup = { Key = "Soup", Name = "🥫 Горячий мясной суп", Cost = { Branches = 3, Fiber = 2 }, Desc = "3 Ветки + 2 Волокна", Warmth = 30, Hunger = 70, Health = 35 },
-	Pepper = { Key = "Pepper", Name = "🌶️ Огненный перец", Cost = { Stone = 2, Branches = 2 }, Desc = "2 Камня + 2 Ветки", Warmth = 50, Hunger = 15, Health = 5 },
-	Coffee = { Key = "Coffee", Name = "☕ Горячий кофе", Cost = { Branches = 3, Fiber = 2 }, Desc = "3 Ветки + 2 Волокна", Warmth = 40, Hunger = 20, Health = 20 },
-	Steak = { Key = "Steak", Name = "🥩 Сочный стейк на гриле", Cost = { Planks = 1, Branches = 2 }, Desc = "1 Доска + 2 Ветки", Warmth = 35, Hunger = 90, Health = 60 }
+	Bar = { Key = "Bar", Name = "🍫 Энергетический батончик", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Bread = { Key = "Bread", Name = "🍞 Питательный хлеб", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Chips = { Key = "Chips", Name = "🥔 Хрустящие чипсы", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Soup = { Key = "Soup", Name = "🥫 Горячий мясной суп", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Pepper = { Key = "Pepper", Name = "🌶️ Огненный перец", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Coffee = { Key = "Coffee", Name = "☕ Горячий кофе", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
+	Steak = { Key = "Steak", Name = "🥩 Сочный стейк на гриле", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 }
 }
 
--- Постройка здания продуктовой лавки
+-- Обработка бесплатного взятия еды
+local function handleBuyFood(player, foodKey)
+	local item = FOOD_CATALOG[foodKey]
+	if not item then
+		return { Success = false, Message = "Неизвестный продукт!" }
+	end
+
+	local given = false
+	if _G.GiveItemToPlayer then
+		given = _G.GiveItemToPlayer(player, foodKey, 1)
+	end
+
+	if given then
+		ShowNotificationRemote:FireClient(player, string.format("🛒 Вы взяли: %s (+60 Сытости, +50%% Тепла)!", item.Name))
+		return { Success = true, Message = "Продукт добавлен в рюкзак!" }
+	else
+		return { Success = false, Message = "Рюкзак полон! Освободите место." }
+	end
+end
+
+BuyFoodRemote.OnServerInvoke = function(player, foodKey)
+	return handleBuyFood(player, foodKey)
+end
+
+--------------------------------------------------------------------------------
+-- 🏪 ПОСТРОЙКА ДОМИКА-МАГАЗИНА С ПОЛКАМИ И 3D-ЕДОЙ ПО 4 ШТ
+--------------------------------------------------------------------------------
+
+-- Вспомогательная функция создания 3D-модели товара на полке
+local function createFoodDisplayItem(foodKey, shelfCFrame)
+	local itemPart = Instance.new("Part")
+	itemPart.Name = "Display_" .. foodKey
+	itemPart.Anchored = true
+	itemPart.CanCollide = false
+
+	if foodKey == "Bar" then
+		itemPart.Size = Vector3.new(0.6, 0.25, 1.2)
+		itemPart.Material = Enum.Material.SmoothPlastic
+		itemPart.BrickColor = BrickColor.new("Dark orange")
+	elseif foodKey == "Bread" then
+		itemPart.Size = Vector3.new(0.9, 0.6, 1.4)
+		itemPart.Material = Enum.Material.WoodPlanks
+		itemPart.BrickColor = BrickColor.new("Nougat")
+	elseif foodKey == "Chips" then
+		itemPart.Size = Vector3.new(0.7, 0.9, 0.4)
+		itemPart.Material = Enum.Material.Fabric
+		itemPart.BrickColor = BrickColor.new("Bright yellow")
+	elseif foodKey == "Soup" then
+		itemPart.Size = Vector3.new(0.8, 0.9, 0.8)
+		itemPart.Shape = Enum.PartType.Cylinder
+		itemPart.Material = Enum.Material.Metal
+		itemPart.BrickColor = BrickColor.new("Bright red")
+	elseif foodKey == "Pepper" then
+		itemPart.Size = Vector3.new(0.4, 0.4, 1.1)
+		itemPart.Material = Enum.Material.SmoothPlastic
+		itemPart.BrickColor = BrickColor.new("Really red")
+	elseif foodKey == "Coffee" then
+		itemPart.Size = Vector3.new(0.7, 0.8, 0.7)
+		itemPart.Shape = Enum.PartType.Cylinder
+		itemPart.Material = Enum.Material.Plastic
+		itemPart.BrickColor = BrickColor.new("White")
+	elseif foodKey == "Steak" then
+		itemPart.Size = Vector3.new(1.1, 0.35, 1.3)
+		itemPart.Material = Enum.Material.Slate
+		itemPart.BrickColor = BrickColor.new("Maroon")
+	end
+
+	itemPart.CFrame = shelfCFrame
+	itemPart.Parent = FoodShopFolder
+	return itemPart
+end
+
+-- Создание секции полок с 4 товарами и интерактивным ценником
+local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
+	local cfg = FOOD_CATALOG[foodKey]
+	if not cfg then return end
+
+	-- Деревянная полка-подставка
+	local shelfPart = Instance.new("Part")
+	shelfPart.Name = "Shelf_" .. foodKey
+	shelfPart.Size = Vector3.new(6.0, 0.5, 2.2)
+	shelfPart.Position = shelfCenterPos
+	shelfPart.Orientation = Vector3.new(0, shelfRotationY, 0)
+	shelfPart.Anchored = true
+	shelfPart.Material = Enum.Material.WoodPlanks
+	shelfPart.BrickColor = BrickColor.new("Brown")
+	shelfPart.Parent = FoodShopFolder
+
+	-- Расставляем ровно 4 штуки еды на полке
+	local offsets = { -2.0, -0.65, 0.65, 2.0 }
+	for _, xOff in ipairs(offsets) do
+		local itemCF = shelfPart.CFrame * CFrame.new(xOff, 0.4, 0)
+		createFoodDisplayItem(foodKey, itemCF)
+	end
+
+	-- Интерактивный ProximityPrompt на полке для мгновенного бесплатного взятия
+	local prompt = Instance.new("ProximityPrompt", shelfPart)
+	prompt.ObjectText = string.format("%s [🍗 +60 | 🔥 +50%%]", cfg.Name)
+	prompt.ActionText = "Взять с полки (Бесплатно)"
+	prompt.HoldDuration = 0.2
+	prompt.MaxActivationDistance = 9
+	prompt.RequiresLineOfSight = false
+
+	prompt.Triggered:Connect(function(player)
+		local res = handleBuyFood(player, foodKey)
+		if not res.Success then
+			ShowNotificationRemote:FireClient(player, "⚠️ " .. res.Message)
+		end
+	end)
+
+	-- Информационный ценник над полкой
+	local bb = Instance.new("BillboardGui", shelfPart)
+	bb.Size = UDim2.new(0, 190, 0, 42)
+	bb.StudsOffset = Vector3.new(0, 1.3, 0)
+	bb.AlwaysOnTop = false
+	bb.MaxDistance = 25
+
+	local lbl = Instance.new("TextLabel", bb)
+	lbl.Size = UDim2.new(1, 0, 1, 0)
+	lbl.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+	lbl.BackgroundTransparency = 0.25
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextSize = 11
+	lbl.TextColor3 = Color3.fromRGB(241, 245, 249)
+	lbl.Text = string.format("%s\n🍗 +60 | 🔥 +50%%\n🎉 БЕСПЛАТНО", cfg.Name)
+	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
+	local stroke = Instance.new("UIStroke", lbl)
+	stroke.Color = Color3.fromRGB(74, 222, 128)
+	stroke.Thickness = 1
+end
+
 local function buildFoodShopBuilding()
 	FoodShopFolder:ClearAllChildren()
 
-	-- Пол
+	-- 1. Пол магазина (32 x 26 studs)
 	local floor = Instance.new("Part")
 	floor.Name = "Floor"
-	floor.Size = Vector3.new(28, 1.2, 22)
+	floor.Size = Vector3.new(32, 1.2, 26)
 	floor.Position = FOOD_SHOP_POSITION
 	floor.Anchored = true
 	floor.Material = Enum.Material.WoodPlanks
 	floor.BrickColor = BrickColor.new("Dark orange")
 	floor.Parent = FoodShopFolder
 
-	-- Стены
+	-- 2. Задняя стена
 	local wallBack = Instance.new("Part")
-	wallBack.Size = Vector3.new(28, 9, 1.5)
-	wallBack.Position = FOOD_SHOP_POSITION + Vector3.new(0, 4.5, -10.5)
+	wallBack.Name = "WallBack"
+	wallBack.Size = Vector3.new(32, 10, 1.5)
+	wallBack.Position = FOOD_SHOP_POSITION + Vector3.new(0, 5, -12.25)
 	wallBack.Anchored = true
 	wallBack.Material = Enum.Material.Wood
 	wallBack.BrickColor = BrickColor.new("Brown")
 	wallBack.Parent = FoodShopFolder
 
+	-- 3. Левая стена
 	local wallLeft = Instance.new("Part")
-	wallLeft.Size = Vector3.new(1.5, 9, 22)
-	wallLeft.Position = FOOD_SHOP_POSITION + Vector3.new(-13.5, 4.5, 0)
+	wallLeft.Name = "WallLeft"
+	wallLeft.Size = Vector3.new(1.5, 10, 26)
+	wallLeft.Position = FOOD_SHOP_POSITION + Vector3.new(-15.25, 5, 0)
 	wallLeft.Anchored = true
 	wallLeft.Material = Enum.Material.Wood
 	wallLeft.BrickColor = BrickColor.new("Brown")
 	wallLeft.Parent = FoodShopFolder
 
+	-- 4. Правая стена
 	local wallRight = Instance.new("Part")
-	wallRight.Size = Vector3.new(1.5, 9, 22)
-	wallRight.Position = FOOD_SHOP_POSITION + Vector3.new(13.5, 4.5, 0)
+	wallRight.Name = "WallRight"
+	wallRight.Size = Vector3.new(1.5, 10, 26)
+	wallRight.Position = FOOD_SHOP_POSITION + Vector3.new(15.25, 5, 0)
 	wallRight.Anchored = true
 	wallRight.Material = Enum.Material.Wood
 	wallRight.BrickColor = BrickColor.new("Brown")
 	wallRight.Parent = FoodShopFolder
 
-	-- Крыша
+	-- 5. Фасадная стена С ОТКРЫТЫМ ДВЕРНЫМ ВХОДОМ (Проход 8 studs)
+	local frontLeft = Instance.new("Part")
+	frontLeft.Name = "FrontWallLeft"
+	frontLeft.Size = Vector3.new(11.5, 10, 1.5)
+	frontLeft.Position = FOOD_SHOP_POSITION + Vector3.new(-10.25, 5, 12.25)
+	frontLeft.Anchored = true
+	frontLeft.Material = Enum.Material.Wood
+	frontLeft.BrickColor = BrickColor.new("Brown")
+	frontLeft.Parent = FoodShopFolder
+
+	local frontRight = Instance.new("Part")
+	frontRight.Name = "FrontWallRight"
+	frontRight.Size = Vector3.new(11.5, 10, 1.5)
+	frontRight.Position = FOOD_SHOP_POSITION + Vector3.new(10.25, 5, 12.25)
+	frontRight.Anchored = true
+	frontRight.Material = Enum.Material.Wood
+	frontRight.BrickColor = BrickColor.new("Brown")
+	frontRight.Parent = FoodShopFolder
+
+	local frontTopLintel = Instance.new("Part")
+	frontTopLintel.Name = "DoorLintel"
+	frontTopLintel.Size = Vector3.new(9, 2.5, 1.5)
+	frontTopLintel.Position = FOOD_SHOP_POSITION + Vector3.new(0, 8.75, 12.25)
+	frontTopLintel.Anchored = true
+	frontTopLintel.Material = Enum.Material.Wood
+	frontTopLintel.BrickColor = BrickColor.new("Brown")
+	frontTopLintel.Parent = FoodShopFolder
+
+	-- 6. Крыша со снегом
 	local roof = Instance.new("Part")
-	roof.Size = Vector3.new(31, 1.5, 25)
-	roof.Position = FOOD_SHOP_POSITION + Vector3.new(0, 9.5, 0)
+	roof.Name = "Roof"
+	roof.Size = Vector3.new(35, 1.5, 29)
+	roof.Position = FOOD_SHOP_POSITION + Vector3.new(0, 10.5, 0)
 	roof.Anchored = true
 	roof.Material = Enum.Material.Snow
 	roof.BrickColor = BrickColor.new("White")
 	roof.Parent = FoodShopFolder
 
-	-- Печь-очаг
-	local oven = Instance.new("Part")
-	oven.Name = "Oven"
-	oven.Size = Vector3.new(5, 5, 4)
-	oven.Position = FOOD_SHOP_POSITION + Vector3.new(9, 2.5, -7)
-	oven.Anchored = true
-	oven.Material = Enum.Material.Brick
-	oven.BrickColor = BrickColor.new("Bright red")
-	oven.Parent = FoodShopFolder
+	-- 7. Потолочное теплое освещение (Без костров и дыма)
+	local ceilingLightPart = Instance.new("Part", FoodShopFolder)
+	ceilingLightPart.Name = "CeilingLight"
+	ceilingLightPart.Size = Vector3.new(3, 0.5, 3)
+	ceilingLightPart.Position = FOOD_SHOP_POSITION + Vector3.new(0, 9.2, 0)
+	ceilingLightPart.Anchored = true
+	ceilingLightPart.Material = Enum.Material.Neon
+	ceilingLightPart.BrickColor = BrickColor.new("Bright yellow")
 
-	local ovenFire = Instance.new("Fire", oven)
-	ovenFire.Size = 4
-	ovenFire.Heat = 12
+	local shopLight = Instance.new("PointLight", ceilingLightPart)
+	shopLight.Color = Color3.fromRGB(255, 220, 140)
+	shopLight.Range = 36
+	shopLight.Brightness = 2.5
 
-	local ovenLight = Instance.new("PointLight", oven)
-	ovenLight.Color = Color3.fromRGB(255, 140, 40)
-	ovenLight.Range = 28
-	ovenLight.Brightness = 2.5
-
-	-- Торговый прилавок
-	local counter = Instance.new("Part")
-	counter.Name = "FoodCounter"
-	counter.Size = Vector3.new(14, 3.2, 3.5)
-	counter.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.6, 2)
-	counter.Anchored = true
-	counter.Material = Enum.Material.WoodPlanks
-	counter.BrickColor = BrickColor.new("Dark orange")
-	counter.Parent = FoodShopFolder
-
-	-- Вывеска
+	-- 8. Вывеска над входом
 	local sign = Instance.new("Part")
-	sign.Size = Vector3.new(16, 2.5, 0.8)
-	sign.Position = FOOD_SHOP_POSITION + Vector3.new(0, 7.5, 11)
+	sign.Name = "ShopSign"
+	sign.Size = Vector3.new(18, 3, 0.8)
+	sign.Position = FOOD_SHOP_POSITION + Vector3.new(0, 8.5, 13.2)
 	sign.Anchored = true
-	sign.Material = Enum.Material.Wood
-	sign.BrickColor = BrickColor.new("Brown")
+	sign.Material = Enum.Material.WoodPlanks
+	sign.BrickColor = BrickColor.new("Dark orange")
 	sign.Parent = FoodShopFolder
 
 	local bbSign = Instance.new("BillboardGui", sign)
-	bbSign.Size = UDim2.new(0, 260, 0, 40)
+	bbSign.Size = UDim2.new(0, 300, 0, 48)
 	bbSign.StudsOffset = Vector3.new(0, 0, 0.6)
 	bbSign.AlwaysOnTop = true
 
@@ -129,114 +282,67 @@ local function buildFoodShopBuilding()
 	signLbl.Size = UDim2.new(1, 0, 1, 0)
 	signLbl.BackgroundTransparency = 1
 	signLbl.Font = Enum.Font.GothamBlack
-	signLbl.TextSize = 16
+	signLbl.TextSize = 17
 	signLbl.TextColor3 = Color3.fromRGB(250, 204, 21)
-	signLbl.Text = "🥫 ПРОДУКТОВАЯ ЛАВКА"
+	signLbl.Text = "🥫 МАГАЗИН ПРОДУКТОВ"
 
-	-- ProximityPrompt для открытия меню магазина
-	local prompt = Instance.new("ProximityPrompt", counter)
-	prompt.ActionText = "Открыть меню продуктов"
-	prompt.ObjectText = "🥫 Лавка Еды"
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 14
-	prompt.RequiresLineOfSight = false
+	----------------------------------------------------------------------------
+	-- 🛒 РАССТАНОВКА СТЕЛЛАЖЕЙ И ПОЛОК С ЕДОЙ (ПО 4 ШТ КАЖДАЯ)
+	----------------------------------------------------------------------------
+
+	-- Стеллаж 1: Вдоль левой стены (3 полки)
+	local shelfLeftBackdrop = Instance.new("Part", FoodShopFolder)
+	shelfLeftBackdrop.Name = "ShelfRack_Left"
+	shelfLeftBackdrop.Size = Vector3.new(1.2, 7.5, 16)
+	shelfLeftBackdrop.Position = FOOD_SHOP_POSITION + Vector3.new(-13.8, 4.25, -2)
+	shelfLeftBackdrop.Anchored = true
+	shelfLeftBackdrop.Material = Enum.Material.WoodPlanks
+	shelfLeftBackdrop.BrickColor = BrickColor.new("Dark orange")
+
+	createRetailShelfSection("Bar", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, -6.5), 0)    -- 4x Батончики
+	createRetailShelfSection("Bread", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, 0.0), 0)   -- 4x Хлеб
+	createRetailShelfSection("Chips", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, 6.5), 0)   -- 4x Чипсы
+
+	-- Стеллаж 2: Вдоль правой стены (3 полки)
+	local shelfRightBackdrop = Instance.new("Part", FoodShopFolder)
+	shelfRightBackdrop.Name = "ShelfRack_Right"
+	shelfRightBackdrop.Size = Vector3.new(1.2, 7.5, 14)
+	shelfRightBackdrop.Position = FOOD_SHOP_POSITION + Vector3.new(13.8, 4.25, 2)
+	shelfRightBackdrop.Anchored = true
+	shelfRightBackdrop.Material = Enum.Material.WoodPlanks
+	shelfRightBackdrop.BrickColor = BrickColor.new("Dark orange")
+
+	createRetailShelfSection("Soup", FOOD_SHOP_POSITION + Vector3.new(12.4, 2.0, -1.5), 0)    -- 4x Суп
+	createRetailShelfSection("Pepper", FOOD_SHOP_POSITION + Vector3.new(12.4, 2.0, 4.0), 0)   -- 4x Перец
+	createRetailShelfSection("Coffee", FOOD_SHOP_POSITION + Vector3.new(12.4, 4.8, 1.2), 0)   -- 4x Кофе
+
+	-- Стеллаж 3: Центральный островной прилавок
+	local centerCounter = Instance.new("Part", FoodShopFolder)
+	centerCounter.Name = "CenterDisplay_Steak"
+	centerCounter.Size = Vector3.new(8, 2.2, 4)
+	centerCounter.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.1, -2)
+	centerCounter.Anchored = true
+	centerCounter.Material = Enum.Material.WoodPlanks
+	centerCounter.BrickColor = BrickColor.new("Dark orange")
+
+	createRetailShelfSection("Steak", FOOD_SHOP_POSITION + Vector3.new(0, 2.3, -2), 0)        -- 4x Стейк
+
+	-- 9. Кассовый стол у входа с общим каталогом
+	local checkout = Instance.new("Part", FoodShopFolder)
+	checkout.Name = "CheckoutCounter"
+	checkout.Size = Vector3.new(5.5, 2.8, 3)
+	checkout.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.4, 7.5)
+	checkout.Anchored = true
+	checkout.Material = Enum.Material.WoodPlanks
+	checkout.BrickColor = BrickColor.new("Dark orange")
+
+	local cashPrompt = Instance.new("ProximityPrompt", checkout)
+	cashPrompt.ObjectText = "🛒 Каталог еды"
+	cashPrompt.ActionText = "Открыть каталог продуктов (Бесплатно)"
+	cashPrompt.HoldDuration = 0
+	cashPrompt.MaxActivationDistance = 9
+
+	print("🏪 [FoodShopService] Бесплатный магазин-домик без костра готов!")
 end
 
 buildFoodShopBuilding()
-
--- Обработка покупки еды через RemoteFunction
-BuyFoodRemote.OnServerInvoke = function(player, foodKey)
-	local item = FOOD_CATALOG[foodKey]
-	if not item then
-		return { Success = false, Message = "Товар не найден" }
-	end
-
-	-- Проверка лимита бесплатного пайка (Максимум 3 батончика в час)
-	if foodKey == "Bar" then
-		local now = os.time()
-		local resetTime = player:GetAttribute("FreeBarResetTime") or 0
-		local claimed = player:GetAttribute("FreeBarsClaimed") or 0
-
-		if now >= resetTime then
-			claimed = 0
-			resetTime = now + 3600 -- 1 час (3600 секунд)
-			player:SetAttribute("FreeBarResetTime", resetTime)
-			player:SetAttribute("FreeBarsClaimed", 0)
-		end
-
-		if claimed >= 3 then
-			local waitMinutes = math.max(1, math.ceil((resetTime - now) / 60))
-			return { Success = false, Message = string.format("Лимит бесплатного пайка исчерпан (3/3 в час)! Доступно через %d мин.", waitMinutes) }
-		end
-	end
-
-	-- 1. Проверка наличия ресурсов
-	for resKey, amountReq in pairs(item.Cost) do
-		local curRes = player:GetAttribute(resKey) or 0
-		if curRes < amountReq then
-			return { Success = false, Message = "Недостаточно ресурсов!" }
-		end
-	end
-
-	-- 2. Проверка свободного места в рюкзаке
-	local backpack = player:FindFirstChildOfClass("Backpack")
-	local maxSlots = player:GetAttribute("MaxSlots") or 5
-	local char = player.Character
-
-	if backpack then
-		-- Проверяем, есть ли уже неполный стак этого товара
-		local hasSpaceInStack = false
-		for _, t in ipairs(backpack:GetChildren()) do
-			if t:IsA("Tool") and t:GetAttribute("ItemKey") == foodKey then
-				local curC = t:GetAttribute("Count") or 1
-				local maxS = t:GetAttribute("MaxStack") or 3
-				if curC < maxS then
-					hasSpaceInStack = true
-					break
-				end
-			end
-		end
-
-		if not hasSpaceInStack then
-			local currentTools = #backpack:GetChildren() + (char and char:FindFirstChildOfClass("Tool") and 1 or 0)
-			if currentTools >= maxSlots then
-				return { Success = false, Message = "⚠️ Рюкзак полон! Освободите место." }
-			end
-		end
-	end
-
-	-- 3. Списание ресурсов
-	for resKey, amountReq in pairs(item.Cost) do
-		local curRes = player:GetAttribute(resKey) or 0
-		player:SetAttribute(resKey, curRes - amountReq)
-
-		-- Уменьшаем количество в Tool рюкзака
-		if backpack then
-			for _, t in ipairs(backpack:GetChildren()) do
-				if t:IsA("Tool") and t:GetAttribute("ItemKey") == resKey then
-					local c = t:GetAttribute("Count") or 1
-					if c > amountReq then
-						t:SetAttribute("Count", c - amountReq)
-						t.Name = string.format("%s (x%d)", t.Name:match("^[^%(]+") or t.Name, c - amountReq)
-					else
-						t:Destroy()
-					end
-					break
-				end
-			end
-		end
-	end
-
-	-- 4. Выдача купленной еды в рюкзак
-	if _G.GiveItemToPlayer then
-		_G.GiveItemToPlayer(player, foodKey, 1)
-	end
-
-	if foodKey == "Bar" then
-		local claimed = player:GetAttribute("FreeBarsClaimed") or 0
-		player:SetAttribute("FreeBarsClaimed", claimed + 1)
-	end
-
-	print(string.format("🥫 %s успешно купил: %s!", player.Name, item.Name))
-	return { Success = true, Message = "Успешно куплено!" }
-end

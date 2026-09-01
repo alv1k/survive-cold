@@ -268,7 +268,7 @@ local function spawnResourceNode(resType, rawPos)
 
 	local groundY = getGroundHeight(rawPos)
 	-- Приподнимаем точку спавна на +0.65 studs над снежной коркой, чтобы модели никогда не тонули в вокселях
-	local pos = Vector3.new(rawPos.X, groundY + 0.65, rawPos.Z)
+	local pos = Vector3.new(rawPos.X, groundY + 2, rawPos.Z)
 
 	local model = nil
 	if resType == "Branches" then model = buildBranchesModel(pos)
@@ -392,6 +392,12 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 		if lumberRank == 1 and math.random() < 0.25 then gain = gain + 1
 		elseif lumberRank == 2 and math.random() < 0.35 then gain = gain + 1
 		elseif lumberRank >= 3 and math.random() < 0.50 then gain = gain + 1 end
+
+		-- Командный бонус с Алтаря (+20% шанс на дополнительный ресурс)
+		local dropBonus = workspace:GetAttribute("ResourceDropBonus") or 0
+		if dropBonus > 0 and math.random() < dropBonus then
+			gain = gain + 1
+		end
 
 		local given = false
 		if _G.GiveItemToPlayer then

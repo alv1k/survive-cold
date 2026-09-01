@@ -1,9 +1,10 @@
 --[[
     WorkbenchController.client.luau
-    Клиентский интерфейс Верстака с четкой иерархией:
-    - 🟢 СЕКЦИЯ 1: «✅ ДОСТУПНО ДЛЯ КРАФТА» (Сортировка по Уровням 1 -> 5)
+    Клиентский интерфейс Верстака с четкой иерархией и мгновенным пересчетом:
+    - 🟢 СЕКЦИЯ 1: «✅ ГОТОВО К СОЗДАНИЮ» (Сортировка по Уровням 1 -> 5)
     - 🔒 СЕКЦИЯ 2: «🔒 ТРЕБУЮТСЯ РЕСУРСЫ ИЛИ УЛУЧШЕНИЕ» (Сортировка по Уровням 1 -> 5)
-    - Четкие бейджи уровней [УРОВЕНЬ 1..5], иконки ресурсов и понятные статусы
+    - Динамический пересчет предметов в рюкзаке и руках в реальном времени
+    - Моментальное обновление доступных рецептов сразу после крафта
 --]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -133,6 +134,32 @@ local ICON_MAP = {
 	Parts = "⚙️"
 }
 
+-- Функция подсчета реального количества ресурсов у игрока (из рюкзака, рук и атрибутов)
+local function getPlayerResourceCount(resourceKey)
+	local attrCount = player:GetAttribute(resourceKey) or 0
+	local toolCount = 0
+
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if backpack then
+		for _, t in ipairs(backpack:GetChildren()) do
+			if t:IsA("Tool") and t:GetAttribute("ItemKey") == resourceKey then
+				toolCount = toolCount + (t:GetAttribute("Count") or 1)
+			end
+		end
+	end
+
+	local char = player.Character
+	if char then
+		for _, t in ipairs(char:GetChildren()) do
+			if t:IsA("Tool") and t:GetAttribute("ItemKey") == resourceKey then
+				toolCount = toolCount + (t:GetAttribute("Count") or 1)
+			end
+		end
+	end
+
+	return math.max(attrCount, toolCount)
+end
+
 local function renderRecipes()
 	for _, child in ipairs(scrollFrame:GetChildren()) do
 		if child:IsA("Frame") then child:Destroy() end
@@ -161,7 +188,7 @@ local function renderRecipes()
 		if matchCat then
 			local canCraft = (curWbLvl >= rData.Tier)
 			for ingKey, ingAmount in pairs(rData.Ingredients) do
-				local cur = player:GetAttribute(ingKey) or 0
+				local cur = getPlayerResourceCount(ingKey)
 				if cur < ingAmount then
 					canCraft = false
 				end
@@ -266,10 +293,10 @@ local function renderRecipes()
 		nameLbl.Text = rData.DisplayName
 		nameLbl.Parent = card
 
-		-- Иконочный список ресурсов
+		-- Иконочный список ресурсов с реальным количеством
 		local ingText = ""
 		for ingKey, ingAmount in pairs(rData.Ingredients) do
-			local cur = player:GetAttribute(ingKey) or 0
+			local cur = getPlayerResourceCount(ingKey)
 			local icon = ICON_MAP[ingKey] or "📦"
 			ingText = ingText .. string.format("%s %d/%d   ", icon, cur, ingAmount)
 		end
@@ -301,9 +328,16 @@ local function renderRecipes()
 		if isAvailable then
 			craftBtn.MouseButton1Click:Connect(function()
 				if CraftItemRemote then
+					craftBtn.Text = "⏳..."
 					CraftItemRemote:FireServer(rKey)
-					task.wait(0.25)
-					renderRecipes()
+					
+					-- Мгновенный и повторный пересчет для гарантии синхронизации
+					task.delay(0.12, function()
+						if screenGui.Enabled then renderRecipes() end
+					end)
+					task.delay(0.35, function()
+						if screenGui.Enabled then renderRecipes() end
+					end)
 				end
 			end)
 		end
@@ -353,8 +387,9 @@ end
 upgradeBtn.MouseButton1Click:Connect(function()
 	if UpgradeWorkbenchRemote then
 		UpgradeWorkbenchRemote:FireServer()
-		task.wait(0.3)
-		renderRecipes()
+		task.delay(0.2, function()
+			if screenGui.Enabled then renderRecipes() end
+		end)
 	end
 end)
 
@@ -391,17 +426,34 @@ workspace.DescendantAdded:Connect(function(desc)
 end)
 bindWorkbenchPrompt()
 
+-- Автоматический пересчет рецептов при изменении любых атрибутов или инвентаря
 player.AttributeChanged:Connect(function()
 	if screenGui.Enabled then
 		renderRecipes()
 	end
 end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.KeyCode == Enum.KeyCode.E and screenGui.Enabled then
-		-- screenGui.Enabled = false
+local function attachBackpackListeners()
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if backpack then
+		backpack.ChildAdded:Connect(function()
+			if screenGui.Enabled then renderRecipes() end
+		end)
+		backpack.ChildRemoved:Connect(function()
+			if screenGui.Enabled then renderRecipes() end
+		end)
 	end
-end)
+end
 
-print("🛠️ [WorkbenchController] Интерфейс верстака с четкой секционной иерархией активен!")
+player.CharacterAdded:Connect(function(char)
+	char.ChildAdded:Connect(function()
+		if screenGui.Enabled then renderRecipes() end
+	end)
+	char.ChildRemoved:Connect(function()
+		if screenGui.Enabled then renderRecipes() end
+	end)
+	attachBackpackListeners()
+end)
+attachBackpackListeners()
+
+print("🛠️ [WorkbenchController] Интерфейс верстака с мгновенным пересчетом активен!")

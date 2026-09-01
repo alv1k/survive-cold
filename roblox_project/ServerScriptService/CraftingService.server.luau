@@ -18,10 +18,36 @@ CraftItemRemote.Name = "CraftItem"
 local UpgradeWorkbenchRemote = RemotesFolder:FindFirstChild("UpgradeWorkbench") or Instance.new("RemoteEvent", RemotesFolder)
 UpgradeWorkbenchRemote.Name = "UpgradeWorkbench"
 
--- 1. Функция проверки ресурсов у игрока
+-- 1. Функция точного подсчета ресурсов у игрока (в атрибутах и в рюкзаке)
+local function countPlayerResource(player, resourceName)
+	local attrCount = player:GetAttribute(resourceName) or 0
+	local toolCount = 0
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	local char = player.Character
+
+	if backpack then
+		for _, t in ipairs(backpack:GetChildren()) do
+			if t:IsA("Tool") and t:GetAttribute("ItemKey") == resourceName then
+				toolCount = toolCount + (t:GetAttribute("Count") or 1)
+			end
+		end
+	end
+	if char then
+		for _, t in ipairs(char:GetChildren()) do
+			if t:IsA("Tool") and t:GetAttribute("ItemKey") == resourceName then
+				toolCount = toolCount + (t:GetAttribute("Count") or 1)
+			end
+		end
+	end
+
+	local total = math.max(attrCount, toolCount)
+	player:SetAttribute(resourceName, total)
+	return total
+end
+
 local function hasResources(player, requirements)
 	for resourceName, amountRequired in pairs(requirements) do
-		local currentVal = player:GetAttribute(resourceName) or 0
+		local currentVal = countPlayerResource(player, resourceName)
 		if currentVal < amountRequired then
 			return false
 		end
@@ -29,11 +55,38 @@ local function hasResources(player, requirements)
 	return true
 end
 
--- 2. Функция списания ресурсов
+-- 2. Функция списания ресурсов из рюкзака и атрибутов
 local function deductResources(player, requirements)
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	local char = player.Character
+
 	for resourceName, amountRequired in pairs(requirements) do
-		local currentVal = player:GetAttribute(resourceName) or 0
-		player:SetAttribute(resourceName, math.max(0, currentVal - amountRequired))
+		local currentVal = countPlayerResource(player, resourceName)
+		local remainingToDeduct = amountRequired
+
+		local function deductFromContainer(container)
+			if not container or remainingToDeduct <= 0 then return end
+			for _, t in ipairs(container:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("ItemKey") == resourceName then
+					local curC = t:GetAttribute("Count") or 1
+					if curC > remainingToDeduct then
+						t:SetAttribute("Count", curC - remainingToDeduct)
+						t.Name = string.format("%s (x%d)", t.Name:match("^[^%(]+") or t.Name, curC - remainingToDeduct)
+						remainingToDeduct = 0
+						break
+					else
+						remainingToDeduct = remainingToDeduct - curC
+						t:Destroy()
+					end
+				end
+			end
+		end
+
+		deductFromContainer(backpack)
+		deductFromContainer(char)
+
+		local finalCount = math.max(0, currentVal - amountRequired)
+		player:SetAttribute(resourceName, finalCount)
 	end
 end
 
@@ -114,26 +167,81 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 			local newModel = Instance.new("Model")
 			newModel.Name = recipe.DisplayName
 
-			local basePart = Instance.new("Part")
-			basePart.Name = "PrimaryPart"
-			basePart.Size = (recipe.Category == "Structures") and Vector3.new(12, 6, 2) or Vector3.new(4, 5, 4)
-			basePart.Position = spawnPos
-			basePart.Anchored = true
-			basePart.Material = (recipe.Category == "Structures") and Enum.Material.WoodPlanks or Enum.Material.DiamondPlate
-			basePart.BrickColor = recipe.IsHeavy and BrickColor.new("Bright orange") or BrickColor.new("Dark stone grey")
-			basePart.Parent = newModel
-			newModel.PrimaryPart = basePart
-
 			if recipe.Category == "Turrets" then
+				local basePart = Instance.new("Part")
+				basePart.Name = "Base"
+				basePart.Size = Vector3.new(4, 0.8, 4)
+				basePart.Position = spawnPos + Vector3.new(0, 0.4, 0)
+				basePart.Anchored = true
+				basePart.Material = Enum.Material.DiamondPlate
+				basePart.BrickColor = recipe.IsHeavy and BrickColor.new("Bright orange") or BrickColor.new("Dark stone grey")
+				basePart.Parent = newModel
+				newModel.PrimaryPart = basePart
+
+				local pillar = Instance.new("Part")
+				pillar.Name = "Pillar"
+				pillar.Size = Vector3.new(1.2, 2.2, 1.2)
+				pillar.Position = basePart.Position + Vector3.new(0, 1.5, 0)
+				pillar.Anchored = true
+				pillar.Material = Enum.Material.Metal
+				pillar.BrickColor = BrickColor.new("Black")
+				pillar.Parent = newModel
+
+				local head = Instance.new("Part")
+				head.Name = "Head"
+				head.Size = Vector3.new(2.2, 1.4, 3.0)
+				head.Position = pillar.Position + Vector3.new(0, 1.6, 0)
+				head.Anchored = true
+				head.Material = Enum.Material.DiamondPlate
+				head.BrickColor = recipe.IsHeavy and BrickColor.new("Bright orange") or BrickColor.new("Medium stone grey")
+				head.Parent = newModel
+
+				local statusLight = Instance.new("Part")
+				statusLight.Name = "StatusLight"
+				statusLight.Size = Vector3.new(0.5, 0.5, 0.5)
+				statusLight.Position = head.Position + Vector3.new(0, 0.9, 0)
+				statusLight.Anchored = true
+				statusLight.Material = Enum.Material.Neon
+				statusLight.BrickColor = BrickColor.new("Bright green")
+				statusLight.Parent = newModel
+
+				local smoke = Instance.new("Smoke", statusLight)
+				smoke.Name = "BrokenSmoke"
+				smoke.Size = 2.5
+				smoke.Color = Color3.fromRGB(70, 70, 70)
+				smoke.Opacity = 0.6
+				smoke.Enabled = false
+
 				newModel:SetAttribute("Range", recipe.Range)
 				newModel:SetAttribute("Damage", recipe.Damage)
 				newModel:SetAttribute("FireRate", recipe.FireRate)
 				newModel:SetAttribute("IsHeavy", recipe.IsHeavy or false)
+				newModel:SetAttribute("Durability", 10)
+				newModel:SetAttribute("MaxDurability", 10)
+				newModel:SetAttribute("IsBroken", false)
+
+				local prompt = Instance.new("ProximityPrompt", basePart)
+				prompt.ActionText = "Прочность: 10/10"
+				prompt.ObjectText = recipe.DisplayName
+				prompt.HoldDuration = 0.5
+				prompt.MaxActivationDistance = 10
+				prompt.RequiresLineOfSight = false
+
 				newModel.Parent = workspace:FindFirstChild("Turrets") or workspace
 			else
+				local basePart = Instance.new("Part")
+				basePart.Name = "PrimaryPart"
+				basePart.Size = Vector3.new(12, 6, 2)
+				basePart.Position = spawnPos + Vector3.new(0, 3, 0)
+				basePart.Anchored = true
+				basePart.Material = Enum.Material.WoodPlanks
+				basePart.BrickColor = BrickColor.new("Dark orange")
+				basePart.Parent = newModel
+				newModel.PrimaryPart = basePart
 				basePart:SetAttribute("Health", recipe.Health or 100)
 				newModel.Parent = workspace:FindFirstChild("Walls") or workspace
 			end
+
 			print(string.format("🛠️ %s построил: %s!", player.Name, recipe.DisplayName))
 			return
 		end

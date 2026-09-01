@@ -25,23 +25,24 @@ local ITEM_CONFIGS = {
 	WolfPelt = { Name = "🐺 Шкура Волка", MaxStack = 5 },
 	YetiPelt = { Name = "❄️ Шкура Йети", MaxStack = 5 },
 	
-	-- Еда
-	Bar = { Name = "🍫 Батончик", MaxStack = 3, IsFood = true, Warmth = 10, Hunger = 30, Health = 15 },
-	Bread = { Name = "🍞 Хлеб", MaxStack = 3, IsFood = true, Warmth = 15, Hunger = 50, Health = 25 },
-	Chips = { Name = "🥔 Чипсы", MaxStack = 3, IsFood = true, Warmth = 8, Hunger = 25, Health = 15 },
-	Soup = { Name = "🥫 Суп", MaxStack = 3, IsFood = true, Warmth = 30, Hunger = 70, Health = 35 },
-	Pepper = { Name = "🌶️ Перец", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 15, Health = 5 },
-	Coffee = { Name = "☕ Кофе", MaxStack = 3, IsFood = true, Warmth = 40, Hunger = 20, Health = 20 },
-	Steak = { Name = "🥩 Стейк", MaxStack = 2, IsFood = true, Warmth = 35, Hunger = 90, Health = 60 },
+	-- Еда (Единое линейное восстановление: +60 Сытости, +50 Тепла, +25 Здоровья)
+	Bar = { Name = "🍫 Батончик", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Bread = { Name = "🍞 Хлеб", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Chips = { Name = "🥔 Чипсы", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Soup = { Name = "🥫 Суп", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Pepper = { Name = "🌶️ Перец", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Coffee = { Name = "☕ Кофе", MaxStack = 3, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
+	Steak = { Name = "🥩 Стейк", MaxStack = 2, IsFood = true, Warmth = 50, Hunger = 60, Health = 25 },
 
 	-- Ловушки и постройки
 	RabbitTrap = { Name = "🪤 Капкан", MaxStack = 3, IsPlaceable = true },
+	SpikeTrap = { Name = "📌 Шипастый Пол", MaxStack = 3, IsPlaceable = true },
 	CampfireKit = { Name = "🔥 Походный костер", MaxStack = 2, IsPlaceable = true },
 	
 	-- Оружие
-	Spear = { Name = "🗡️ Копье", MaxStack = 1, IsWeapon = true, Damage = 30 },
-	Slingshot = { Name = "🏹 Рогатка", MaxStack = 1, IsWeapon = true, Damage = 22 },
-	Revolver = { Name = "🔫 Револьвер", MaxStack = 1, IsWeapon = true, Damage = 55 }
+	Spear = { Name = "🗡️ Копье", MaxStack = 1, IsWeapon = true, WeaponType = "Melee", Damage = 30, FireRate = 0.8 },
+	Slingshot = { Name = "🏹 Праща", MaxStack = 1, IsWeapon = true, WeaponType = "Ranged", AmmoType = "Ammo_Slingshot", Damage = 20, FireRate = 0.6 },
+	Revolver = { Name = "🔫 Револьвер", MaxStack = 1, IsWeapon = true, WeaponType = "Ranged", AmmoType = "Ammo_Revolver", Damage = 55, FireRate = 0.35 }
 }
 
 -- Функция сборки детализированной 3D-модели для Handle инструмента
@@ -124,6 +125,19 @@ local function attachDetailed3DModel(tool, itemKey)
 		addSubPart("Jaw2", Vector3.new(1.6, 0.35, 0.2), CFrame.new(0, 0.15, -0.7), Enum.Material.Metal, BrickColor.new("Black"))
 		addSubPart("Diode", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 0.2, 0), Enum.Material.Neon, BrickColor.new("Bright green"))
 
+	elseif itemKey == "SpikeTrap" then
+		handle.Size = Vector3.new(2.4, 0.2, 2.4)
+		handle.Material = Enum.Material.WoodPlanks
+		handle.BrickColor = BrickColor.new("Dark orange")
+
+		-- Шипы
+		for sx = -1, 1, 2 do
+			for sz = -1, 1, 2 do
+				addSubPart("Spike_" .. sx .. "_" .. sz, Vector3.new(0.2, 0.8, 0.2), CFrame.new(sx * 0.6, 0.45, sz * 0.6), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+			end
+		end
+		addSubPart("CenterSpike", Vector3.new(0.25, 0.9, 0.25), CFrame.new(0, 0.5, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
+
 	elseif itemKey == "Steak" then
 		handle.Size = Vector3.new(1.4, 0.4, 1.1)
 		handle.Material = Enum.Material.SmoothPlastic
@@ -191,6 +205,53 @@ local function attachDetailed3DModel(tool, itemKey)
 	return handle
 end
 
+local EatFoodRemote = RemotesFolder:FindFirstChild("EatFood") or Instance.new("RemoteEvent", RemotesFolder)
+EatFoodRemote.Name = "EatFood"
+
+-- Функция поедания еды (только при подтвержденном клике по персонажу)
+local function consumeFoodItem(player, targetTool)
+	local char = player.Character
+	if not char then return end
+
+	local tool = targetTool or char:FindFirstChildOfClass("Tool")
+	if not tool then return end
+
+	local itemKey = tool:GetAttribute("ItemKey") or tool.Name
+	local cfg = ITEM_CONFIGS[itemKey]
+	if not cfg or not cfg.IsFood then return end
+
+	local curCount = tool:GetAttribute("Count") or 1
+	local curWarmth = player:GetAttribute("Warmth") or 100
+	local curHunger = player:GetAttribute("Hunger") or 100
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+	player:SetAttribute("Warmth", math.min(100, curWarmth + (cfg.Warmth or 50)))
+	player:SetAttribute("Hunger", math.min(100, curHunger + (cfg.Hunger or 60)))
+	if humanoid then
+		humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + (cfg.Health or 25))
+	end
+
+	local curAttr = player:GetAttribute(itemKey) or 0
+	if curAttr > 0 then
+		player:SetAttribute(itemKey, curAttr - 1)
+	end
+
+	print(string.format("🍖 %s съел %s! (+%d тепла, +%d сытости, +%d HP)", player.Name, cfg.Name, cfg.Warmth or 50, cfg.Hunger or 60, cfg.Health or 25))
+
+	if curCount > 1 then
+		tool:SetAttribute("Count", curCount - 1)
+		tool.Name = string.format("%s (x%d)", cfg.Name, curCount - 1)
+	else
+		tool:Destroy()
+	end
+end
+
+_G.ConsumeFoodItem = consumeFoodItem
+
+EatFoodRemote.OnServerEvent:Connect(function(player)
+	consumeFoodItem(player)
+end)
+
 -- Функция создания нативного объекта Tool
 local function createItemTool(itemKey, count)
 	local cfg = ITEM_CONFIGS[itemKey]
@@ -203,6 +264,7 @@ local function createItemTool(itemKey, count)
 	tool:SetAttribute("ItemKey", itemKey)
 	tool:SetAttribute("Count", count)
 	tool:SetAttribute("MaxStack", cfg.MaxStack)
+	tool:SetAttribute("IsFood", cfg.IsFood or false)
 
 	if itemKey == "Torch" then
 		tool:SetAttribute("TorchFuel", 120)
@@ -210,40 +272,29 @@ local function createItemTool(itemKey, count)
 
 	attachDetailed3DModel(tool, itemKey)
 
-	-- Обработка клика ЛКМ
+	-- Обработка клика ЛКМ (Еда исключена от случайных нажатий по экрану)
 	tool.Activated:Connect(function()
 		local char = tool.Parent
 		local player = Players:GetPlayerFromCharacter(char)
 		if not player then return end
 
 		if cfg.IsFood then
-			local curCount = tool:GetAttribute("Count") or 1
-			local curWarmth = player:GetAttribute("Warmth") or 100
-			local curHunger = player:GetAttribute("Hunger") or 100
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-
-			player:SetAttribute("Warmth", math.min(100, curWarmth + (cfg.Warmth or 10)))
-			player:SetAttribute("Hunger", math.min(100, curHunger + (cfg.Hunger or 25)))
-			if humanoid then
-				humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + (cfg.Health or 15))
-			end
-
-			local curAttr = player:GetAttribute(itemKey) or 0
-			if curAttr > 0 then
-				player:SetAttribute(itemKey, curAttr - 1)
-			end
-
-			print(string.format("🍖 %s съел %s! (+%d тепла, +%d сытости)", player.Name, cfg.Name, cfg.Warmth or 10, cfg.Hunger or 25))
-
-			if curCount > 1 then
-				tool:SetAttribute("Count", curCount - 1)
-				tool.Name = string.format("%s (x%d)", cfg.Name, curCount - 1)
-			else
-				tool:Destroy()
-			end
+			-- Еда не съедается от любого клика по экрану!
+			-- Съедание происходит ТОЛЬКО при клике по персонажу через FoodEatController
+			return
 		elseif cfg.IsPlaceable then
 			if _G.PlaceTrapFromHand then
 				_G.PlaceTrapFromHand(player, itemKey, tool)
+			end
+		elseif cfg.IsWeapon then
+			local now = os.clock()
+			local lastAttack = tool:GetAttribute("LastAttack") or 0
+			local fireRate = cfg.FireRate or 0.8
+			if now - lastAttack < fireRate then return end
+			tool:SetAttribute("LastAttack", now)
+
+			if _G.ExecuteWeaponAttack then
+				_G.ExecuteWeaponAttack(player, itemKey)
 			end
 		end
 	end)

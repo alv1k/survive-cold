@@ -225,6 +225,54 @@ end
 
 _G.DropItemOnGround = dropItemOnGround
 
+-- Обработка сброса предмета игроком (клавиша G) со списанием из инвентаря
 DropItemRemote.OnServerEvent:Connect(function(player, itemName, count)
-	dropItemOnGround(player, itemName, count)
+	count = count or 1
+	local char = player and player.Character
+	local backpack = player and player:FindFirstChildOfClass("Backpack")
+	if not char then return end
+
+	-- Ищем предмет сначала в руках персонажа (Character), затем в рюкзаке (Backpack)
+	local targetTool = nil
+	local equippedTool = char:FindFirstChildOfClass("Tool")
+	if equippedTool and (equippedTool:GetAttribute("ItemKey") == itemName or equippedTool.Name:find(itemName)) then
+		targetTool = equippedTool
+	elseif backpack then
+		for _, t in ipairs(backpack:GetChildren()) do
+			if t:IsA("Tool") and (t:GetAttribute("ItemKey") == itemName or t.Name:find(itemName)) then
+				targetTool = t
+				break
+			end
+		end
+	end
+
+	if not targetTool then
+		print(string.format("⚠️ %s попытался выбросить %s, но предмета нет в руках/рюкзаке!", player.Name, tostring(itemName)))
+		return
+	end
+
+	local actualKey = targetTool:GetAttribute("ItemKey") or itemName
+	if actualKey == "Torch" then return end
+
+	local curCount = targetTool:GetAttribute("Count") or 1
+	local dropAmount = math.min(curCount, count)
+
+	if curCount > dropAmount then
+		targetTool:SetAttribute("Count", curCount - dropAmount)
+		local baseName = targetTool.Name:match("^[^%(]+") or targetTool.Name
+		baseName = baseName:gsub("%s+$", "")
+		targetTool.Name = string.format("%s (x%d)", baseName, curCount - dropAmount)
+	else
+		targetTool:Destroy()
+	end
+
+	-- Синхронизируем числовой атрибут игрока, если это ресурс
+	local curAttr = player:GetAttribute(actualKey)
+	if curAttr and type(curAttr) == "number" then
+		player:SetAttribute(actualKey, math.max(0, curAttr - dropAmount))
+	end
+
+	-- Создаем 3D-объект на земле
+	dropItemOnGround(player, actualKey, dropAmount)
+	print(string.format("📦 %s выбросил %s (x%d) на землю! Осталось в стаке: %d", player.Name, actualKey, dropAmount, math.max(0, curCount - dropAmount)))
 end)

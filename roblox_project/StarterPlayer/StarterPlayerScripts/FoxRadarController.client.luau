@@ -33,12 +33,19 @@ RunService.RenderStepped:Connect(function()
 		local closestRelic = nil
 		local minDistance = math.huge
 
-		for _, relic in ipairs(RelicsFolder:GetChildren()) do
-			if relic:IsA("BasePart") then
-				local dist = (relic.Position - hrp.Position).Magnitude
+		for _, site in ipairs(RelicsFolder:GetChildren()) do
+			local targetPart = nil
+			if site:IsA("Model") then
+				targetPart = site.PrimaryPart or site:FindFirstChildWhichIsA("BasePart")
+			elseif site:IsA("BasePart") then
+				targetPart = site
+			end
+
+			if targetPart then
+				local dist = (targetPart.Position - hrp.Position).Magnitude
 				if dist < minDistance then
 					minDistance = dist
-					closestRelic = relic
+					closestRelic = targetPart
 				end
 			end
 		end

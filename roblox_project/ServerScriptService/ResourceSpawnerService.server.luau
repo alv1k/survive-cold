@@ -382,11 +382,13 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 			model.Transparency = 1
 		end
 
-		local gain = 1
+		-- Выдача случайного количества ресурсов от 1 до 3 шт.
+		local gain = math.random(1, 3)
+
 		local lumberRank = player:GetAttribute("Perk_Lumberjack") or 0
-		if lumberRank == 1 and math.random() < 0.20 then gain = gain + 1
-		elseif lumberRank == 2 and math.random() < 0.30 then gain = gain + 1
-		elseif lumberRank >= 3 and math.random() < 0.40 then gain = gain + 1 end
+		if lumberRank == 1 and math.random() < 0.25 then gain = gain + 1
+		elseif lumberRank == 2 and math.random() < 0.35 then gain = gain + 1
+		elseif lumberRank >= 3 and math.random() < 0.50 then gain = gain + 1 end
 
 		local given = false
 		if _G.GiveItemToPlayer then

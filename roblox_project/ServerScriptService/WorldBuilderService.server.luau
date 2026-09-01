@@ -1,13 +1,12 @@
 --[[
     WorldBuilderService.server.luau
-    Генератор 3D мира выживания:
-    1. Снежный ландшафт (Smooth Terrain Snow & Ice)
-    2. Заснеженный хвойный лес (80+ елей с коллизиями)
-    3. Жилой дом игрока (очаг, верстак, лежанка, крыша)
-    4. Древний Алтарь и Бункер Эвакуации
-    5. Магазины (Одежда и Продукты)
-    6. 6 Охотничьих Заимок в тайге
-    7. Зимняя кинематографичная атмосфера и освещение (Lighting)
+    Генератор масштабного открытого 3D мира выживания (3200 x 3200 studs):
+    1. Огромный снежный ландшафт (Smooth Terrain Snow & Ice)
+    2. Скалистый восточный хребет и горное кольцо по периметру
+    3. Заснеженная тайга (280+ высоких елей)
+    4. Жилой дом игрока с очагом и верстаком
+    5. 8 Охотничьих Заимок-убежищ с горящими печами для дальних экспедиций
+    6. Кинематографичная морозная атмосфера и освещение
 --]]
 
 local Lighting = game:GetService("Lighting")
@@ -19,59 +18,60 @@ WorldFolder.Name = "WorldStructures"
 -- 1. НАСТРОЙКА КИНЕМАТОГРАФИЧНОЙ ЗИМНЕЙ АТМОСФЕРЫ
 local function setupWinterLighting()
 	Lighting.ClockTime = 14.5
-	Lighting.GeographicLatitude = 65 -- Северные широты
+	Lighting.GeographicLatitude = 65
 	Lighting.Brightness = 2.2
 	Lighting.OutdoorAmbient = Color3.fromRGB(140, 165, 195)
 	Lighting.FogColor = Color3.fromRGB(180, 210, 240)
-	Lighting.FogStart = 60
-	Lighting.FogEnd = 500
+	Lighting.FogStart = 90
+	Lighting.FogEnd = 900
 	Lighting.GlobalShadows = true
 
-	-- Атмосфера
 	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", Lighting)
-	atmosphere.Density = 0.35
+	atmosphere.Density = 0.32
 	atmosphere.Offset = 0.25
 	atmosphere.Color = Color3.fromRGB(190, 220, 250)
 	atmosphere.Decay = Color3.fromRGB(110, 150, 190)
 	atmosphere.Glare = 0.2
 	atmosphere.Haze = 1.5
 
-	-- Цветокоррекция (Холодный кинематографичный зимний тон)
 	local colorCorrection = Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect", Lighting)
 	colorCorrection.TintColor = Color3.fromRGB(235, 245, 255)
 	colorCorrection.Contrast = 0.15
 	colorCorrection.Saturation = -0.1
 
-	-- Блум (Мягкое свечение снега и костров)
 	local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
 	bloom.Intensity = 0.6
 	bloom.Size = 24
 	bloom.Threshold = 0.8
 end
 
--- 2. ГЕНЕРАЦИЯ СНЕЖНОГО РЕЛЬЕФА (SMOOTH TERRAIN)
+-- 2. ГЕНЕРАЦИЯ СНЕЖНОГО РЕЛЬЕФА (3200 x 3200 studs)
 local function generateSnowTerrain()
-	-- Заливка основной карты снегом 1200x1200 studs
-	Terrain:FillBlock(CFrame.new(0, -5, 0), Vector3.new(1400, 10, 1400), Enum.Material.Snow)
-	
-	-- Замерзшее озеро у Запада
-	Terrain:FillBlock(CFrame.new(-180, -4.5, -60), Vector3.new(160, 9.5, 120), Enum.Material.Ice)
-	
-	-- Скалистый восточный хребет (Опасная зона)
-	Terrain:FillBlock(CFrame.new(380, 15, 0), Vector3.new(200, 50, 1200), Enum.Material.Rock)
-	Terrain:FillBlock(CFrame.new(380, 38, 0), Vector3.new(180, 10, 1180), Enum.Material.Snow)
+	-- Заливка основной карты снегом 3400x3400 studs
+	Terrain:FillBlock(CFrame.new(0, -5, 0), Vector3.new(3400, 10, 3400), Enum.Material.Snow)
+
+	-- Большое замерзшее озеро на западе
+	Terrain:FillBlock(CFrame.new(-650, -4.5, -350), Vector3.new(450, 9.5, 400), Enum.Material.Ice)
+
+	-- Скалистый восточный хребет
+	Terrain:FillBlock(CFrame.new(1050, 25, 0), Vector3.new(350, 70, 3200), Enum.Material.Rock)
+	Terrain:FillBlock(CFrame.new(1050, 52, 0), Vector3.new(320, 16, 3160), Enum.Material.Snow)
+
+	-- Горное кольцо по периметру (Север, Юг, Запад)
+	Terrain:FillBlock(CFrame.new(0, 30, -1600), Vector3.new(3400, 80, 200), Enum.Material.Rock)
+	Terrain:FillBlock(CFrame.new(0, 30, 1600), Vector3.new(3400, 80, 200), Enum.Material.Rock)
+	Terrain:FillBlock(CFrame.new(-1600, 30, 0), Vector3.new(200, 80, 3400), Enum.Material.Rock)
 end
 
--- 3. СОЗДАНИЕ ВЫСОКОЙ ЗАСНЕЖЕННОЙ ЕЛИ (PINE TREE - ЧИСТОЕ ОКРУЖЕНИЕ/ДЕКОРАЦИЯ)
+-- 3. СОЗДАНИЕ ВЫСОКОЙ ЗАСНЕЖЕННОЙ ЕЛИ
 local function createPineTree(pos, scale)
 	scale = scale or 1.0
 	local treeModel = Instance.new("Model")
 	treeModel.Name = "SnowPineTree"
 
-	local trunkHeight = 36 * scale
-	local trunkWidth = 3.2 * scale
+	local trunkHeight = 38 * scale
+	local trunkWidth = 3.4 * scale
 
-	-- Высокий массивный ствол (С коллизией, НЕ добывается)
 	local trunk = Instance.new("Part")
 	trunk.Name = "Trunk"
 	trunk.Size = Vector3.new(trunkWidth, trunkHeight, trunkWidth)
@@ -82,13 +82,12 @@ local function createPineTree(pos, scale)
 	trunk.BrickColor = BrickColor.new("Reddish brown")
 	trunk.Parent = treeModel
 
-	-- 5 Ярусов пышной заснеженной хвои (высота дерева до 48 studs)
 	local tierConfigs = {
-		{ Height = 16 * scale, Size = 20 * scale, FoliageH = 8 * scale },
-		{ Height = 24 * scale, Size = 16 * scale, FoliageH = 7 * scale },
-		{ Height = 31 * scale, Size = 12 * scale, FoliageH = 6 * scale },
-		{ Height = 37 * scale, Size = 8 * scale, FoliageH = 5 * scale },
-		{ Height = 42 * scale, Size = 4.5 * scale, FoliageH = 5 * scale }
+		{ Height = 17 * scale, Size = 22 * scale, FoliageH = 8.5 * scale },
+		{ Height = 25 * scale, Size = 17 * scale, FoliageH = 7.5 * scale },
+		{ Height = 32 * scale, Size = 13 * scale, FoliageH = 6.5 * scale },
+		{ Height = 38 * scale, Size = 9 * scale, FoliageH = 5.5 * scale },
+		{ Height = 44 * scale, Size = 5 * scale, FoliageH = 5.5 * scale }
 	}
 
 	for i, tc in ipairs(tierConfigs) do
@@ -102,7 +101,6 @@ local function createPineTree(pos, scale)
 		foliage.BrickColor = BrickColor.new("Dark green")
 		foliage.Parent = treeModel
 
-		-- Снежная шапка на каждом ярусе
 		local snowCap = Instance.new("Part")
 		snowCap.Name = "SnowCap_" .. i
 		snowCap.Size = Vector3.new(tc.Size - 1.2 * scale, 1.4 * scale, tc.Size - 1.2 * scale)
@@ -125,7 +123,6 @@ local function buildPlayerHouse()
 
 	local HOUSE_POS = Vector3.new(0, 0, 0)
 
-	-- Пол
 	local floor = Instance.new("Part")
 	floor.Name = "HouseFloor"
 	floor.Size = Vector3.new(34, 1.2, 28)
@@ -135,7 +132,6 @@ local function buildPlayerHouse()
 	floor.BrickColor = BrickColor.new("Brown")
 	floor.Parent = houseModel
 
-	-- Точка спавна (Рождение внутри дома!)
 	local houseSpawn = Instance.new("SpawnLocation")
 	houseSpawn.Name = "HouseSpawnLocation"
 	houseSpawn.Size = Vector3.new(8, 0.5, 8)
@@ -147,13 +143,12 @@ local function buildPlayerHouse()
 	houseSpawn.Duration = 0
 	houseSpawn.Parent = houseModel
 
-	-- Стены
 	local wallConfigs = {
-		{ Size = Vector3.new(34, 12, 1.5), Pos = Vector3.new(0, 6.6, -13.5) }, -- Задняя
-		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(-16.5, 6.6, 0) }, -- Левая
-		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(16.5, 6.6, 0) },  -- Правая
-		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(-11, 6.6, 13.5) }, -- Передняя левая
-		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(11, 6.6, 13.5) }   -- Передняя правая (Дверной проем по центру)
+		{ Size = Vector3.new(34, 12, 1.5), Pos = Vector3.new(0, 6.6, -13.5) },
+		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(-16.5, 6.6, 0) },
+		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(16.5, 6.6, 0) },
+		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(-11, 6.6, 13.5) },
+		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(11, 6.6, 13.5) }
 	}
 
 	for _, wc in ipairs(wallConfigs) do
@@ -166,7 +161,6 @@ local function buildPlayerHouse()
 		wall.Parent = houseModel
 	end
 
-	-- Крыша
 	local roof = Instance.new("Part")
 	roof.Name = "HouseRoof"
 	roof.Size = Vector3.new(38, 2, 32)
@@ -176,7 +170,6 @@ local function buildPlayerHouse()
 	roof.BrickColor = BrickColor.new("Dark stone grey")
 	roof.Parent = houseModel
 
-	-- Очаг / Камин (Тепловая зона)
 	local fireplace = Instance.new("Part")
 	fireplace.Name = "HouseFireplace"
 	fireplace.Size = Vector3.new(6, 4, 6)
@@ -199,7 +192,6 @@ local function buildPlayerHouse()
 	fireplace:SetAttribute("HeatPower", 15)
 	fireplace.Parent = workspace:FindFirstChild("HeatSources") or workspace
 
-	-- Верстак (Workbench)
 	local workbench = Instance.new("Part")
 	workbench.Name = "Workbench"
 	workbench.Size = Vector3.new(5, 3.5, 3.5)
@@ -214,7 +206,6 @@ local function buildPlayerHouse()
 	wbPrompt.ObjectText = "🛠️ Верстак выживальщика"
 	wbPrompt.HoldDuration = 0
 
-	-- Лежанка для питомцев
 	local petBed = Instance.new("Part")
 	petBed.Name = "PetBed"
 	petBed.Size = Vector3.new(6, 1, 4)
@@ -227,39 +218,46 @@ local function buildPlayerHouse()
 	houseModel.Parent = WorldFolder
 end
 
--- 5. РАССАДКА 100+ ЕЛЕЙ В ТАЙГЕ
+-- 5. РАССАДКА 280+ ЕЛЕЙ В ТАЙГЕ 3200x3200
 local function populateForest()
-	local forestFolder = Instance.new("Folder", workspace)
+	local forestFolder = workspace:FindFirstChild("Forest") or Instance.new("Folder", workspace)
 	forestFolder.Name = "Forest"
+	forestFolder:ClearAllChildren()
 
-	-- Ели вокруг дома (Плотная роща)
-	for i = 1, 35 do
+	-- Роща вокруг дома (40..180 studs)
+	for i = 1, 45 do
 		local angle = math.random() * math.pi * 2
-		local dist = math.random(35, 150)
+		local dist = math.random(42, 180)
 		local x = math.cos(angle) * dist
 		local z = math.sin(angle) * dist
 		createPineTree(Vector3.new(x, 0, z), math.random(90, 140) / 100)
 	end
 
-	-- Ели в дикой тайге
-	for i = 1, 65 do
-		local x = math.random(-450, 450)
-		local z = math.random(-450, 450)
-		if math.abs(x) > 40 or math.abs(z) > 40 then
-			createPineTree(Vector3.new(x, 0, z), math.random(80, 150) / 100)
+	-- Дикая тайга по всей карте 3200x3200
+	for i = 1, 240 do
+		local x = math.random(-1480, 1480)
+		local z = math.random(-1480, 1480)
+		if math.abs(x) > 45 or math.abs(z) > 45 then
+			createPineTree(Vector3.new(x, 0, z), math.random(80, 160) / 100)
 		end
 	end
 end
 
--- 6. ПОСТРОЙКА ОХОТНИЧЬИХ ЗАИМОК (HUNTER CABINS)
+-- 6. ПОСТРОЙКА 8 ОХОТНИЧЬИХ ЗАИМОК ДЛЯ ДАЛЬНИХ ЭКСПЕДИЦИЙ
 local function buildHunterCabins()
+	local cabinsFolder = workspace:FindFirstChild("HunterCabins") or Instance.new("Folder", workspace)
+	cabinsFolder.Name = "HunterCabins"
+	cabinsFolder:ClearAllChildren()
+
 	local CABIN_POSITIONS = {
-		{ Name = "Северная Заимка", Pos = Vector3.new(-120, 0, -220) },
-		{ Name = "Западное Убежище", Pos = Vector3.new(-280, 0, 40) },
-		{ Name = "Южная Стоянка", Pos = Vector3.new(80, 0, 240) },
-		{ Name = "Восточный Форпост", Pos = Vector3.new(220, 0, -140) },
-		{ Name = "Озерный Домик", Pos = Vector3.new(-210, 0, -80) },
-		{ Name = "Тайный Схрон", Pos = Vector3.new(140, 0, 320) }
+		{ Name = "Северный Аванпост", Pos = Vector3.new(0, 0, -850) },
+		{ Name = "Южная Заимка", Pos = Vector3.new(200, 0, 900) },
+		{ Name = "Западное Убежище Озера", Pos = Vector3.new(-950, 0, -150) },
+		{ Name = "Восточный Форпост Хребта", Pos = Vector3.new(850, 0, -550) },
+		{ Name = "Северо-Западный Лагерь", Pos = Vector3.new(-800, 0, -900) },
+		{ Name = "Юго-Восточная Стоянка", Pos = Vector3.new(900, 0, 850) },
+		{ Name = "Северо-Восточный Дозор", Pos = Vector3.new(800, 0, -1150) },
+		{ Name = "Юго-Западный Схрон", Pos = Vector3.new(-850, 0, 950) }
 	}
 
 	for _, c in ipairs(CABIN_POSITIONS) do
@@ -268,30 +266,47 @@ local function buildHunterCabins()
 
 		local base = Instance.new("Part")
 		base.Name = "Floor"
-		base.Size = Vector3.new(16, 1, 16)
-		base.Position = c.Pos + Vector3.new(0, 0.5, 0)
+		base.Size = Vector3.new(20, 1.2, 20)
+		base.Position = c.Pos + Vector3.new(0, 0.6, 0)
 		base.Anchored = true
 		base.Material = Enum.Material.WoodPlanks
 		base.BrickColor = BrickColor.new("Reddish brown")
 		base.Parent = cabin
 
+		-- Крыша
+		local roof = Instance.new("Part")
+		roof.Size = Vector3.new(22, 1.2, 22)
+		roof.Position = c.Pos + Vector3.new(0, 10, 0)
+		roof.Anchored = true
+		roof.Material = Enum.Material.Wood
+		roof.BrickColor = BrickColor.new("Dark stone grey")
+		roof.Parent = cabin
+
+		-- Печь-очаг
 		local stove = Instance.new("Part")
 		stove.Name = "Stove"
-		stove.Size = Vector3.new(3, 3, 3)
-		stove.Position = c.Pos + Vector3.new(-4, 2, -4)
+		stove.Size = Vector3.new(4, 4, 4)
+		stove.Position = c.Pos + Vector3.new(-5, 2.5, -5)
 		stove.Anchored = true
-		stove.Material = Enum.Material.Metal
+		stove.Material = Enum.Material.Brick
 		stove.BrickColor = BrickColor.new("Dark stone grey")
 		stove.Parent = cabin
 
 		local stoveFire = Instance.new("Fire", stove)
-		stoveFire.Size = 4
+		stoveFire.Size = 5
+		stoveFire.Heat = 12
 
-		stove:SetAttribute("HeatRadius", 25)
-		stove:SetAttribute("HeatPower", 10)
+		local stoveLight = Instance.new("PointLight", stove)
+		stoveLight.Color = Color3.fromRGB(255, 140, 40)
+		stoveLight.Range = 30
+		stoveLight.Brightness = 3
+
+		stove:SetAttribute("HeatRadius", 35)
+		stove:SetAttribute("HeatPower", 12)
 		stove.Parent = workspace:FindFirstChild("HeatSources") or workspace
 
-		cabin.Parent = WorldFolder
+		cabin.PrimaryPart = base
+		cabin.Parent = cabinsFolder
 	end
 end
 
@@ -302,4 +317,4 @@ buildPlayerHouse()
 populateForest()
 buildHunterCabins()
 
-print("❄️ [WorldBuilder] Зимний 3D мир успешно сгенерирован: Рельеф, Тайга, Дом, Заимки и Освещение!")
+print("❄️ [WorldBuilder] Карта 3200x3200 studs успешно сгенерирована: 280+ елей, горный пояс и 8 охотничьих заимок!")

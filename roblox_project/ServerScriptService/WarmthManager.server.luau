@@ -170,7 +170,7 @@ task.spawn(function()
 					-- А) Расчет Тепла (Warmth)
 					local warmth = player:GetAttribute("Warmth") or 100
 					local clothingProt = player:GetAttribute("ClothingProtection") or 0
-					local baseColdRate = isBlizzard and 3.2 or (isNight and 1.8 or 0.9)
+					local baseColdRate = isBlizzard and 5.0 or (isNight and 2.6 or 1.0)
 					local effectiveColdRate = baseColdRate * (1 - clothingProt)
 
 					local heatSourcesGain = 0
@@ -212,15 +212,15 @@ task.spawn(function()
 						player:SetAttribute("Hunger", 100)
 					end
 
-					-- В) Урон и Пассивная регенерация
+					-- В) Урон и Пассивная регенерация (Хардкорный баланс)
 					local curHunger = player:GetAttribute("Hunger") or 100
 					if warmth <= 0 then
-						humanoid:TakeDamage(5) -- Замерзание
+						humanoid:TakeDamage(8) -- Суровое замерзание (8 урона/сек)
 					end
 					if curHunger <= 0 then
-						humanoid:TakeDamage(4) -- Голодание
+						humanoid:TakeDamage(6) -- Голодание (6 урона/сек)
 					elseif curHunger > 65 and warmth > 60 and humanoid.Health < humanoid.MaxHealth then
-						humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + 1) -- Сытое исцеление
+						humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + 1.5) -- Быстрое исцеление при тепле и сытости (+1.5 HP/сек)
 					end
 				end
 			end

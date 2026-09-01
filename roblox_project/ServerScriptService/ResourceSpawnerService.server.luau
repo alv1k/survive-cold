@@ -22,7 +22,8 @@ local HarvestResourceRemote = RemotesFolder:FindFirstChild("HarvestResource") or
 HarvestResourceRemote.Name = "HarvestResource"
 
 local function isInsideHouseZone(pos)
-	return math.abs(pos.X) <= 28 and math.abs(pos.Z) <= 22
+	-- Строгий запрет спавна в черте дома и прилегающего двора
+	return (math.abs(pos.X) <= 38 and math.abs(pos.Z) <= 30) or ((pos.X^2 + pos.Z^2) <= 38^2)
 end
 
 local function getGroundHeight(pos)
@@ -51,7 +52,6 @@ local function buildBranchesModel(pos)
 	hitBox.CanCollide = false
 	hitBox.Parent = model
 
-	-- Ветка 1
 	local stick1 = Instance.new("Part")
 	stick1.Name = "Stick1"
 	stick1.Size = Vector3.new(0.4, 0.4, 3.8)
@@ -62,7 +62,6 @@ local function buildBranchesModel(pos)
 	stick1.BrickColor = BrickColor.new("Reddish brown")
 	stick1.Parent = model
 
-	-- Ветка 2
 	local stick2 = Instance.new("Part")
 	stick2.Name = "Stick2"
 	stick2.Size = Vector3.new(0.35, 0.35, 3.4)
@@ -73,7 +72,6 @@ local function buildBranchesModel(pos)
 	stick2.BrickColor = BrickColor.new("Dark orange")
 	stick2.Parent = model
 
-	-- Ветка 3 (малая)
 	local stick3 = Instance.new("Part")
 	stick3.Name = "Stick3"
 	stick3.Size = Vector3.new(0.3, 0.3, 2.6)
@@ -84,7 +82,6 @@ local function buildBranchesModel(pos)
 	stick3.BrickColor = BrickColor.new("Brown")
 	stick3.Parent = model
 
-	-- Хвоя на кончиках
 	local needles = Instance.new("Part")
 	needles.Name = "Needles"
 	needles.Size = Vector3.new(0.8, 0.3, 0.8)
@@ -113,7 +110,6 @@ local function buildStoneModel(pos)
 	hitBox.CanCollide = false
 	hitBox.Parent = model
 
-	-- Главный валун
 	local mainRock = Instance.new("Part")
 	mainRock.Name = "MainRock"
 	mainRock.Size = Vector3.new(3.2, 1.8, 2.8)
@@ -124,7 +120,6 @@ local function buildStoneModel(pos)
 	mainRock.BrickColor = BrickColor.new("Medium stone grey")
 	mainRock.Parent = model
 
-	-- Шапка снега на вершине
 	local snowCap = Instance.new("Part")
 	snowCap.Name = "SnowCap"
 	snowCap.Size = Vector3.new(2.8, 0.4, 2.4)
@@ -135,7 +130,6 @@ local function buildStoneModel(pos)
 	snowCap.BrickColor = BrickColor.new("White")
 	snowCap.Parent = model
 
-	-- Меньший камушек сбоку
 	local sideRock = Instance.new("Part")
 	sideRock.Name = "SideRock"
 	sideRock.Size = Vector3.new(1.4, 0.9, 1.3)
@@ -164,7 +158,6 @@ local function buildFiberModel(pos)
 	hitBox.CanCollide = false
 	hitBox.Parent = model
 
-	-- Стебель 1
 	local stem1 = Instance.new("Part")
 	stem1.Name = "Stem1"
 	stem1.Size = Vector3.new(0.3, 2.2, 0.3)
@@ -175,7 +168,6 @@ local function buildFiberModel(pos)
 	stem1.BrickColor = BrickColor.new("Bright green")
 	stem1.Parent = model
 
-	-- Стебель 2
 	local stem2 = Instance.new("Part")
 	stem2.Name = "Stem2"
 	stem2.Size = Vector3.new(0.35, 2.5, 0.35)
@@ -186,7 +178,6 @@ local function buildFiberModel(pos)
 	stem2.BrickColor = BrickColor.new("Lime green")
 	stem2.Parent = model
 
-	-- Стебель 3
 	local stem3 = Instance.new("Part")
 	stem3.Name = "Stem3"
 	stem3.Size = Vector3.new(0.25, 1.9, 0.25)
@@ -197,7 +188,6 @@ local function buildFiberModel(pos)
 	stem3.BrickColor = BrickColor.new("Pastel green")
 	stem3.Parent = model
 
-	-- Основание пучка
 	local baseTuft = Instance.new("Part")
 	baseTuft.Name = "BaseTuft"
 	baseTuft.Size = Vector3.new(1.2, 0.5, 1.2)
@@ -212,7 +202,7 @@ local function buildFiberModel(pos)
 	return model
 end
 
--- 4. Создание красивой 3D-модели ДОСОК (🌲 Стопка обработанных досок)
+-- 4. Создание красивой 3D-модели ДОСОК (🌲 Стопка пиломатериалов)
 local function buildPlanksModel(pos)
 	local model = Instance.new("Model")
 	model.Name = "Resource_Planks"
@@ -226,7 +216,6 @@ local function buildPlanksModel(pos)
 	hitBox.CanCollide = false
 	hitBox.Parent = model
 
-	-- Доска нижняя 1
 	local p1 = Instance.new("Part")
 	p1.Name = "Plank1"
 	p1.Size = Vector3.new(1.1, 0.4, 3.6)
@@ -237,7 +226,6 @@ local function buildPlanksModel(pos)
 	p1.BrickColor = BrickColor.new("Dark orange")
 	p1.Parent = model
 
-	-- Доска нижняя 2
 	local p2 = Instance.new("Part")
 	p2.Name = "Plank2"
 	p2.Size = Vector3.new(1.1, 0.4, 3.6)
@@ -248,7 +236,6 @@ local function buildPlanksModel(pos)
 	p2.BrickColor = BrickColor.new("Dark orange")
 	p2.Parent = model
 
-	-- Доска верхняя (поперек со сдвигом)
 	local p3 = Instance.new("Part")
 	p3.Name = "Plank3"
 	p3.Size = Vector3.new(1.1, 0.4, 3.4)
@@ -259,7 +246,6 @@ local function buildPlanksModel(pos)
 	p3.BrickColor = BrickColor.new("Medium orange")
 	p3.Parent = model
 
-	-- Металлические скобы
 	local bracket = Instance.new("Part")
 	bracket.Name = "Bracket"
 	bracket.Size = Vector3.new(1.3, 0.05, 0.3)
@@ -304,38 +290,50 @@ local function spawnResourceNode(resType, rawPos)
 	model.Parent = ResourcesFolder
 end
 
-local function getSafeOutdoorPos(minRadius, maxRadius)
-	local houseCenter = Vector3.new(0, 3.5, 0)
-	for attempt = 1, 20 do
-		local angle = math.random() * math.pi * 2
-		local dist = math.random(minRadius, maxRadius)
-		local pos = houseCenter + Vector3.new(math.cos(angle) * dist, 0, math.sin(angle) * dist)
-		if not isInsideHouseZone(pos) then
-			return pos
-		end
-	end
-	return houseCenter + Vector3.new(35, 0, 35)
-end
-
+-- РАВНОМЕРНОЕ ПРОСТРАНСТВЕННОЕ РАСПРЕДЕЛЕНИЕ РЕСУРСОВ ПО ВСЕЙ КАРТЕ
 local function spawnWorldResources()
 	ResourcesFolder:ClearAllChildren()
 
-	-- Роща вокруг двора дома (30..80 studs)
-	for i = 1, 24 do spawnResourceNode("Branches", getSafeOutdoorPos(30, 80)) end
-	for i = 1, 18 do spawnResourceNode("Planks", getSafeOutdoorPos(30, 80)) end
-	for i = 1, 20 do spawnResourceNode("Fiber", getSafeOutdoorPos(30, 80)) end
-	for i = 1, 16 do spawnResourceNode("Stone", getSafeOutdoorPos(32, 85)) end
+	local GRID_STEP = 52 -- Шаг сетки спавна в мире 3200x3200 -- Шаг сетки (studs)
+	local MAP_MIN_X, MAP_MAX_X = -1450, 1450
+	local MAP_MIN_Z, MAP_MAX_Z = -1450, 1450
 
-	-- Дикая тайга
-	for i = 1, 45 do
-		local pos = Vector3.new(math.random(-340, 240), 3.5, math.random(-340, 340))
-		if not isInsideHouseZone(pos) then
-			local types = { "Branches", "Fiber", "Stone", "Planks" }
-			spawnResourceNode(types[math.random(1, #types)], pos)
+	local totalSpawned = 0
+
+	for x = MAP_MIN_X, MAP_MAX_X, GRID_STEP do
+		for z = MAP_MIN_Z, MAP_MAX_Z, GRID_STEP do
+			-- Добавляем естественное случайное смещение (Jitter) внутри сектора сетки
+			local jX = x + math.random(-14, 14)
+			local jZ = z + math.random(-14, 14)
+			local pos = Vector3.new(jX, 0, jZ)
+
+			if not isInsideHouseZone(pos) then
+				local distFromHouse = math.sqrt(pos.X^2 + pos.Z^2)
+
+				-- Вероятность спавна ноды в ячейке (~50% заполненность сетки для сбалансированной плотности)
+				if math.random() <= 0.52 then
+					local chosenType = nil
+
+					if distFromHouse < 80 then
+						-- Околодомовая зона (40..80 studs): Ветки, Волокно, Доски (КАМНЕЙ НЕТ ВБЛИЗИ ДОМА!)
+						local nearTypes = { "Branches", "Branches", "Fiber", "Fiber", "Planks" }
+						chosenType = nearTypes[math.random(1, #nearTypes)]
+					else
+						-- Удаленная зона (80..420 studs): Все ресурсы, включая Камни в каменистых предгорьях
+						local farTypes = { "Branches", "Fiber", "Planks", "Stone", "Stone" }
+						chosenType = farTypes[math.random(1, #farTypes)]
+					end
+
+					if chosenType then
+						spawnResourceNode(chosenType, pos)
+						totalSpawned = totalSpawned + 1
+					end
+				end
+			end
 		end
 	end
 
-	print("🌲 [Респавн] 3D-ресурсы возрождены на карте!")
+	print(string.format("🌲 [Респавн] Равномерно распределено %d 3D-ресурсов по всей карте (камни спавнятся от 80 studs)!", totalSpawned))
 end
 
 spawnWorldResources()

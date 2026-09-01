@@ -174,10 +174,10 @@ local PartChestsFolder = workspace:FindFirstChild("PartChests") or Instance.new(
 PartChestsFolder.Name = "PartChests"
 
 local CHEST_LOCATIONS = {
-	Vector3.new(-220, 20, -180), Vector3.new(-150, 20, 240), Vector3.new(-320, 20, 80), Vector3.new(-90, 20, -310),
-	Vector3.new(180, 20, -260),  Vector3.new(280, 20, 190),  Vector3.new(350, 20, -120), Vector3.new(120, 20, 340),
-	Vector3.new(-420, 20, -140), Vector3.new(-260, 20, -400), Vector3.new(-380, 20, 310), Vector3.new(420, 20, 280),
-	Vector3.new(480, 20, -220),  Vector3.new(210, 20, -450), Vector3.new(-180, 20, 440), Vector3.new(360, 20, 420)
+	Vector3.new(-450, 20, -480), Vector3.new(-380, 20, 620),  Vector3.new(-750, 20, 220),  Vector3.new(-240, 20, -850),
+	Vector3.new(480, 20, -680),  Vector3.new(680, 20, 520),   Vector3.new(950, 20, -350),  Vector3.new(320, 20, 850),
+	Vector3.new(-1150, 20, -450), Vector3.new(-650, 20, -1200), Vector3.new(-980, 20, 850),  Vector3.new(1150, 20, 750),
+	Vector3.new(1250, 20, -650), Vector3.new(550, 20, -1350), Vector3.new(-520, 20, 1250), Vector3.new(980, 20, 1150)
 }
 
 local function getGroundHeight(pos)

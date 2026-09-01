@@ -1,8 +1,9 @@
 --[[
     SprintController.client.luau
     Клиентский скрипт спринта на Left Shift:
-    - Плавное ускорение без утечек памяти (FOV твины запускаются ТОЛЬКО при смене состояния)
-    - Безопасное подключение персонажа без блокировок потока
+    - ⚡ 30 секунд непрерывного быстрого бега
+    - 🔋 10 секунд полного восстановления выносливости
+    - Плавное изменение FOV камеры без спама твинов
 --]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -26,9 +27,9 @@ end
 player.CharacterAdded:Connect(onCharAdded)
 
 local DEFAULT_WALK_SPEED = 16
-local SPRINT_WALK_SPEED = 26
+local SPRINT_WALK_SPEED = 24 -- Быстрый маневренный спринт
 local DEFAULT_FOV = 70
-local SPRINT_FOV = 78
+local SPRINT_FOV = 77
 
 local isShiftHeld = false
 local isExhausted = false
@@ -36,7 +37,10 @@ local stamina = 100
 local MAX_STAMINA = 100
 local isCurrentlySprinting = false
 
--- Функция плавного изменения FOV только при смене состояния спринта!
+-- Точный расчет: 100 стамины / 30 сек = 3.333/сек расход; 100 стамины / 10 сек = 10.0/сек восстановление
+local STAMINA_DRAIN_PER_SEC = 3.333
+local STAMINA_REGEN_PER_SEC = 10.0
+
 local function setSprintingFOV(sprinting)
 	if isCurrentlySprinting == sprinting then return end
 	isCurrentlySprinting = sprinting
@@ -68,16 +72,16 @@ RunService.RenderStepped:Connect(function(dt)
 
 	local isMoving = humanoid.MoveDirection.Magnitude > 0.1
 
-	-- Проверка одышки
+	-- Проверка одышки (восстановление до 15% для повторного рывка)
 	if stamina <= 0 then
 		isExhausted = true
-	elseif isExhausted and stamina >= 20 then
+	elseif isExhausted and stamina >= 15 then
 		isExhausted = false
 	end
 
 	if isShiftHeld and isMoving and not isExhausted and stamina > 0 then
 		humanoid.WalkSpeed = SPRINT_WALK_SPEED
-		stamina = math.max(0, stamina - (30 * dt))
+		stamina = math.max(0, stamina - (STAMINA_DRAIN_PER_SEC * dt)) -- Ровно 30 секунд бега
 		setSprintingFOV(true)
 		player:SetAttribute("IsSprinting", true)
 		
@@ -89,7 +93,7 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 	else
 		humanoid.WalkSpeed = DEFAULT_WALK_SPEED
-		stamina = math.min(MAX_STAMINA, stamina + (22 * dt))
+		stamina = math.min(MAX_STAMINA, stamina + (STAMINA_REGEN_PER_SEC * dt)) -- Ровно 10 секунд восстановления
 		setSprintingFOV(false)
 		player:SetAttribute("IsSprinting", false)
 	end

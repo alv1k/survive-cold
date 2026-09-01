@@ -19,7 +19,7 @@ BuyFoodRemote.Name = "BuyFood"
 local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
 ShowNotificationRemote.Name = "ShowNotification"
 
-local FOOD_SHOP_POSITION = Vector3.new(-180, 4.0, -220)
+local FOOD_SHOP_POSITION = Vector3.new(-380, 4.0, -450)
 
 local FoodShopFolder = workspace:FindFirstChild("FoodShop") or Instance.new("Folder", workspace)
 FoodShopFolder.Name = "FoodShop"

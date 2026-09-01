@@ -7,9 +7,9 @@ local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DAY_DURATION = 180 -- Длительность дня в секундах
-local FOG_DURATION = 30   -- Длительность тумана перед бурей
-local BLIZZARD_DURATION = 60 -- Длительность бури
+local DAY_DURATION = 240 -- 4 минуты ясного дня для сбора и исследований -- Длительность дня в секундах
+local FOG_DURATION = 45   -- 45 секунд ледяного тумана перед бурей   -- Длительность тумана перед бурей
+local BLIZZARD_DURATION = 90 -- 1.5 минуты свирепой ночной метели -- Длительность бури
 
 -- Создание или получение эффекта атмосферы
 local Atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")

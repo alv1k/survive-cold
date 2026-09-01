@@ -63,14 +63,14 @@ local function generateSnowTerrain()
 	Terrain:FillBlock(CFrame.new(-1600, 30, 0), Vector3.new(200, 80, 3400), Enum.Material.Rock)
 end
 
--- 3. СОЗДАНИЕ ВЫСОКОЙ ЗАСНЕЖЕННОЙ ЕЛИ
+-- 3. СОЗДАНИЕ ВЕЛИЧЕСТВЕННЫХ ВЫСОКИХ ЕЛЕЙ (СТВОЛ В 3 РАЗА ВЫШЕ: 114+ STUDS)
 local function createPineTree(pos, scale)
 	scale = scale or 1.0
 	local treeModel = Instance.new("Model")
 	treeModel.Name = "SnowPineTree"
 
-	local trunkHeight = 38 * scale
-	local trunkWidth = 3.4 * scale
+	local trunkHeight = 114 * scale -- В 3 раза выше (было 38, стало 114)
+	local trunkWidth = 4.6 * scale
 
 	local trunk = Instance.new("Part")
 	trunk.Name = "Trunk"
@@ -82,12 +82,13 @@ local function createPineTree(pos, scale)
 	trunk.BrickColor = BrickColor.new("Reddish brown")
 	trunk.Parent = treeModel
 
+	-- 5 Ярусов пышной заснеженной кроны на большой высоте
 	local tierConfigs = {
-		{ Height = 17 * scale, Size = 22 * scale, FoliageH = 8.5 * scale },
-		{ Height = 25 * scale, Size = 17 * scale, FoliageH = 7.5 * scale },
-		{ Height = 32 * scale, Size = 13 * scale, FoliageH = 6.5 * scale },
-		{ Height = 38 * scale, Size = 9 * scale, FoliageH = 5.5 * scale },
-		{ Height = 44 * scale, Size = 5 * scale, FoliageH = 5.5 * scale }
+		{ Height = 48 * scale, Size = 28 * scale, FoliageH = 18 * scale },
+		{ Height = 68 * scale, Size = 22 * scale, FoliageH = 16 * scale },
+		{ Height = 86 * scale, Size = 17 * scale, FoliageH = 14 * scale },
+		{ Height = 102 * scale, Size = 12 * scale, FoliageH = 12 * scale },
+		{ Height = 116 * scale, Size = 6.5 * scale, FoliageH = 10 * scale }
 	}
 
 	for i, tc in ipairs(tierConfigs) do
@@ -103,7 +104,7 @@ local function createPineTree(pos, scale)
 
 		local snowCap = Instance.new("Part")
 		snowCap.Name = "SnowCap_" .. i
-		snowCap.Size = Vector3.new(tc.Size - 1.2 * scale, 1.4 * scale, tc.Size - 1.2 * scale)
+		snowCap.Size = Vector3.new(tc.Size - 1.4 * scale, 2.0 * scale, tc.Size - 1.4 * scale)
 		snowCap.Position = foliage.Position + Vector3.new(0, tc.FoliageH / 2, 0)
 		snowCap.Anchored = true
 		snowCap.CanCollide = false

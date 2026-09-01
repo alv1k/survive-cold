@@ -177,20 +177,34 @@ local function buildPlayerHouse()
 	fireplace.Anchored = true
 	fireplace.Material = Enum.Material.Cobblestone
 	fireplace.BrickColor = BrickColor.new("Dark stone grey")
+	fireplace:SetAttribute("FuelSeconds", 0) -- Изначально потушен
+	fireplace:SetAttribute("MaxFuel", 600)
+	fireplace:SetAttribute("HeatRadius", 40)
+	fireplace:SetAttribute("HeatPower", 15)
 	fireplace.Parent = houseModel
 
 	local fire = Instance.new("Fire", fireplace)
 	fire.Size = 8
 	fire.Heat = 15
+	fire.Enabled = false
 
 	local fireLight = Instance.new("PointLight", fireplace)
 	fireLight.Color = Color3.fromRGB(255, 140, 40)
 	fireLight.Brightness = 3.5
 	fireLight.Range = 35
+	fireLight.Enabled = false
 
-	fireplace:SetAttribute("HeatRadius", 40)
-	fireplace:SetAttribute("HeatPower", 15)
-	fireplace.Parent = workspace:FindFirstChild("HeatSources") or workspace
+	local prompt = Instance.new("ProximityPrompt", fireplace)
+	prompt.Name = "FirePrompt"
+	prompt.ActionText = "Зажечь костер (1 🌿 Ветка = +60с)"
+	prompt.ObjectText = "🔥 Потухший камин"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+
+	local heatFolder = workspace:FindFirstChild("HeatSources") or Instance.new("Folder", workspace)
+	heatFolder.Name = "HeatSources"
+	fireplace.Parent = heatFolder
 
 	local workbench = Instance.new("Part")
 	workbench.Name = "Workbench"
@@ -284,26 +298,40 @@ local function buildHunterCabins()
 
 		-- Печь-очаг
 		local stove = Instance.new("Part")
-		stove.Name = "Stove"
+		stove.Name = "CabinStove_" .. i
 		stove.Size = Vector3.new(4, 4, 4)
 		stove.Position = c.Pos + Vector3.new(-5, 2.5, -5)
 		stove.Anchored = true
 		stove.Material = Enum.Material.Brick
 		stove.BrickColor = BrickColor.new("Dark stone grey")
+		stove:SetAttribute("FuelSeconds", 0) -- Изначально потушена
+		stove:SetAttribute("MaxFuel", 600)
+		stove:SetAttribute("HeatRadius", 35)
+		stove:SetAttribute("HeatPower", 12)
 		stove.Parent = cabin
 
 		local stoveFire = Instance.new("Fire", stove)
 		stoveFire.Size = 5
 		stoveFire.Heat = 12
+		stoveFire.Enabled = false
 
 		local stoveLight = Instance.new("PointLight", stove)
 		stoveLight.Color = Color3.fromRGB(255, 140, 40)
 		stoveLight.Range = 30
 		stoveLight.Brightness = 3
+		stoveLight.Enabled = false
 
-		stove:SetAttribute("HeatRadius", 35)
-		stove:SetAttribute("HeatPower", 12)
-		stove.Parent = workspace:FindFirstChild("HeatSources") or workspace
+		local prompt = Instance.new("ProximityPrompt", stove)
+		prompt.Name = "FirePrompt"
+		prompt.ActionText = "Зажечь печь (1 🌿 Ветка = +60с)"
+		prompt.ObjectText = string.format("🔥 %s [Потушено]", c.Name)
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 14
+		prompt.RequiresLineOfSight = false
+
+		local heatFolder = workspace:FindFirstChild("HeatSources") or Instance.new("Folder", workspace)
+		heatFolder.Name = "HeatSources"
+		stove.Parent = heatFolder
 
 		cabin.PrimaryPart = base
 		cabin.Parent = cabinsFolder

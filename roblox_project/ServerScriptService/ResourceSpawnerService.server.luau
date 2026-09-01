@@ -267,7 +267,8 @@ local function spawnResourceNode(resType, rawPos)
 	if isInsideHouseZone(rawPos) then return end
 
 	local groundY = getGroundHeight(rawPos)
-	local pos = Vector3.new(rawPos.X, groundY, rawPos.Z)
+	-- Приподнимаем точку спавна на +0.65 studs над снежной коркой, чтобы модели никогда не тонули в вокселях
+	local pos = Vector3.new(rawPos.X, groundY + 0.65, rawPos.Z)
 
 	local model = nil
 	if resType == "Branches" then model = buildBranchesModel(pos)
@@ -292,7 +293,6 @@ local function spawnResourceNode(resType, rawPos)
 
 	model.Parent = ResourcesFolder
 end
-
 -- РАВНОМЕРНОЕ ПРОСТРАНСТВЕННОЕ РАСПРЕДЕЛЕНИЕ РЕСУРСОВ ПО ВСЕЙ КАРТЕ
 local function spawnWorldResources()
 	ResourcesFolder:ClearAllChildren()

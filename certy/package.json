@@ -1,0 +1,47 @@
+{
+  "name": "certy",
+  "version": "0.1.0",
+  "description": "Certificate Generator and Management System",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm start",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "cd server && npm test",
+    "test:client": "cd client && npm test",
+    "docker:build": "docker-compose -f docker/docker-compose.yml build",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "migrate": "cd database && echo 'Run database migrations here'",
+    "seed": "cd database && echo 'Run database seeding here'"
+  },
+  "keywords": [
+    "certificate",
+    "generator",
+    "yookassa",
+    "pdf",
+    "event",
+    "management"
+  ],
+  "author": "Certy Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/certy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/certy/issues"
+  },
+  "homepage": "https://github.com/your-username/certy#readme"
+}

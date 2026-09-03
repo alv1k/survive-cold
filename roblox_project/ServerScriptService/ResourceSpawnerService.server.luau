@@ -402,7 +402,13 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 		local given = false
 		if _G.GiveItemToPlayer then
 			given = _G.GiveItemToPlayer(player, resourceType, gain)
+		else
+			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+			if giveBindable and giveBindable:IsA("BindableFunction") then
+				given = giveBindable:Invoke(player, resourceType, gain)
+			end
 		end
+
 
 		if not given then
 			if _G.DropItemOnGround then

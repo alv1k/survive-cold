@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest:*)",
+      "Bash(curl -s -m 5 http://localhost:3000/catalog)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(npx next:*)",
+      "WebSearch",
+      "WebFetch(domain:elbuz.com)",
+      "Bash(npx --yes create-expo-app@latest casheler-mobile --template tabs)"
+    ]
+  }
+}

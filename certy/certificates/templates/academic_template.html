@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Academic Certificate Template</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Palatino Linotype', 'Book Antiqua', serif;
+            background: #f0f0f0;
+        }
+        .certificate {
+            width: 900px;
+            height: 700px;
+            background: #fff9e6; /* Slightly cream background */
+            position: relative;
+            overflow: hidden;
+            border: 15px solid #8b4513; /* Saddle brown border */
+            box-sizing: border-box;
+        }
+        .certificate::before {
+            content: "";
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            border: 2px solid #8b4513;
+            box-sizing: border-box;
+        }
+        .seal {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            border: 3px solid #8b4513;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #8b4513;
+            font-size: 14px;
+            text-align: center;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 80px 60px 60px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 2;
+        }
+        .institution {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .degree {
+            font-size: 28px;
+            color: #34495e;
+            margin-bottom: 50px;
+            font-weight: bold;
+        }
+        .awarded {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .name {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 30px 0;
+            letter-spacing: 1px;
+            text-decoration: underline;
+        }
+        .completed {
+            font-size: 20px;
+            color: #34495e;
+            margin-bottom: 20px;
+        }
+        .event {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 25px 0;
+            font-weight: bold;
+        }
+        .date {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin: 40px 0 60px;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .signature {
+            text-align: center;
+        }
+        .signature-line {
+            height: 1px;
+            width: 180px;
+            background: #2c3e50;
+            margin: 25px auto 10px;
+        }
+        .signature-title {
+            font-size: 14px;
+            color: #34495e;
+        }
+        .decoration {
+            position: absolute;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                #8b4513,
+                #8b4513 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+        .decoration-top {
+            top: 100px;
+        }
+        .decoration-bottom {
+            bottom: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <div class="decoration decoration-top"></div>
+        <div class="decoration decoration-bottom"></div>
+        <div class="seal">Certy<br>Academy</div>
+        <div class="content">
+            <div class="institution">Certy Academy of Excellence</div>
+            <div class="degree">Certificate of Achievement</div>
+            <div class="awarded">This is to certify that</div>
+            <div class="name">[PARTICIPANT NAME]</div>
+            <div class="completed">has successfully completed the</div>
+            <div class="event">[EVENT TITLE]</div>
+            <div class="date">Issued on [DATE]</div>
+            <div class="signatures">
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">Dean of Studies</div>
+                </div>
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">Director</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

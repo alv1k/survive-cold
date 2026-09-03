@@ -11,9 +11,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local GiveItemBindable = Instance.new("BindableFunction")
+local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
+RemotesFolder.Name = "Remotes"
+
+local GiveItemBindable = ReplicatedStorage:FindFirstChild("GiveItem") or Instance.new("BindableFunction", ReplicatedStorage)
 GiveItemBindable.Name = "GiveItem"
-GiveItemBindable.Parent = ReplicatedStorage
 
 local ITEM_CONFIGS = {
 	Torch = { Name = "🔥 Факел", MaxStack = 4, HasFire = true },
@@ -138,6 +140,13 @@ local function attachDetailed3DModel(tool, itemKey)
 		end
 		addSubPart("CenterSpike", Vector3.new(0.25, 0.9, 0.25), CFrame.new(0, 0.5, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
 
+	elseif itemKey == "CampfireKit" then
+		handle.Size = Vector3.new(1.6, 0.4, 1.6)
+		handle.Material = Enum.Material.Wood
+		handle.BrickColor = BrickColor.new("Reddish brown")
+		addSubPart("Log2", Vector3.new(1.6, 0.35, 0.4), CFrame.new(0, 0.15, 0) * CFrame.Angles(0, math.rad(90), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
+		addSubPart("Ember", Vector3.new(0.6, 0.2, 0.6), CFrame.new(0, 0.2, 0), Enum.Material.Neon, BrickColor.new("Deep orange"))
+
 	elseif itemKey == "Steak" then
 		handle.Size = Vector3.new(1.4, 0.4, 1.1)
 		handle.Material = Enum.Material.SmoothPlastic
@@ -165,7 +174,19 @@ local function attachDetailed3DModel(tool, itemKey)
 		handle.Material = Enum.Material.SmoothPlastic
 		handle.BrickColor = BrickColor.new("Brown")
 
-		addSubPart("Wrapper", Vector3.new(0.64, 0.32, 1.0), CFrame.new(0, 0, -0.2), Enum.Material.Metal, BrickColor.new("Bright yellow"))
+		addSubPart("Wrapper", Vector3.new(0.64, 0.32, 1.0), CFrame.new(0, 0, -0.2), Enum.Material.SmoothPlastic, BrickColor.new("Bright yellow"))
+
+	elseif itemKey == "Chips" then
+		handle.Size = Vector3.new(0.8, 1.1, 0.4)
+		handle.Material = Enum.Material.Fabric
+		handle.BrickColor = BrickColor.new("Bright yellow")
+		addSubPart("Strip", Vector3.new(0.82, 0.25, 0.42), CFrame.new(0, 0.1, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
+
+	elseif itemKey == "Pepper" then
+		handle.Size = Vector3.new(0.5, 0.5, 1.3)
+		handle.Material = Enum.Material.SmoothPlastic
+		handle.BrickColor = BrickColor.new("Really red")
+		addSubPart("Stem", Vector3.new(0.2, 0.3, 0.2), CFrame.new(0, 0.2, 0.6) * CFrame.Angles(math.rad(20), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright green"))
 
 	elseif itemKey == "Coffee" then
 		handle.Size = Vector3.new(0.8, 1.5, 0.8)
@@ -194,6 +215,23 @@ local function attachDetailed3DModel(tool, itemKey)
 		handle.BrickColor = BrickColor.new("Dark orange")
 
 		addSubPart("P2", Vector3.new(0.8, 0.4, 2.0), CFrame.new(0, 0.4, 0.1), Enum.Material.WoodPlanks, BrickColor.new("Medium orange"))
+
+	elseif itemKey == "Branches" then
+		handle.Size = Vector3.new(0.4, 0.4, 2.4)
+		handle.Material = Enum.Material.Wood
+		handle.BrickColor = BrickColor.new("Reddish brown")
+		addSubPart("Twig2", Vector3.new(0.3, 0.3, 2.0), CFrame.new(0, 0.1, 0) * CFrame.Angles(0, math.rad(35), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
+
+	elseif itemKey == "Fiber" then
+		handle.Size = Vector3.new(0.6, 1.2, 0.6)
+		handle.Material = Enum.Material.Grass
+		handle.BrickColor = BrickColor.new("Sand green")
+		addSubPart("Leaf2", Vector3.new(0.5, 1.0, 0.5), CFrame.new(0, 0.1, 0) * CFrame.Angles(0, math.rad(45), 0), Enum.Material.Grass, BrickColor.new("Bright yellow"))
+
+	elseif itemKey == "WolfPelt" or itemKey == "YetiPelt" then
+		handle.Size = Vector3.new(1.4, 0.3, 1.4)
+		handle.Material = Enum.Material.Fabric
+		handle.BrickColor = (itemKey == "WolfPelt") and BrickColor.new("Dark stone grey") or BrickColor.new("White")
 
 	else
 		-- Базовая модель по умолчанию
@@ -359,10 +397,16 @@ end)
 local function giveItemToPlayer(player, itemKey, amount)
 	amount = amount or 1
 	local cfg = ITEM_CONFIGS[itemKey]
-	if not cfg then return false end
+	if not cfg then
+		warn(string.format("⚠️ [GiveItem] Неизвестный предмет: %s", tostring(itemKey)))
+		return false
+	end
 
 	local backpack = player:FindFirstChildOfClass("Backpack")
-	if not backpack then return false end
+	if not backpack then
+		warn(string.format("⚠️ [GiveItem] Рюкзак игрока %s не найден!", player.Name))
+		return false
+	end
 
 	local char = player.Character
 
@@ -395,9 +439,9 @@ local function giveItemToPlayer(player, itemKey, amount)
 		end
 	end
 
-	-- 2. Если остались предметы -> проверяем лимит слотов
+	-- 2. Если остались предметы -> проверяем лимит слотов (считаем только Tool)
 	local maxSlots = player:GetAttribute("MaxSlots") or 5
-	local currentToolCount = #backpack:GetChildren() + (char and (char:FindFirstChildOfClass("Tool") and 1 or 0) or 0)
+	local currentToolCount = #allTools
 	if currentToolCount >= maxSlots then
 		return false
 	end
@@ -427,3 +471,4 @@ Players.PlayerAdded:Connect(function(player)
 		player:SetAttribute("HasTorchInHand", false)
 	end)
 end)
+

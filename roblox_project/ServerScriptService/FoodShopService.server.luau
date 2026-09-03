@@ -47,6 +47,11 @@ local function handleBuyFood(player, foodKey)
 	local given = false
 	if _G.GiveItemToPlayer then
 		given = _G.GiveItemToPlayer(player, foodKey, 1)
+	else
+		local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+		if giveBindable and giveBindable:IsA("BindableFunction") then
+			given = giveBindable:Invoke(player, foodKey, 1)
+		end
 	end
 
 	if given then
@@ -60,6 +65,7 @@ end
 BuyFoodRemote.OnServerInvoke = function(player, foodKey)
 	return handleBuyFood(player, foodKey)
 end
+
 
 --------------------------------------------------------------------------------
 -- 🏪 ПОСТРОЙКА ДОМИКА-МАГАЗИНА С ПОЛКАМИ И 3D-ЕДОЙ ПО 4 ШТ

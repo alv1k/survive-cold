@@ -261,6 +261,11 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 		local given = false
 		if _G.GiveItemToPlayer then
 			given = _G.GiveItemToPlayer(player, resultKey, resultCount)
+		else
+			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+			if giveBindable and giveBindable:IsA("BindableFunction") then
+				given = giveBindable:Invoke(player, resultKey, resultCount)
+			end
 		end
 
 		if not given then
@@ -361,6 +366,11 @@ local function buildPartChest(index, loc)
 
 		if _G.GiveItemToPlayer then
 			given = _G.GiveItemToPlayer(player, "Parts", partsCount)
+		else
+			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+			if giveBindable and giveBindable:IsA("BindableFunction") then
+				given = giveBindable:Invoke(player, "Parts", partsCount)
+			end
 		end
 
 		if not given then

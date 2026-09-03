@@ -1,0 +1,33 @@
+# Hiddify (TIIN VPN) Project Summary
+
+## Overview
+**Hiddify** is a powerful, multi-platform proxy client designed to provide fast and secure internet access. It is an open-source, ad-free application that serves as a universal client for various proxy protocols and configuration formats.
+
+## Core Functionality
+- **Proxy Engine:** Built on the [Sing-box](https://github.com/SagerNet/sing-box) universal proxy toolchain.
+- **Protocol Support:** Extensive support for modern protocols including **VLESS, VMess, Reality, TUIC, Hysteria (1 & 2), WireGuard, SSH**, and more.
+- **Configuration Compatibility:** Can import and use configurations from **Sing-box, V2Ray, Clash, and Clash Meta**.
+- **Advanced Features:** 
+  - **TUN Mode:** System-wide proxying.
+  - **Latency-Based Selection:** Automatically selects the fastest available node.
+  - **Remote Profiles:** Support for subscription links and automatic updates.
+  - **Profile Management:** Displays traffic usage and remaining subscription days.
+
+## Technical Architecture
+The project uses a hybrid architecture to combine cross-platform UI flexibility with high-performance networking:
+- **Frontend (Flutter):** The user interface is built with **Flutter**, ensuring a consistent experience across **Android, iOS, Windows, macOS, and Linux**. 
+  - **State Management:** Uses [Riverpod](https://riverpod.dev/).
+  - **Database:** Uses [Drift](https://drift.simonbinder.eu/) (formerly Moor) for local data persistence.
+  - **Routing:** Uses [GoRouter](https://pub.dev/packages/go_router).
+- **Core (Go):** The heavy lifting (networking and proxy logic) is handled by a custom Go core located in `hiddify-core`. This core is integrated into the Flutter app via **Dart FFI** (Foreign Function Interface).
+- **Automation & CI/CD:** The repository includes complex GitHub Workflows for building and releasing the app across all five platforms, including signing and store deployments.
+
+## Project Structure
+- `lib/`: Contains the Flutter application code, organized into `core`, `features`, and `hiddifycore` (Dart bindings).
+- `hiddify-core/`: The Go source code for the proxy engine.
+- `assets/`: UI assets and translations (supporting multiple languages like Farsi, Russian, Chinese, Japanese, and Portuguese).
+- `test/`: Unit and integration tests for the Flutter components.
+- `android/`, `ios/`, `linux/`, `macos/`, `windows/`: Platform-specific native code and configurations.
+
+
+- Это саммари другого проекта, надо создать проект - app, react native, redux, tailwind if possible, посоветуй еще какие решения по архитектуре могут быть

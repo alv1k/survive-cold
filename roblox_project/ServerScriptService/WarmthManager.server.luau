@@ -57,12 +57,16 @@ local function restoreSavedInventory(player)
 
 		if saved.Items and #saved.Items > 0 then
 			for _, itemData in ipairs(saved.Items) do
+				local given = false
 				if _G.GiveItemToPlayer then
-					local tool = _G.GiveItemToPlayer(player, itemData.Key, itemData.Count)
-					if tool and itemData.TorchFuel then
-						tool:SetAttribute("TorchFuel", itemData.TorchFuel)
+					given = _G.GiveItemToPlayer(player, itemData.Key, itemData.Count)
+				else
+					local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+					if giveBindable and giveBindable:IsA("BindableFunction") then
+						given = giveBindable:Invoke(player, itemData.Key, itemData.Count)
 					end
 				end
+
 			end
 		end
 		SavedInventoriesOnDeath[player.UserId] = nil

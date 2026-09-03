@@ -85,8 +85,14 @@ local function spawnPlacedRabbitTrap(ownerPlayer, spawnPos)
 		local isArmed = trapModel:GetAttribute("IsArmed")
 
 		if hasPrey then
+			local given = false
 			if _G.GiveItemToPlayer then
-				_G.GiveItemToPlayer(triggerPlayer, "Steak", 1)
+				given = _G.GiveItemToPlayer(triggerPlayer, "Steak", 1)
+			else
+				local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+				if giveBindable and giveBindable:IsA("BindableFunction") then
+					given = giveBindable:Invoke(triggerPlayer, "Steak", 1)
+				end
 			end
 			trapModel:SetAttribute("HasPrey", false)
 			trapModel:SetAttribute("IsArmed", true)
@@ -103,14 +109,23 @@ local function spawnPlacedRabbitTrap(ownerPlayer, spawnPos)
 			prompt.ActionText = "Взведен (Ожидание дичи...)"
 			ShowNotificationRemote:FireClient(triggerPlayer, "⚙️ Капкан снова взведен и готов к охоте!")
 		else
+			local picked = false
 			if _G.GiveItemToPlayer then
-				local picked = _G.GiveItemToPlayer(triggerPlayer, "RabbitTrap", 1)
-				if picked then
-					trapModel:Destroy()
-					ShowNotificationRemote:FireClient(triggerPlayer, "🪤 Капкан убран в рюкзак.")
+				picked = _G.GiveItemToPlayer(triggerPlayer, "RabbitTrap", 1)
+			else
+				local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+				if giveBindable and giveBindable:IsA("BindableFunction") then
+					picked = giveBindable:Invoke(triggerPlayer, "RabbitTrap", 1)
 				end
 			end
+			if picked then
+				trapModel:Destroy()
+				ShowNotificationRemote:FireClient(triggerPlayer, "🪤 Капкан убран в рюкзак.")
+			else
+				ShowNotificationRemote:FireClient(triggerPlayer, "⚠️ Рюкзак полон! Освободите место.")
+			end
 		end
+
 	end)
 
 	-- Автономный цикл охоты на дичь в лесу

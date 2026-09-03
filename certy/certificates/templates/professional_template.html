@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Professional Certificate Template</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .certificate {
+            width: 850px;
+            height: 650px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .certificate::before {
+            content: "";
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 1px solid #d4af37;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 80px;
+            color: rgba(212, 175, 55, 0.05);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 50px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 2;
+        }
+        .header {
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .recipient {
+            font-size: 26px;
+            color: #34495e;
+            margin: 25px 0;
+            font-weight: bold;
+            font-style: italic;
+        }
+        .description {
+            font-size: 20px;
+            color: #34495e;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .event {
+            font-size: 22px;
+            color: #2c3e50;
+            margin: 25px 0;
+            font-weight: bold;
+        }
+        .date-issuer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .signature {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .signature-line {
+            height: 1px;
+            width: 150px;
+            background: #34495e;
+            margin: 30px auto 10px;
+        }
+        .signature-role {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .certificate-id {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <div class="watermark">CERTIFICATE</div>
+        <div class="content">
+            <div class="header">
+                <div class="logo">Certy</div>
+                <div class="subtitle">Certificate of Achievement</div>
+            </div>
+            <div class="title">Certificate of Completion</div>
+            <div class="recipient">This certificate is proudly presented to<br>[PARTICIPANT NAME]</div>
+            <div class="description">for successfully completing the requirements</div>
+            <div class="event">[EVENT TITLE]</div>
+            <div class="date-issuer">
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <div class="signature-role">Organizer Signature</div>
+                </div>
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <div class="signature-role">Date</div>
+                </div>
+            </div>
+            <div class="certificate-id">ID: [CERTIFICATE_ID]</div>
+        </div>
+    </div>
+</body>
+</html>

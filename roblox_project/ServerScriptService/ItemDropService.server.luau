@@ -210,7 +210,13 @@ local function dropItemOnGround(player, itemName, count, customPos)
 		local given = false
 		if _G.GiveItemToPlayer then
 			given = _G.GiveItemToPlayer(triggeringPlayer, itName, itCount)
+		else
+			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+			if giveBindable and giveBindable:IsA("BindableFunction") then
+				given = giveBindable:Invoke(triggeringPlayer, itName, itCount)
+			end
 		end
+
 
 		if given then
 			dropPart:Destroy()

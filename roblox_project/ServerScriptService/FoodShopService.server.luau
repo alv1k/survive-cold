@@ -37,44 +37,43 @@ local FOOD_CATALOG = {
 	Steak = { Key = "Steak", Name = "🥩 Сочный стейк на гриле", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 }
 }
 
--- Обработка бесплатного взятия еды
-local function handleBuyFood(player, foodKey)
-	local item = FOOD_CATALOG[foodKey]
-	if not item then
-		return { Success = false, Message = "Неизвестный продукт!" }
-	end
+-- Данные о наличии товаров на полках
+local ShelfStocks = {}
 
-	local given = false
-	if _G.GiveItemToPlayer then
-		given = _G.GiveItemToPlayer(player, foodKey, 1)
-	else
-		local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-		if giveBindable and giveBindable:IsA("BindableFunction") then
-			given = giveBindable:Invoke(player, foodKey, 1)
+local function updateShelfStatus(foodKey)
+	local shelfData = ShelfStocks[foodKey]
+	if not shelfData then return end
+	local cfg = FOOD_CATALOG[foodKey]
+	if not cfg then return end
+
+	local count = 0
+	for _, itemPart in pairs(shelfData.Items) do
+		if itemPart and itemPart.Parent then
+			count = count + 1
 		end
 	end
 
-	if given then
-		ShowNotificationRemote:FireClient(player, string.format("🛒 Вы взяли: %s (+60 Сытости, +50%% Тепла)!", item.Name))
-		return { Success = true, Message = "Продукт добавлен в рюкзак!" }
+	if count > 0 then
+		shelfData.Label.Text = string.format("%s\nВ наличии: %d/4\n🍗 +60 | 🔥 +50%%\n🎉 БЕСПЛАТНО", cfg.Name, count)
+		shelfData.Stroke.Color = Color3.fromRGB(74, 222, 128)
 	else
-		return { Success = false, Message = "Рюкзак полон! Освободите место." }
+		shelfData.Label.Text = string.format("🔒 %s\nНЕТ В НАЛИЧИИ (Поставка...)\n🎉 БЕСПЛАТНО", cfg.Name)
+		shelfData.Stroke.Color = Color3.fromRGB(239, 68, 68)
 	end
 end
 
-BuyFoodRemote.OnServerInvoke = function(player, foodKey)
-	return handleBuyFood(player, foodKey)
-end
+local function spawnShelfItem(foodKey, slotIndex)
+	local shelfData = ShelfStocks[foodKey]
+	if not shelfData then return end
+	local cfg = FOOD_CATALOG[foodKey]
+	if not cfg then return end
 
+	local itemCF = shelfData.SlotCFrames[slotIndex]
+	if not itemCF then return end
 
---------------------------------------------------------------------------------
--- 🏪 ПОСТРОЙКА ДОМИКА-МАГАЗИНА С ПОЛКАМИ И 3D-ЕДОЙ ПО 4 ШТ
---------------------------------------------------------------------------------
-
--- Вспомогательная функция создания 3D-модели товара на полке
-local function createFoodDisplayItem(foodKey, shelfCFrame)
+	-- Создание 3D-модели товара
 	local itemPart = Instance.new("Part")
-	itemPart.Name = "Display_" .. foodKey
+	itemPart.Name = string.format("Display_%s_%d", foodKey, slotIndex)
 	itemPart.Anchored = true
 	itemPart.CanCollide = false
 
@@ -110,12 +109,120 @@ local function createFoodDisplayItem(foodKey, shelfCFrame)
 		itemPart.BrickColor = BrickColor.new("Maroon")
 	end
 
-	itemPart.CFrame = shelfCFrame
+	itemPart.CFrame = itemCF
 	itemPart.Parent = FoodShopFolder
-	return itemPart
+
+	-- Интерактивный ProximityPrompt на каждом конкретном товаре
+	local prompt = Instance.new("ProximityPrompt", itemPart)
+	prompt.ObjectText = string.format("%s [🍗 +60 | 🔥 +50%%]", cfg.Name)
+	prompt.ActionText = "Взять с полки (Бесплатно)"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 9
+	prompt.RequiresLineOfSight = false
+
+	local isClaiming = false
+	prompt.Triggered:Connect(function(player)
+		if isClaiming then return end
+		isClaiming = true
+
+		local given = false
+		if _G.GiveItemToPlayer then
+			given = _G.GiveItemToPlayer(player, foodKey, 1)
+		else
+			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+			if giveBindable and giveBindable:IsA("BindableFunction") then
+				given = giveBindable:Invoke(player, foodKey, 1)
+			end
+		end
+
+		if given then
+			shelfData.Items[slotIndex] = nil
+			itemPart:Destroy()
+			updateShelfStatus(foodKey)
+			ShowNotificationRemote:FireClient(player, string.format("🛒 Вы взяли с полки: %s (+60 Сытости, +50%% Тепла)!", cfg.Name))
+			print(string.format("🛒 %s взял с полки %s (слот %d)!", player.Name, cfg.Name, slotIndex))
+
+			-- Респавн товара через 180 секунд (3 минуты)
+			task.delay(180, function()
+				if FoodShopFolder and FoodShopFolder.Parent then
+					spawnShelfItem(foodKey, slotIndex)
+				end
+			end)
+		else
+			isClaiming = false
+			ShowNotificationRemote:FireClient(player, "⚠️ Рюкзак полон! Освободите место.")
+		end
+	end)
+
+	shelfData.Items[slotIndex] = itemPart
+	updateShelfStatus(foodKey)
 end
 
--- Создание секции полок с 4 товарами и интерактивным ценником
+-- Обработка бесплатного взятия еды через меню/каталог
+local function handleBuyFood(player, foodKey)
+	local item = FOOD_CATALOG[foodKey]
+	if not item then
+		return { Success = false, Message = "Неизвестный продукт!" }
+	end
+
+	local shelfData = ShelfStocks[foodKey]
+	if not shelfData then
+		return { Success = false, Message = "Полка с товаром не найдена!" }
+	end
+
+	-- Поиск доступного предмета на полке
+	local availableSlot = nil
+	local availableItemPart = nil
+	for slotIdx, itemPart in pairs(shelfData.Items) do
+		if itemPart and itemPart.Parent then
+			availableSlot = slotIdx
+			availableItemPart = itemPart
+			break
+		end
+	end
+
+	if not availableSlot or not availableItemPart then
+		return { Success = false, Message = "Товар закончился на полках магазина!" }
+	end
+
+	local given = false
+	if _G.GiveItemToPlayer then
+		given = _G.GiveItemToPlayer(player, foodKey, 1)
+	else
+		local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+		if giveBindable and giveBindable:IsA("BindableFunction") then
+			given = giveBindable:Invoke(player, foodKey, 1)
+		end
+	end
+
+	if given then
+		shelfData.Items[availableSlot] = nil
+		availableItemPart:Destroy()
+		updateShelfStatus(foodKey)
+
+		-- Респавн через 180 сек
+		task.delay(180, function()
+			if FoodShopFolder and FoodShopFolder.Parent then
+				spawnShelfItem(foodKey, availableSlot)
+			end
+		end)
+
+		ShowNotificationRemote:FireClient(player, string.format("🛒 Вы взяли: %s (+60 Сытости, +50%% Тепла)!", item.Name))
+		return { Success = true, Message = "Продукт добавлен в рюкзак!" }
+	else
+		return { Success = false, Message = "Рюкзак полон! Освободите место." }
+	end
+end
+
+BuyFoodRemote.OnServerInvoke = function(player, foodKey)
+	return handleBuyFood(player, foodKey)
+end
+
+--------------------------------------------------------------------------------
+-- 🏪 ПОСТРОЙКА ДОМИКА-МАГАЗИНА С ПОЛКАМИ И 3D-ЕДОЙ ПО 4 ШТ
+--------------------------------------------------------------------------------
+
+-- Создание секции полок с 4 индивидуальными товарами и интерактивным ценником
 local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 	local cfg = FOOD_CATALOG[foodKey]
 	if not cfg then return end
@@ -131,32 +238,10 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 	shelfPart.BrickColor = BrickColor.new("Brown")
 	shelfPart.Parent = FoodShopFolder
 
-	-- Расставляем ровно 4 штуки еды на полке
-	local offsets = { -2.0, -0.65, 0.65, 2.0 }
-	for _, xOff in ipairs(offsets) do
-		local itemCF = shelfPart.CFrame * CFrame.new(xOff, 0.4, 0)
-		createFoodDisplayItem(foodKey, itemCF)
-	end
-
-	-- Интерактивный ProximityPrompt на полке для мгновенного бесплатного взятия
-	local prompt = Instance.new("ProximityPrompt", shelfPart)
-	prompt.ObjectText = string.format("%s [🍗 +60 | 🔥 +50%%]", cfg.Name)
-	prompt.ActionText = "Взять с полки (Бесплатно)"
-	prompt.HoldDuration = 0.2
-	prompt.MaxActivationDistance = 9
-	prompt.RequiresLineOfSight = false
-
-	prompt.Triggered:Connect(function(player)
-		local res = handleBuyFood(player, foodKey)
-		if not res.Success then
-			ShowNotificationRemote:FireClient(player, "⚠️ " .. res.Message)
-		end
-	end)
-
 	-- Информационный ценник над полкой
 	local bb = Instance.new("BillboardGui", shelfPart)
 	bb.Size = UDim2.new(0, 190, 0, 42)
-	bb.StudsOffset = Vector3.new(0, 1.3, 0)
+	bb.StudsOffset = Vector3.new(0, 1.4, 0)
 	bb.AlwaysOnTop = false
 	bb.MaxDistance = 25
 
@@ -167,14 +252,32 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 	lbl.Font = Enum.Font.GothamBold
 	lbl.TextSize = 11
 	lbl.TextColor3 = Color3.fromRGB(241, 245, 249)
-	lbl.Text = string.format("%s\n🍗 +60 | 🔥 +50%%\n🎉 БЕСПЛАТНО", cfg.Name)
 	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
+
 	local stroke = Instance.new("UIStroke", lbl)
 	stroke.Color = Color3.fromRGB(74, 222, 128)
-	stroke.Thickness = 1
+	stroke.Thickness = 1.2
+
+	local shelfData = {
+		SectionPart = shelfPart,
+		Label = lbl,
+		Stroke = stroke,
+		Items = {},
+		SlotCFrames = {}
+	}
+	ShelfStocks[foodKey] = shelfData
+
+	-- Расставляем 4 штуки еды на полке
+	local offsets = { -2.0, -0.65, 0.65, 2.0 }
+	for idx, xOff in ipairs(offsets) do
+		shelfData.SlotCFrames[idx] = shelfPart.CFrame * CFrame.new(xOff, 0.4, 0)
+		spawnShelfItem(foodKey, idx)
+	end
 end
 
+
 local function buildFoodShopBuilding()
+	ShelfStocks = {}
 	FoodShopFolder:ClearAllChildren()
 
 	-- 1. Пол магазина (32 x 26 studs)

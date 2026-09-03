@@ -45,6 +45,8 @@ header.BorderSizePixel = 0
 header.Parent = mainFrame
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
 
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
+
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -90, 1, 0)
 titleLabel.Position = UDim2.new(0, 20, 0, 0)
@@ -56,23 +58,12 @@ titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Text = "❄️ ВЫЖИТЬ В ХОЛОДЕ: 7 РЕЛИКВИЙ (ГИД ВЫЖИВАЮЩЕГО)"
 titleLabel.Parent = header
 
--- ✖ ИКОНКА КРЕСТИКА ЗАКРЫТИЯ
-local closeBtn = Instance.new("TextButton")
+-- ✖ ГРАФИЧЕСКАЯ ИКОНКА ЗАКРЫТИЯ
+local closeBtn, closeImg = IconConfig.CreateIconButton(header, "UI_Close", UDim2.new(0, 36, 0, 36), Color3.fromRGB(220, 38, 38), Color3.fromRGB(254, 202, 202))
 closeBtn.Name = "CloseButton"
-closeBtn.Size = UDim2.new(0, 36, 0, 36)
 closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(220, 38, 38)
-closeBtn.Font = Enum.Font.MontserratBold
-closeBtn.TextSize = 18
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Text = "✕"
-closeBtn.Parent = header
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 10)
 
-local closeStroke = Instance.new("UIStroke", closeBtn)
-closeStroke.Color = Color3.fromRGB(254, 202, 202)
-closeStroke.Thickness = 1.5
 
 -- 2. Панель переключения вкладок
 local tabsBar = Instance.new("Frame")

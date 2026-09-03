@@ -74,21 +74,14 @@ upgradeBtn.Text = "⬆️ Улучшить верстак"
 upgradeBtn.Parent = header
 Instance.new("UICorner", upgradeBtn).CornerRadius = UDim.new(0, 8)
 
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 38, 0, 38)
+local closeBtn = IconConfig.CreateIconButton(header, "UI_Close", UDim2.new(0, 36, 0, 36), Color3.fromRGB(220, 38, 38), Color3.fromRGB(254, 202, 202))
+closeBtn.Name = "CloseButton"
 closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
-closeBtn.Font = Enum.Font.MontserratBold
-closeBtn.TextSize = 17
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Text = "✕"
-closeBtn.Parent = header
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 10)
 
 -- 2. Вкладки категорий
 local catBar = Instance.new("Frame")
-catBar.Size = UDim2.new(1, -36, 0, 34)
+catBar.Size = UDim2.new(1, -36, 0, 36)
 catBar.Position = UDim2.new(0, 18, 0, 64)
 catBar.BackgroundTransparency = 1
 catBar.Parent = mainFrame
@@ -98,11 +91,12 @@ catLayout.FillDirection = Enum.FillDirection.Horizontal
 catLayout.Padding = UDim.new(0, 8)
 
 local CATEGORIES = {
-	{ Id = "All", Name = "📋 Все рецепты" },
-	{ Id = "Weapons", Name = "🗡️ Оружие" },
-	{ Id = "Gear", Name = "⛺ Снаряжение" },
-	{ Id = "Structures", Name = "🛡️ Оборона & Ловушки" }
+	{ Id = "All", Name = "Все рецепты", IconKey = "UI_Check" },
+	{ Id = "Weapons", Name = "Оружие", IconKey = "UI_Swords" },
+	{ Id = "Gear", Name = "Снаряжение", IconKey = "UI_Tent" },
+	{ Id = "Structures", Name = "Оборона", IconKey = "UI_Shield" }
 }
+
 
 local selectedCategory = "All"
 local catButtons = {}
@@ -369,17 +363,30 @@ local function renderRecipes()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layoutIndex * 78 + 20)
 end
 
--- Кнопки категорий
+-- Кнопки категорий с графическими иконками
 for _, cat in ipairs(CATEGORIES) do
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 160, 1, 0)
+	btn.Size = UDim2.new(0, 170, 1, 0)
 	btn.BackgroundColor3 = (cat.Id == selectedCategory) and Color3.fromRGB(2, 132, 199) or Color3.fromRGB(15, 23, 42)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 12
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Text = cat.Name
+	btn.Text = "" -- Без текста кнопки, используем внутренние лейблы
+	btn.AutoButtonColor = true
 	btn.Parent = catBar
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+	local iconBadge = IconConfig.CreateIconBadge(btn, cat.IconKey, UDim2.new(0, 24, 0, 24), 1)
+	iconBadge.Position = UDim2.new(0, 8, 0.5, 0)
+	iconBadge.AnchorPoint = Vector2.new(0, 0.5)
+
+	local btnLbl = Instance.new("TextLabel")
+	btnLbl.Size = UDim2.new(1, -38, 1, 0)
+	btnLbl.Position = UDim2.new(0, 36, 0, 0)
+	btnLbl.BackgroundTransparency = 1
+	btnLbl.Font = Enum.Font.MontserratBold
+	btnLbl.TextSize = 13
+	btnLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnLbl.TextXAlignment = Enum.TextXAlignment.Left
+	btnLbl.Text = cat.Name
+	btnLbl.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
 		selectedCategory = cat.Id
@@ -390,6 +397,7 @@ for _, cat in ipairs(CATEGORIES) do
 	end)
 	catButtons[cat.Id] = btn
 end
+
 
 upgradeBtn.MouseButton1Click:Connect(function()
 	if UpgradeWorkbenchRemote then

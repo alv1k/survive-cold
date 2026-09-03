@@ -72,7 +72,20 @@ IconConfig.Icons = {
 	HUD_Hunger = { File = "steak.png", Color = Color3.fromRGB(234, 179, 8), Name = "Сытость", FallbackEmoji = "🍗" },
 	HUD_Stamina = { File = "hud_stamina.png", Color = Color3.fromRGB(56, 189, 248), Name = "Бег", FallbackEmoji = "⚡" },
 	HUD_Health = { File = "hud_health.png", Color = Color3.fromRGB(239, 68, 68), Name = "Здоровье", FallbackEmoji = "❤️" },
-	HUD_Blizzard = { File = "hud_blizzard.png", Color = Color3.fromRGB(186, 230, 253), Name = "Буря", FallbackEmoji = "❄️" }
+	HUD_Blizzard = { File = "hud_blizzard.png", Color = Color3.fromRGB(186, 230, 253), Name = "Буря", FallbackEmoji = "❄️" },
+
+	-- 🖥️ Системный UI и навигация (Замена всех эмодзи и текстовых крестиков)
+	UI_Close = { File = "ui_close.png", Color = Color3.fromRGB(255, 255, 255), Name = "Закрыть", FallbackEmoji = "✕" },
+	UI_ArrowLeft = { File = "ui_arrow_left.png", Color = Color3.fromRGB(255, 255, 255), Name = "Назад", FallbackEmoji = "◀" },
+	UI_ArrowRight = { File = "ui_arrow_right.png", Color = Color3.fromRGB(255, 255, 255), Name = "Вперед", FallbackEmoji = "▶" },
+	UI_Guide = { File = "ui_guide_book.png", Color = Color3.fromRGB(56, 189, 248), Name = "Гид", FallbackEmoji = "📖" },
+	UI_Hammer = { File = "ui_craft_hammer.png", Color = Color3.fromRGB(74, 222, 128), Name = "Создать", FallbackEmoji = "🔨" },
+	UI_Anvil = { File = "ui_anvil.png", Color = Color3.fromRGB(250, 204, 21), Name = "Улучшить", FallbackEmoji = "⭐" },
+	UI_Swords = { File = "ui_swords.png", Color = Color3.fromRGB(248, 113, 113), Name = "Оружие", FallbackEmoji = "🗡️" },
+	UI_Tent = { File = "ui_tent.png", Color = Color3.fromRGB(251, 146, 60), Name = "Снаряжение", FallbackEmoji = "⛺" },
+	UI_Shield = { File = "ui_shield.png", Color = Color3.fromRGB(56, 189, 248), Name = "Оборона", FallbackEmoji = "🛡️" },
+	UI_Check = { File = "ui_check.png", Color = Color3.fromRGB(34, 197, 94), Name = "Готово", FallbackEmoji = "✓" },
+	UI_Skull = { File = "ui_skull.png", Color = Color3.fromRGB(239, 68, 68), Name = "Смерть", FallbackEmoji = "💀" }
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -134,7 +147,6 @@ function IconConfig.CreateIconBadge(parent, iconKey, size, bgTransparency)
 	if resolvedImage and resolvedImage ~= "" then
 		img.Image = resolvedImage
 	else
-		-- Если изображение еще не загружено в Studio, показываем стилизованный Fallback
 		local fallbackLbl = Instance.new("TextLabel")
 		fallbackLbl.Name = "Fallback"
 		fallbackLbl.Size = UDim2.new(1, 0, 1, 0)
@@ -149,5 +161,52 @@ function IconConfig.CreateIconBadge(parent, iconKey, size, bgTransparency)
 	return badge, img
 end
 
+-- Создание кнопки с графической иконкой (например, крестик закрытия, стрелочки)
+function IconConfig.CreateIconButton(parent, iconKey, size, bgCol, strokeCol)
+	local cfg = IconConfig.Icons[iconKey]
+	size = size or UDim2.new(0, 36, 0, 36)
+
+	local btn = Instance.new("TextButton")
+	btn.Name = "Btn_" .. tostring(iconKey)
+	btn.Size = size
+	btn.BackgroundColor3 = bgCol or Color3.fromRGB(220, 38, 38)
+	btn.Text = "" -- Без текста, чистая графическая иконка
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = strokeCol or Color3.fromRGB(254, 202, 202)
+	stroke.Thickness = 1.5
+
+	local img = Instance.new("ImageLabel")
+	img.Name = "IconImg"
+	img.Size = UDim2.new(1, -8, 1, -8)
+	img.Position = UDim2.new(0.5, 0, 0.5, 0)
+	img.AnchorPoint = Vector2.new(0.5, 0.5)
+	img.BackgroundTransparency = 1
+	img.ImageColor3 = (cfg and cfg.Color) or Color3.fromRGB(255, 255, 255)
+	img.ScaleType = Enum.ScaleType.Fit
+	img.Parent = btn
+
+	local resolved = IconConfig.GetIconImage(iconKey)
+	if resolved and resolved ~= "" then
+		img.Image = resolved
+	else
+		local fallbackLbl = Instance.new("TextLabel")
+		fallbackLbl.Name = "Fallback"
+		fallbackLbl.Size = UDim2.new(1, 0, 1, 0)
+		fallbackLbl.BackgroundTransparency = 1
+		fallbackLbl.Font = Enum.Font.MontserratBold
+		fallbackLbl.TextSize = 18
+		fallbackLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+		fallbackLbl.Text = cfg and cfg.FallbackEmoji or "✕"
+		fallbackLbl.Parent = btn
+	end
+
+	return btn, img
+end
+
 return IconConfig
+
 

@@ -18,6 +18,8 @@ local HideDeathScreenRemote = RemotesFolder and RemotesFolder:WaitForChild("Hide
 local RespawnInHouseRemote = RemotesFolder and RemotesFolder:WaitForChild("RespawnInHouse", 10)
 local ReviveWithRobuxRemote = RemotesFolder and RemotesFolder:WaitForChild("ReviveWithRobux", 10)
 
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DeathReviveGui"
 screenGui.ResetOnSpawn = false
@@ -27,7 +29,7 @@ screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 590, 0, 420)
+mainFrame.Size = UDim2.new(0, 600, 0, 430)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
@@ -50,30 +52,27 @@ header.BorderSizePixel = 0
 header.Parent = mainFrame
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
 
+local skullBadge = IconConfig.CreateIconBadge(header, "UI_Skull", UDim2.new(0, 32, 0, 32), 1)
+skullBadge.Position = UDim2.new(0, 14, 0.5, 0)
+skullBadge.AnchorPoint = Vector2.new(0, 0.5)
+
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -70, 1, 0)
-titleLabel.Position = UDim2.new(0, 20, 0, 0)
+titleLabel.Size = UDim2.new(1, -110, 1, 0)
+titleLabel.Position = UDim2.new(0, 54, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Font = Enum.Font.GothamBlack
-titleLabel.TextSize = 16
+titleLabel.Font = Enum.Font.MontserratBlack
+titleLabel.TextSize = 17
 titleLabel.TextColor3 = Color3.fromRGB(254, 202, 202)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "💀 ВЫ ПОГИБЛИ"
+titleLabel.Text = "ВЫ ПОГИБЛИ"
 titleLabel.Parent = header
 
--- ✖ Крестик закрытия (Возрождение в жилом доме)
-local closeBtn = Instance.new("TextButton")
+-- ✖ Графический крестик закрытия (Возрождение в жилом доме)
+local closeBtn = IconConfig.CreateIconButton(header, "UI_Close", UDim2.new(0, 36, 0, 36), Color3.fromRGB(185, 28, 28), Color3.fromRGB(254, 202, 202))
 closeBtn.Name = "CloseButton"
-closeBtn.Size = UDim2.new(0, 36, 0, 36)
 closeBtn.Position = UDim2.new(1, -46, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(185, 28, 28)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 18
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Text = "✕"
-closeBtn.Parent = header
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 10)
+
 
 -- 2. Информационный блок о помощи союзников
 local infoCard = Instance.new("Frame")

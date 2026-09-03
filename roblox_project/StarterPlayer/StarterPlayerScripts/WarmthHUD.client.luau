@@ -115,19 +115,37 @@ local hungerTitle, hungerFill = createBarGroup("HungerGroup", "Сытость", 
 local staminaTitle, staminaFill = createBarGroup("StaminaGroup", "Бег", "HUD_Stamina", Color3.fromRGB(56, 189, 248))
 
 
--- 3. Кнопка вызова Гайда
+-- 3. Кнопка вызова Гайда с графической иконкой книги
 local guideBtn = Instance.new("TextButton")
 guideBtn.Name = "GuideButton"
-guideBtn.Size = UDim2.new(0, 170, 0, 38)
+guideBtn.Size = UDim2.new(0, 185, 0, 40)
 guideBtn.Position = UDim2.new(0, 20, 0, 20)
 guideBtn.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 guideBtn.BackgroundTransparency = 0.2
-guideBtn.Font = Enum.Font.MontserratBold
-guideBtn.TextSize = 14
-guideBtn.TextColor3 = Color3.fromRGB(56, 189, 248)
-guideBtn.Text = "❓ Обучение & Гайд"
+guideBtn.Text = ""
+guideBtn.AutoButtonColor = true
 guideBtn.Parent = screenGui
 Instance.new("UICorner", guideBtn).CornerRadius = UDim.new(0, 10)
+
+local guideStroke = Instance.new("UIStroke", guideBtn)
+guideStroke.Color = Color3.fromRGB(56, 189, 248)
+guideStroke.Thickness = 1.5
+
+local gIcon = IconConfig.CreateIconBadge(guideBtn, "UI_Guide", UDim2.new(0, 26, 0, 26), 1)
+gIcon.Position = UDim2.new(0, 8, 0.5, 0)
+gIcon.AnchorPoint = Vector2.new(0, 0.5)
+
+local gLbl = Instance.new("TextLabel")
+gLbl.Size = UDim2.new(1, -42, 1, 0)
+gLbl.Position = UDim2.new(0, 40, 0, 0)
+gLbl.BackgroundTransparency = 1
+gLbl.Font = Enum.Font.MontserratBold
+gLbl.TextSize = 13
+gLbl.TextColor3 = Color3.fromRGB(56, 189, 248)
+gLbl.TextXAlignment = Enum.TextXAlignment.Left
+gLbl.Text = "Гид по выживанию"
+gLbl.Parent = guideBtn
+
 
 guideBtn.MouseButton1Click:Connect(function()
 	local guideGui = playerGui:FindFirstChild("WelcomeGuideGui")

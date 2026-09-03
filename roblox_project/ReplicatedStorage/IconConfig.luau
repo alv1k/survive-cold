@@ -75,6 +75,30 @@ IconConfig.Icons = {
 	HUD_Blizzard = { File = "hud_blizzard.png", Color = Color3.fromRGB(186, 230, 253), Name = "Буря", FallbackEmoji = "❄️" }
 }
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Получение реальной текстуры иконки (из AssetId или из синхронизированной папки ReplicatedStorage.Icons)
+function IconConfig.GetIconImage(iconKey)
+	local cfg = IconConfig.Icons[iconKey]
+	if not cfg then return "" end
+
+	if cfg.AssetId and cfg.AssetId ~= "" then
+		return cfg.AssetId
+	end
+
+	-- Проверяем наличие синхронизированного Rojo Decal в ReplicatedStorage.Icons
+	local iconsFolder = ReplicatedStorage:FindFirstChild("Icons")
+	if iconsFolder and cfg.File then
+		local baseName = cfg.File:gsub("%.png$", "")
+		local decal = iconsFolder:FindFirstChild(baseName)
+		if decal and decal:IsA("Decal") then
+			return decal.Texture
+		end
+	end
+
+	return ""
+end
+
 -- Создание компактного красивого бейджа иконки для UI
 function IconConfig.CreateIconBadge(parent, iconKey, size, bgTransparency)
 	local cfg = IconConfig.Icons[iconKey]
@@ -106,11 +130,24 @@ function IconConfig.CreateIconBadge(parent, iconKey, size, bgTransparency)
 	img.ScaleType = Enum.ScaleType.Fit
 	img.Parent = badge
 
-	if cfg and cfg.AssetId then
-		img.Image = cfg.AssetId
+	local resolvedImage = IconConfig.GetIconImage(iconKey)
+	if resolvedImage and resolvedImage ~= "" then
+		img.Image = resolvedImage
+	else
+		-- Если изображение еще не загружено в Studio, показываем стилизованный Fallback
+		local fallbackLbl = Instance.new("TextLabel")
+		fallbackLbl.Name = "Fallback"
+		fallbackLbl.Size = UDim2.new(1, 0, 1, 0)
+		fallbackLbl.BackgroundTransparency = 1
+		fallbackLbl.Font = Enum.Font.MontserratBold
+		fallbackLbl.TextSize = 18
+		fallbackLbl.TextColor3 = iconColor
+		fallbackLbl.Text = cfg and cfg.FallbackEmoji or "📦"
+		fallbackLbl.Parent = badge
 	end
 
 	return badge, img
 end
 
 return IconConfig
+

@@ -29,7 +29,7 @@ frostContainer.Size = UDim2.new(1, 0, 1, 0)
 frostContainer.BackgroundTransparency = 1
 frostContainer.Parent = screenGui
 
--- 4 Градиентные ледяные рамки (Верх, Низ, Лево, Право)
+-- 4 Градиентные ледяные рамки по самым краям экрана (Верх, Низ, Лево, Право)
 local function createFrostBorder(name, size, pos, gradRotation)
 	local border = Instance.new("Frame")
 	border.Name = name
@@ -44,16 +44,16 @@ local function createFrostBorder(name, size, pos, gradRotation)
 	grad.Rotation = gradRotation
 	grad.Transparency = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
-		NumberSequenceKeypoint.new(0.6, 0.4),
+		NumberSequenceKeypoint.new(0.5, 0.6),
 		NumberSequenceKeypoint.new(1, 1)
 	})
 	return border
 end
 
-local borderTop = createFrostBorder("Top", UDim2.new(1, 0, 0.35, 0), UDim2.new(0, 0, 0, 0), 90)
-local borderBottom = createFrostBorder("Bottom", UDim2.new(1, 0, 0.35, 0), UDim2.new(0, 0, 0.65, 0), 270)
-local borderLeft = createFrostBorder("Left", UDim2.new(0.35, 0, 1, 0), UDim2.new(0, 0, 0, 0), 0)
-local borderRight = createFrostBorder("Right", UDim2.new(0.35, 0, 1, 0), UDim2.new(0.65, 0, 0, 0), 180)
+local borderTop = createFrostBorder("Top", UDim2.new(1, 0, 0.14, 0), UDim2.new(0, 0, 0, 0), 90)
+local borderBottom = createFrostBorder("Bottom", UDim2.new(1, 0, 0.14, 0), UDim2.new(0, 0, 0.86, 0), 270)
+local borderLeft = createFrostBorder("Left", UDim2.new(0.14, 0, 1, 0), UDim2.new(0, 0, 0, 0), 0)
+local borderRight = createFrostBorder("Right", UDim2.new(0.14, 0, 1, 0), UDim2.new(0.86, 0, 0, 0), 180)
 
 local borders = { borderTop, borderBottom, borderLeft, borderRight }
 
@@ -105,20 +105,21 @@ RunService.RenderStepped:Connect(function()
 
 	local targetTrans = 1.0
 
-	if warmth < 60 then
-		-- Плавное появление инея от 1.0 (при 60%) до 0.15 (при 0%)
-		local frostFactor = 1 - (warmth / 60)
-		targetTrans = math.clamp(1.0 - (frostFactor * 0.85), 0.15, 1.0)
+	if warmth < 50 then
+		-- Мягкое появление инея по краям экрана (минимум 0.40 прозрачности, чтобы никогда не слепить)
+		local frostFactor = 1 - (warmth / 50)
+		targetTrans = math.clamp(1.0 - (frostFactor * 0.60), 0.40, 1.0)
 	end
 
-	-- В метель иней еще гуще
+	-- В метель легкий дополнительный морозный оттенок по периметру
 	if isBlizzard and targetTrans < 1.0 then
-		targetTrans = math.max(0.10, targetTrans - 0.15)
+		targetTrans = math.max(0.35, targetTrans - 0.10)
 	end
 
 	for _, b in ipairs(borders) do
 		b.BackgroundTransparency = b.BackgroundTransparency + (targetTrans - b.BackgroundTransparency) * 0.1
 	end
+
 
 	-- Микро-дрожь камеры при критическом замерзании
 	if warmth <= 15 then

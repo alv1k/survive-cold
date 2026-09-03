@@ -27,36 +27,42 @@ local function setWeatherState(state)
 	if state == "Clear" then
 		workspace:SetAttribute("IsBlizzard", false)
 		TweenService:Create(Atmosphere, TweenInfo.new(5), {
-			Density = 0.35,
+			Density = 0.3,
+			Haze = 0.5,
 			Color = Color3.fromRGB(199, 219, 230),
 			Glare = 0.2
 		}):Play()
 		TweenService:Create(Lighting, TweenInfo.new(5), {
-			FogEnd = 500,
+			FogStart = 60,
+			FogEnd = 800,
 			OutdoorAmbient = Color3.fromRGB(128, 140, 155)
 		}):Play()
 		
 	elseif state == "Fog" then
 		workspace:SetAttribute("IsBlizzard", false)
 		TweenService:Create(Atmosphere, TweenInfo.new(4), {
-			Density = 0.65,
+			Density = 0.5,
+			Haze = 1.2,
 			Color = Color3.fromRGB(150, 170, 185)
 		}):Play()
 		TweenService:Create(Lighting, TweenInfo.new(4), {
-			FogEnd = 150,
+			FogStart = 15,
+			FogEnd = 280,
 			OutdoorAmbient = Color3.fromRGB(90, 100, 115)
 		}):Play()
 		
 	elseif state == "Blizzard" then
 		workspace:SetAttribute("IsBlizzard", true)
 		TweenService:Create(Atmosphere, TweenInfo.new(3), {
-			Density = 0.92,
+			Density = 0.65,
+			Haze = 2.0,
 			Color = Color3.fromRGB(120, 135, 150),
 			Glare = 0
 		}):Play()
 		TweenService:Create(Lighting, TweenInfo.new(3), {
-			FogEnd = 40,
-			OutdoorAmbient = Color3.fromRGB(40, 50, 65)
+			FogStart = 0,
+			FogEnd = 140,
+			OutdoorAmbient = Color3.fromRGB(50, 60, 75)
 		}):Play()
 	end
 end

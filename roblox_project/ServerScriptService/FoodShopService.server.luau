@@ -21,7 +21,7 @@ BuyFoodRemote.Name = "BuyFood"
 local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
 ShowNotificationRemote.Name = "ShowNotification"
 
-local FOOD_SHOP_POSITION = Vector3.new(-380, 4.0, -450)
+local FOOD_SHOP_POSITION = Vector3.new(-50, 4.0, 0)
 
 local FoodShopFolder = workspace:FindFirstChild("FoodShop") or Instance.new("Folder", workspace)
 FoodShopFolder.Name = "FoodShop"
@@ -372,32 +372,10 @@ local function buildFoodShopBuilding()
 	shopLight.Range = 36
 	shopLight.Brightness = 2.5
 
-	-- 8. Вывеска над входом
-	local sign = Instance.new("Part")
-	sign.Name = "ShopSign"
-	sign.Size = Vector3.new(18, 3, 0.8)
-	sign.Position = FOOD_SHOP_POSITION + Vector3.new(0, 8.5, 13.2)
-	sign.Anchored = true
-	sign.Material = Enum.Material.WoodPlanks
-	sign.BrickColor = BrickColor.new("Dark orange")
-	sign.Parent = FoodShopFolder
-
-	local bbSign = Instance.new("BillboardGui", sign)
-	bbSign.Size = UDim2.new(0, 360, 0, 56)
-	bbSign.StudsOffset = Vector3.new(0, 0, 0.6)
-	bbSign.AlwaysOnTop = true
-
-	local signLbl = Instance.new("TextLabel", bbSign)
-	signLbl.Size = UDim2.new(1, 0, 1, 0)
-	signLbl.BackgroundTransparency = 1
-	signLbl.Font = Enum.Font.MontserratBlack
-	signLbl.TextSize = 22
-	signLbl.TextColor3 = Color3.fromRGB(250, 204, 21)
-	signLbl.Text = "🥫 МАГАЗИН ПРОДУКТОВ"
-
 	----------------------------------------------------------------------------
 	-- 🛒 РАССТАНОВКА СТЕЛЛАЖЕЙ И ПОЛОК С ЕДОЙ (ПО 4 ШТ КАЖДАЯ)
 	----------------------------------------------------------------------------
+
 
 	-- Стеллаж 1: Вдоль левой стены (3 полки)
 	local shelfLeftBackdrop = Instance.new("Part", FoodShopFolder)

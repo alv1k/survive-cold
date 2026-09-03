@@ -25,7 +25,7 @@ local ClothingTiers = {
 local ShopFolder = workspace:FindFirstChild("ClothingShop") or Instance.new("Folder", workspace)
 ShopFolder.Name = "ClothingShop"
 
-local SHOP_POSITION = Vector3.new(350, 2.5, -300)
+local SHOP_POSITION = Vector3.new(70, 2.5, 0)
 
 local function setupBalancedShop()
 	local shopBase = Instance.new("Part")

@@ -90,13 +90,18 @@ IconConfig.Icons = {
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Получение реальной текстуры иконки (из AssetId или из синхронизированной папки ReplicatedStorage.Icons)
+-- Получение реальной текстуры иконки (из AssetId или локальной библиотеки rbxasset://textures/survival_icons/)
 function IconConfig.GetIconImage(iconKey)
 	local cfg = IconConfig.Icons[iconKey]
 	if not cfg then return "" end
 
 	if cfg.AssetId and cfg.AssetId ~= "" then
 		return cfg.AssetId
+	end
+
+	-- Прямое использование локальной текстуры Roblox Studio
+	if cfg.File and cfg.File ~= "" then
+		return "rbxasset://textures/survival_icons/" .. cfg.File
 	end
 
 	-- Проверяем наличие синхронизированного Rojo Decal в ReplicatedStorage.Icons
@@ -144,19 +149,7 @@ function IconConfig.CreateIconBadge(parent, iconKey, size, bgTransparency)
 	img.Parent = badge
 
 	local resolvedImage = IconConfig.GetIconImage(iconKey)
-	if resolvedImage and resolvedImage ~= "" then
-		img.Image = resolvedImage
-	else
-		local fallbackLbl = Instance.new("TextLabel")
-		fallbackLbl.Name = "Fallback"
-		fallbackLbl.Size = UDim2.new(1, 0, 1, 0)
-		fallbackLbl.BackgroundTransparency = 1
-		fallbackLbl.Font = Enum.Font.MontserratBold
-		fallbackLbl.TextSize = 18
-		fallbackLbl.TextColor3 = iconColor
-		fallbackLbl.Text = cfg and cfg.FallbackEmoji or "📦"
-		fallbackLbl.Parent = badge
-	end
+	img.Image = resolvedImage
 
 	return badge, img
 end
@@ -190,23 +183,12 @@ function IconConfig.CreateIconButton(parent, iconKey, size, bgCol, strokeCol)
 	img.Parent = btn
 
 	local resolved = IconConfig.GetIconImage(iconKey)
-	if resolved and resolved ~= "" then
-		img.Image = resolved
-	else
-		local fallbackLbl = Instance.new("TextLabel")
-		fallbackLbl.Name = "Fallback"
-		fallbackLbl.Size = UDim2.new(1, 0, 1, 0)
-		fallbackLbl.BackgroundTransparency = 1
-		fallbackLbl.Font = Enum.Font.MontserratBold
-		fallbackLbl.TextSize = 18
-		fallbackLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-		fallbackLbl.Text = cfg and cfg.FallbackEmoji or "✕"
-		fallbackLbl.Parent = btn
-	end
+	img.Image = resolved
 
 	return btn, img
 end
 
 return IconConfig
+
 
 

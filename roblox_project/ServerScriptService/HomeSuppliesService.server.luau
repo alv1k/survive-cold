@@ -132,17 +132,16 @@ local function createHomeChest(index, offset)
 	local lootPool = CHEST_LOOT_TABLES[index] or CHEST_LOOT_TABLES[1]
 
 	prompt.Triggered:Connect(function(player)
-		local lootedText = {}
-		for _, loot in ipairs(lootPool) do
+		for i, loot in ipairs(lootPool) do
 			local qty = math.random(loot.Min, loot.Max)
-			local given = givePlayerItem(player, loot.Item, qty)
-			if not given and _G.DropItemOnGround then
-				_G.DropItemOnGround(player, loot.Item, qty, chestPos + Vector3.new(0, 0.5, 2))
+			local spreadAngle = (i / #lootPool) * (math.pi * 2)
+			local dropPos = chestPos + Vector3.new(math.cos(spreadAngle) * 2.2, 0.4, math.sin(spreadAngle) * 2.2 + 1.2)
+			if _G.DropItemOnGround then
+				_G.DropItemOnGround(player, loot.Item, qty, dropPos)
 			end
-			table.insert(lootedText, string.format("%s (x%d)", loot.Item, qty))
 		end
 
-		ShowNotificationRemote:FireClient(player, "📦 Вы открыли сундук и получили припасы!")
+		ShowNotificationRemote:FireClient(player, "📦 Припасы высыпались на землю! Подберите их.")
 		prompt.Enabled = false
 		lock.BrickColor = BrickColor.new("Really red")
 		light.Color = Color3.fromRGB(239, 68, 68)
@@ -164,6 +163,105 @@ end
 for i, offset in ipairs(CHEST_OFFSETS) do
 	createHomeChest(i, offset)
 end
+
+--------------------------------------------------------------------------------
+-- 1.2 ⚙️ 10 СУНДУКОВ ДЕТАЛЕЙ (PART CHESTS) У ДОМА
+--------------------------------------------------------------------------------
+local PART_CHEST_OFFSETS = {
+	-- Спереди дома вдоль забора (5 шт)
+	Vector3.new(-10, 0, -18),
+	Vector3.new(-5, 0, -18),
+	Vector3.new(0, 0, -18),
+	Vector3.new(5, 0, -18),
+	Vector3.new(10, 0, -18),
+	-- Сзади дома вдоль забора (5 шт)
+	Vector3.new(-10, 0, 18),
+	Vector3.new(-5, 0, 18),
+	Vector3.new(0, 0, 18),
+	Vector3.new(5, 0, 18),
+	Vector3.new(10, 0, 18)
+}
+
+local function createHomePartChest(index, offset)
+	local groundY = getGroundHeight(offset.X, offset.Z)
+	local chestPos = Vector3.new(offset.X, groundY + 1.2, offset.Z)
+
+	local chestModel = Instance.new("Model")
+	chestModel.Name = "HomePartChest_" .. index
+
+	local base = Instance.new("Part")
+	base.Name = "Base"
+	base.Size = Vector3.new(3.4, 2.0, 2.4)
+	base.Position = chestPos
+	base.Anchored = true
+	base.CanCollide = true
+	base.Material = Enum.Material.DiamondPlate
+	base.BrickColor = BrickColor.new("Dark stone grey")
+	base.Parent = chestModel
+
+	local lid = Instance.new("Part")
+	lid.Name = "Lid"
+	lid.Size = Vector3.new(3.6, 0.6, 2.6)
+	lid.Position = chestPos + Vector3.new(0, 1.25, 0)
+	lid.Anchored = true
+	lid.CanCollide = true
+	lid.Material = Enum.Material.Metal
+	lid.BrickColor = BrickColor.new("Black")
+	lid.Parent = chestModel
+
+	local lock = Instance.new("Part")
+	lock.Name = "Lock"
+	lock.Size = Vector3.new(0.7, 0.7, 0.3)
+	lock.Position = chestPos + Vector3.new(0, 0.25, 1.25)
+	lock.Anchored = true
+	lock.CanCollide = false
+	lock.Material = Enum.Material.Neon
+	lock.BrickColor = BrickColor.new("Cyan")
+	lock.Parent = chestModel
+
+	local light = Instance.new("PointLight", lock)
+	light.Color = Color3.fromRGB(56, 189, 248)
+	light.Range = 10
+	light.Brightness = 1.4
+
+	local prompt = Instance.new("ProximityPrompt", base)
+	prompt.ActionText = "Открыть сундук деталей"
+	prompt.ObjectText = string.format("⚙️ Сундук деталей #%d", index)
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+
+	prompt.Triggered:Connect(function(player)
+		local partsCount = math.random(1, 3)
+		for p = 1, partsCount do
+			local offsetDrop = Vector3.new(math.random(-15, 15) / 10, 0.4, math.random(10, 22) / 10)
+			if _G.DropItemOnGround then
+				_G.DropItemOnGround(player, "Parts", 1, chestPos + offsetDrop)
+			end
+		end
+
+		ShowNotificationRemote:FireClient(player, string.format("⚙️ Из сундука выпали Детали (x%d)!", partsCount))
+		prompt.Enabled = false
+		lock.BrickColor = BrickColor.new("Really red")
+		light.Color = Color3.fromRGB(239, 68, 68)
+
+		task.delay(60, function()
+			if prompt and prompt.Parent then
+				prompt.Enabled = true
+				lock.BrickColor = BrickColor.new("Cyan")
+				light.Color = Color3.fromRGB(56, 189, 248)
+			end
+		end)
+	end)
+
+	chestModel.PrimaryPart = base
+	chestModel.Parent = HomeSuppliesFolder
+end
+
+for i, offset in ipairs(PART_CHEST_OFFSETS) do
+	createHomePartChest(i, offset)
+end
+
 
 --------------------------------------------------------------------------------
 -- 2. 🌲 10 ВЕТОК, 10 ВОЛОКОН, 10 КАМНЕЙ, 10 ДОСОК У ДОМА

@@ -65,6 +65,67 @@ local function getMobUnderMouse()
 	return nil
 end
 
+local TweenService = game:GetService("TweenService")
+
+local spearAnimTrack = nil
+local loadedAnimHum = nil
+
+local function playSpearThrustAnimation()
+	local char = player.Character
+	if not char then return end
+
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local animator = humanoid and (humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid))
+
+	-- 1. Воспроизведение анимации выпада/удара персонажа
+	if animator then
+		if loadedAnimHum ~= humanoid or not spearAnimTrack then
+			loadedAnimHum = humanoid
+			local anim = Instance.new("Animation")
+			-- R15 / R6 анимация выпада и колющего удара
+			anim.AnimationId = "rbxassetid://522635555"
+			local success, track = pcall(function()
+				return animator:LoadAnimation(anim)
+			end)
+			if success and track then
+				spearAnimTrack = track
+				spearAnimTrack.Priority = Enum.AnimationPriority.Action
+			end
+		end
+
+		if spearAnimTrack then
+			spearAnimTrack:Play(0.05, 1, 2.0)
+		end
+	end
+
+	-- 2. Процедурный колющий выпад руки с копьем (Tween Motor6D)
+	local rArm = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+	local tool = char:FindFirstChildOfClass("Tool")
+	if tool and tool:IsA("Tool") then
+		local origGrip = tool.Grip
+		local thrustGrip = origGrip * CFrame.new(0, 0, -1.6) * CFrame.Angles(math.rad(15), 0, 0)
+		tool.Grip = thrustGrip
+
+		task.delay(0.12, function()
+			if tool and tool.Parent == char then
+				tool.Grip = origGrip
+			end
+		end)
+	end
+
+	-- 3. Звуковой эффект рассекающего удара (Whoosh)
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxasset://sounds/action_swipe.mp3"
+		sound.Volume = 0.85
+		sound.PlaybackSpeed = 1.25
+		sound.Parent = hrp
+		sound:Play()
+		sound.Ended:Connect(function() sound:Destroy() end)
+	end
+end
+
 -- Обработка клика ЛКМ для атаки оружием
 local function onAttackTrigger()
 	local weaponType = getEquippedWeapon()
@@ -74,7 +135,7 @@ local function onAttackTrigger()
 	local now = os.clock()
 	local lastTime = lastAttackTimes[weaponType] or 0
 
-	if now - lastTime < fireRate then
+	if now - lastTime < (fireRate * 0.8) then
 		return -- Еще идет кулдаун между выстрелами / ударами
 	end
 	lastAttackTimes[weaponType] = now
@@ -82,6 +143,7 @@ local function onAttackTrigger()
 	local targetMob = getMobUnderMouse()
 
 	if weaponType == "Spear" then
+		playSpearThrustAnimation()
 		if AttackMeleeRemote then
 			AttackMeleeRemote:FireServer(targetMob)
 		end
@@ -98,3 +160,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		onAttackTrigger()
 	end
 end)
+

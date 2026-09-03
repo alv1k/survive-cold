@@ -180,6 +180,7 @@ local function spawnMob(mobType, spawnPos)
 			lootPart.Size = Vector3.new(2, 1, 2)
 			lootPart.Position = hrp.Position + Vector3.new(0, 1, 0)
 			lootPart.Anchored = true
+			lootPart.CanCollide = false
 			lootPart.Material = Enum.Material.Fabric
 			lootPart.BrickColor = (cfg.Loot.Item == "WolfPelt") and BrickColor.new("Dark stone grey") or BrickColor.new("White")
 			lootPart.Parent = workspace:FindFirstChild("DroppedItems") or workspace
@@ -188,11 +189,33 @@ local function spawnMob(mobType, spawnPos)
 			prompt.ActionText = string.format("Подобрать %s (x%d)", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count)
 			prompt.ObjectText = "Трофей с монстра"
 			prompt.HoldDuration = 0
+			prompt.MaxActivationDistance = 14
+			prompt.RequiresLineOfSight = false
 
 			prompt.Triggered:Connect(function(player)
-				local currentCount = player:GetAttribute(cfg.Loot.Item) or 0
-				player:SetAttribute(cfg.Loot.Item, currentCount + cfg.Loot.Count)
+				local given = false
+				if _G.GiveItemToPlayer then
+					given = _G.GiveItemToPlayer(player, cfg.Loot.Item, cfg.Loot.Count)
+				else
+					local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
+					if giveBindable and giveBindable:IsA("BindableFunction") then
+						given = giveBindable:Invoke(player, cfg.Loot.Item, cfg.Loot.Count)
+					end
+				end
+
+				if not given then
+					local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
+					if ShowNotificationRemote then
+						ShowNotificationRemote:FireClient(player, "⚠️ Рюкзак полон! Освободите место, чтобы поднять шкуру.")
+					end
+					return
+				end
+
 				lootPart:Destroy()
+				local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
+				if ShowNotificationRemote then
+					ShowNotificationRemote:FireClient(player, string.format("🎒 Вы подобрали %s (x%d)!", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count))
+				end
 				print(string.format("🎒 %s подобрал %dx %s!", player.Name, cfg.Loot.Count, cfg.Loot.Item))
 			end)
 		end
@@ -201,11 +224,12 @@ local function spawnMob(mobType, spawnPos)
 			mobModel:Destroy()
 		end)
 
-		-- Респавн моба в восточной опасной зоне через 60 секунд
+		-- Респавн моба в опасной зоне через 60 секунд
 		task.delay(60, function()
 			spawnMob(mobType, spawnPos)
 		end)
 	end)
+
 
 	mobModel.Parent = MobsFolder
 end

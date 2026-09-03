@@ -70,14 +70,14 @@ worldLayer.AnchorPoint = Vector2.new(0.5, 0.5)
 worldLayer.BackgroundTransparency = 1
 worldLayer.Parent = mapContainer
 
--- Маркер игрока по центру с направлением взгляда
+-- Маркер игрока по центру (всегда смотрит строго ВВЕРХ на вращающемся радаре)
 local playerMarker = Instance.new("Frame")
 playerMarker.Name = "PlayerMarker"
-playerMarker.Size = UDim2.new(0, 18, 0, 18)
+playerMarker.Size = UDim2.new(0, 16, 0, 16)
 playerMarker.Position = UDim2.new(0.5, 0, 0.5, 0)
 playerMarker.AnchorPoint = Vector2.new(0.5, 0.5)
 playerMarker.BackgroundColor3 = Color3.fromRGB(56, 189, 248)
-playerMarker.ZIndex = 10
+playerMarker.ZIndex = 15
 playerMarker.Parent = mapContainer
 Instance.new("UICorner", playerMarker).CornerRadius = UDim.new(1, 0)
 
@@ -85,7 +85,7 @@ local pStroke = Instance.new("UIStroke", playerMarker)
 pStroke.Color = Color3.fromRGB(255, 255, 255)
 pStroke.Thickness = 1.5
 
--- Стрелочка направления взгляда
+-- Стрелочка взгляда игрока (фиксирована вверх)
 local arrow = Instance.new("ImageLabel")
 arrow.Name = "Arrow"
 arrow.Size = UDim2.new(0, 12, 0, 12)
@@ -95,8 +95,29 @@ arrow.BackgroundTransparency = 1
 arrow.Image = "rbxasset://textures/survival_icons/ui_arrow_right.png"
 arrow.ImageColor3 = Color3.fromRGB(255, 255, 255)
 arrow.Rotation = -90
-arrow.ZIndex = 11
+arrow.ZIndex = 16
 arrow.Parent = playerMarker
+
+-- Компасные маркеры (N, S, E, W)
+local function createCompassMarker(text, color)
+	local lbl = Instance.new("TextLabel")
+	lbl.Name = "Compass_" .. text
+	lbl.Size = UDim2.new(0, 18, 0, 18)
+	lbl.AnchorPoint = Vector2.new(0.5, 0.5)
+	lbl.BackgroundTransparency = 1
+	lbl.Font = Enum.Font.MontserratBlack
+	lbl.TextSize = 13
+	lbl.TextColor3 = color or Color3.fromRGB(241, 245, 249)
+	lbl.Text = text
+	lbl.ZIndex = 12
+	lbl.Parent = mapContainer
+	return lbl
+end
+
+local markerN = createCompassMarker("N", Color3.fromRGB(239, 68, 68)) -- Ярко-красный Север
+local markerS = createCompassMarker("S", Color3.fromRGB(148, 163, 184))
+local markerE = createCompassMarker("E", Color3.fromRGB(148, 163, 184))
+local markerW = createCompassMarker("W", Color3.fromRGB(148, 163, 184))
 
 -- Нижняя плашка координат
 local coordLabel = Instance.new("TextLabel")
@@ -115,7 +136,8 @@ Instance.new("UICorner", coordLabel).CornerRadius = UDim.new(0, 6)
 --------------------------------------------------------------------------------
 -- СПИСОК КАРТОГРАФИЧЕСКИХ ОБЪЕКТОВ
 --------------------------------------------------------------------------------
-local MAP_RADAR_RADIUS = 60 -- Пикселей радиуса отображения
+local MAP_RADAR_RADIUS = 56 -- Пикселей радиуса отображения внутри ободка
+local COMPASS_RADIUS = 64 -- Радиус вращения сторон света N/S/E/W
 local WORLD_RADAR_RANGE = 140 -- Студов дальности видимости на миникарте
 
 local POI_LIST = {
@@ -128,7 +150,6 @@ local POI_LIST = {
 	{ Name = "Йети", Pos = Vector3.new(148, 5, 148), Color = Color3.fromRGB(239, 68, 68), IconKey = "YetiPelt", Symbol = "❄️" },
 	{ Name = "Бигфут", Pos = Vector3.new(148, 6, -148), Color = Color3.fromRGB(220, 38, 38), IconKey = "UI_Skull", Symbol = "🦍" }
 }
-
 
 -- Добавляем 8 Заимок
 task.spawn(function()
@@ -161,7 +182,7 @@ local function getOrCreateBlip(poiKey, poiData)
 	blip.Size = UDim2.new(0, 16, 0, 16)
 	blip.AnchorPoint = Vector2.new(0.5, 0.5)
 	blip.BackgroundColor3 = poiData.Color or Color3.fromRGB(255, 255, 255)
-	blip.ZIndex = 5
+	blip.ZIndex = 8
 	blip.Parent = worldLayer
 	Instance.new("UICorner", blip).CornerRadius = UDim.new(1, 0)
 
@@ -181,7 +202,7 @@ local function getOrCreateBlip(poiKey, poiData)
 	return blip
 end
 
--- 60 FPS Обновление положения радара
+-- 60 FPS Обновление вращающегося радара
 RunService.RenderStepped:Connect(function()
 	local char = player.Character
 	local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -190,12 +211,30 @@ RunService.RenderStepped:Connect(function()
 	local pPos = hrp.Position
 	coordLabel.Text = string.format("📍 X: %d, Z: %d", math.floor(pPos.X), math.floor(pPos.Z))
 
-	-- Направление взгляда персонажа
-	local lookVec = hrp.CFrame.LookVector
-	local lookAngle = math.atan2(lookVec.X, -lookVec.Z)
-	playerMarker.Rotation = -math.deg(lookAngle)
+	-- Угол направления взгляда (Heading) относительно Севера (Север = Vector3.new(0, 0, -1))
+	local camLook = camera.CFrame.LookVector
+	local lookVec = Vector3.new(camLook.X, 0, camLook.Z)
+	if lookVec.Magnitude > 0.001 then
+		lookVec = lookVec.Unit
+	else
+		lookVec = hrp.CFrame.LookVector
+	end
+	local playerAngle = math.atan2(lookVec.X, -lookVec.Z)
 
-	-- Обновление точек на миникарте относительно игрока
+	-- Вращение меток компаса (N, S, E, W) по ободку радара
+	local function updateCompass(lbl, baseAngle)
+		local relAngle = baseAngle - playerAngle
+		local sx = math.sin(relAngle) * COMPASS_RADIUS
+		local sy = -math.cos(relAngle) * COMPASS_RADIUS
+		lbl.Position = UDim2.new(0.5, sx, 0.5, sy)
+	end
+
+	updateCompass(markerN, 0)               -- N (North = 0 рад)
+	updateCompass(markerE, math.pi / 2)     -- E (East = 90 град)
+	updateCompass(markerS, math.pi)         -- S (South = 180 град)
+	updateCompass(markerW, -math.pi / 2)    -- W (West = -90 град)
+
+	-- Вращение и позиционирование объектов на радаре
 	for idx, poi in ipairs(POI_LIST) do
 		local blip = getOrCreateBlip(idx, poi)
 		local dx = poi.Pos.X - pPos.X
@@ -207,13 +246,17 @@ RunService.RenderStepped:Connect(function()
 		local factor = clampedDist / WORLD_RADAR_RANGE
 		local pixelDist = factor * MAP_RADAR_RADIUS
 
-		local angleToPoi = math.atan2(dx, dz)
-		local screenX = math.sin(angleToPoi) * pixelDist
-		local screenY = -math.cos(angleToPoi) * pixelDist
+		-- Угол на объект в мире и относительный угол к взгляду игрока
+		local worldAngle = math.atan2(dx, dz)
+		local relativeAngle = worldAngle - playerAngle
+
+		local screenX = math.sin(relativeAngle) * pixelDist
+		local screenY = -math.cos(relativeAngle) * pixelDist
 
 		blip.Position = UDim2.new(0.5, screenX, 0.5, screenY)
 		blip.Visible = true
 	end
 end)
 
-print("🗺️ [MinimapController] Круглая миникарта успешно инициализирована в верхнем правом углу!")
+print("🗺️ [MinimapController] Вращающийся HUD-радар с компасом N (Север) активирован!")
+

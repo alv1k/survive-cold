@@ -70,6 +70,19 @@ worldLayer.AnchorPoint = Vector2.new(0.5, 0.5)
 worldLayer.BackgroundTransparency = 1
 worldLayer.Parent = mapContainer
 
+-- Сектор/конус направления взгляда игрока (Vision Field of View)
+local visionBeam = Instance.new("Frame")
+visionBeam.Name = "VisionBeam"
+visionBeam.Size = UDim2.new(0, 2, 0, 48)
+visionBeam.Position = UDim2.new(0.5, 0, 0.5, -24)
+visionBeam.AnchorPoint = Vector2.new(0.5, 0.5)
+visionBeam.BackgroundColor3 = Color3.fromRGB(56, 189, 248)
+visionBeam.BackgroundTransparency = 0.45
+visionBeam.BorderSizePixel = 0
+visionBeam.ZIndex = 11
+visionBeam.Parent = mapContainer
+Instance.new("UICorner", visionBeam).CornerRadius = UDim.new(1, 0)
+
 -- Маркер игрока по центру (всегда смотрит строго ВВЕРХ на вращающемся радаре)
 local playerMarker = Instance.new("Frame")
 playerMarker.Name = "PlayerMarker"
@@ -85,7 +98,7 @@ local pStroke = Instance.new("UIStroke", playerMarker)
 pStroke.Color = Color3.fromRGB(255, 255, 255)
 pStroke.Thickness = 1.5
 
--- Стрелочка взгляда игрока (фиксирована вверх)
+-- Стрелочка направления взгляда
 local arrow = Instance.new("ImageLabel")
 arrow.Name = "Arrow"
 arrow.Size = UDim2.new(0, 12, 0, 12)
@@ -109,7 +122,7 @@ local function createCompassMarker(text, color)
 	lbl.TextSize = 13
 	lbl.TextColor3 = color or Color3.fromRGB(241, 245, 249)
 	lbl.Text = text
-	lbl.ZIndex = 12
+	lbl.ZIndex = 14
 	lbl.Parent = mapContainer
 	return lbl
 end
@@ -211,7 +224,7 @@ RunService.RenderStepped:Connect(function()
 	local pPos = hrp.Position
 	coordLabel.Text = string.format("📍 X: %d, Z: %d", math.floor(pPos.X), math.floor(pPos.Z))
 
-	-- Угол направления взгляда (Heading) относительно Севера (Север = Vector3.new(0, 0, -1))
+	-- Угол направления взгляда (Heading): -Z это 0 (Север), +X это +90° (Восток)
 	local camLook = camera.CFrame.LookVector
 	local lookVec = Vector3.new(camLook.X, 0, camLook.Z)
 	if lookVec.Magnitude > 0.001 then
@@ -246,8 +259,8 @@ RunService.RenderStepped:Connect(function()
 		local factor = clampedDist / WORLD_RADAR_RANGE
 		local pixelDist = factor * MAP_RADAR_RADIUS
 
-		-- Угол на объект в мире и относительный угол к взгляду игрока
-		local worldAngle = math.atan2(dx, dz)
+		-- Точный расчет угла на объект с учетом системы координат Roblox (-Z = North)
+		local worldAngle = math.atan2(dx, -dz)
 		local relativeAngle = worldAngle - playerAngle
 
 		local screenX = math.sin(relativeAngle) * pixelDist
@@ -257,6 +270,7 @@ RunService.RenderStepped:Connect(function()
 		blip.Visible = true
 	end
 end)
+
 
 print("🗺️ [MinimapController] Вращающийся HUD-радар с компасом N (Север) активирован!")
 

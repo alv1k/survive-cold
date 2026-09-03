@@ -436,22 +436,8 @@ local function buildFoodShopBuilding()
 
 	createRetailShelfSection("Steak", FOOD_SHOP_POSITION + Vector3.new(0, 2.3, -2), 0)        -- 4x Стейк
 
-	-- 9. Кассовый стол у входа с общим каталогом
-	local checkout = Instance.new("Part", FoodShopFolder)
-	checkout.Name = "CheckoutCounter"
-	checkout.Size = Vector3.new(5.5, 2.8, 3)
-	checkout.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.4, 7.5)
-	checkout.Anchored = true
-	checkout.Material = Enum.Material.WoodPlanks
-	checkout.BrickColor = BrickColor.new("Dark orange")
-
-	local cashPrompt = Instance.new("ProximityPrompt", checkout)
-	cashPrompt.ObjectText = "🛒 Каталог еды"
-	cashPrompt.ActionText = "Открыть каталог продуктов (Бесплатно)"
-	cashPrompt.HoldDuration = 0
-	cashPrompt.MaxActivationDistance = 9
-
-	print("🏪 [FoodShopService] Бесплатный магазин-домик без костра готов!")
+	print("🏪 [FoodShopService] Бесплатный продуктовый магазин с полками готов!")
 end
+
 
 buildFoodShopBuilding()

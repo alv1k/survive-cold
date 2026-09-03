@@ -72,27 +72,110 @@ for petId, cfg in pairs(PET_CONFIG) do
 		if hasTorch then
 			iceBlock:Destroy()
 
-			-- Создание спутника
-			local petModel = Instance.new("Model")
-			petModel.Name = "Pet_" .. petId
-			petModel:SetAttribute("PetId", petId)
-			petModel:SetAttribute("OwnerUserId", player.UserId)
-			petModel:SetAttribute("Satiety", 100)
-			petModel:SetAttribute("Mode", "follow")
-			petModel:SetAttribute("StarveTimer", 0)
+			local function addSubPart(name, size, cfOffset, material, color, isNeon)
+				local sub = Instance.new("Part")
+				sub.Name = name
+				sub.Size = size
+				sub.CFrame = body.CFrame * cfOffset
+				sub.Material = material or Enum.Material.Fabric
+				sub.BrickColor = color or BrickColor.new("White")
+				sub.CanCollide = false
+				sub.Massless = true
+				sub.Parent = petModel
 
-			local body = Instance.new("Part")
-			body.Name = "PrimaryPart"
-			body.Size = Vector3.new(2, 2, 3)
-			body.Position = cfg.IceLocation
-			body.Anchored = false
-			body.Material = Enum.Material.Fabric
-			body.BrickColor = (petId == "Fox") and BrickColor.new("Bright orange") or ((petId == "Wolf") and BrickColor.new("Medium stone grey") or BrickColor.new("White"))
-			body.Parent = petModel
-			petModel.PrimaryPart = body
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = body
+				weld.Part1 = sub
+				weld.Parent = sub
+				return sub
+			end
+
+			local function attachPetVisuals()
+				if petId == "Fox" then
+					-- 🦊 СНЕЖНЫЙ ЛИС: Оранжевый корпус, белая грудка, ушки, изумрудные глазки и пушистый хвост
+					body.Size = Vector3.new(1.4, 1.2, 2.2)
+					body.Material = Enum.Material.Fabric
+					body.BrickColor = BrickColor.new("Bright orange")
+
+					-- Белая манишка на груди
+					addSubPart("Chest", Vector3.new(1.1, 0.9, 1.1), CFrame.new(0, 0.1, -0.7), Enum.Material.Fabric, BrickColor.new("White"))
+
+					-- Голова и носик
+					addSubPart("Head", Vector3.new(1.1, 1.0, 1.2), CFrame.new(0, 0.6, -1.4), Enum.Material.Fabric, BrickColor.new("Bright orange"))
+					addSubPart("Snout", Vector3.new(0.6, 0.45, 0.8), CFrame.new(0, 0.35, -2.0), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("Nose", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0, 0.45, -2.45), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+
+					-- Ушки
+					addSubPart("EarL", Vector3.new(0.25, 0.6, 0.3), CFrame.new(-0.4, 1.2, -1.3) * CFrame.Angles(0, 0, math.rad(-15)), Enum.Material.Fabric, BrickColor.new("Bright orange"))
+					addSubPart("EarR", Vector3.new(0.25, 0.6, 0.3), CFrame.new(0.4, 1.2, -1.3) * CFrame.Angles(0, 0, math.rad(15)), Enum.Material.Fabric, BrickColor.new("Bright orange"))
+
+					-- Изумрудные глазки
+					addSubPart("EyeL", Vector3.new(0.18, 0.18, 0.18), CFrame.new(-0.28, 0.65, -1.9), Enum.Material.Neon, BrickColor.new("Lime green"))
+					addSubPart("EyeR", Vector3.new(0.18, 0.18, 0.18), CFrame.new(0.28, 0.65, -1.9), Enum.Material.Neon, BrickColor.new("Lime green"))
+
+					-- 4 Лапки
+					addSubPart("LegFL", Vector3.new(0.35, 0.9, 0.35), CFrame.new(-0.5, -0.7, -0.7), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegFR", Vector3.new(0.35, 0.9, 0.35), CFrame.new(0.5, -0.7, -0.7), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegBL", Vector3.new(0.4, 0.9, 0.4), CFrame.new(-0.5, -0.7, 0.7), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegBR", Vector3.new(0.4, 0.9, 0.4), CFrame.new(0.5, -0.7, 0.7), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+
+					-- Большой хвост с белым кончиком
+					addSubPart("TailMain", Vector3.new(0.5, 0.5, 1.4), CFrame.new(0, 0.4, 1.6) * CFrame.Angles(math.rad(25), 0, 0), Enum.Material.Fabric, BrickColor.new("Bright orange"))
+					addSubPart("TailTip", Vector3.new(0.4, 0.4, 0.6), CFrame.new(0, 0.7, 2.2) * CFrame.Angles(math.rad(30), 0, 0), Enum.Material.Fabric, BrickColor.new("White"))
+
+				elseif petId == "Wolf" then
+					-- 🐺 ЛЕДЯНОЙ ВОЛЧОНОК: Серебристый мех, небесно-голубые глазки
+					body.Size = Vector3.new(1.5, 1.3, 2.4)
+					body.Material = Enum.Material.Fabric
+					body.BrickColor = BrickColor.new("Medium stone grey")
+
+					addSubPart("Head", Vector3.new(1.2, 1.1, 1.3), CFrame.new(0, 0.6, -1.5), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
+					addSubPart("Snout", Vector3.new(0.7, 0.5, 0.9), CFrame.new(0, 0.4, -2.1), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("Nose", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0, 0.55, -2.6), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+
+					addSubPart("EarL", Vector3.new(0.25, 0.6, 0.3), CFrame.new(-0.45, 1.25, -1.4) * CFrame.Angles(0, 0, math.rad(-12)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("EarR", Vector3.new(0.25, 0.6, 0.3), CFrame.new(0.45, 1.25, -1.4) * CFrame.Angles(0, 0, math.rad(12)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+
+					addSubPart("EyeL", Vector3.new(0.2, 0.2, 0.2), CFrame.new(-0.3, 0.7, -2.0), Enum.Material.Neon, BrickColor.new("Pastel light blue"))
+					addSubPart("EyeR", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0.3, 0.7, -2.0), Enum.Material.Neon, BrickColor.new("Pastel light blue"))
+
+					addSubPart("LegFL", Vector3.new(0.4, 1.0, 0.4), CFrame.new(-0.55, -0.8, -0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegFR", Vector3.new(0.4, 1.0, 0.4), CFrame.new(0.55, -0.8, -0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegBL", Vector3.new(0.45, 1.0, 0.45), CFrame.new(-0.55, -0.8, 0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					addSubPart("LegBR", Vector3.new(0.45, 1.0, 0.45), CFrame.new(0.55, -0.8, 0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+
+					addSubPart("Tail", Vector3.new(0.45, 0.45, 1.6), CFrame.new(0, 0.35, 1.7) * CFrame.Angles(math.rad(-20), 0, 0), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
+
+				elseif petId == "Bear" then
+					-- 🐻 ПОЛЯРНЫЙ МЕДВЕЖОНОК: Толстенький белый мишка, круглые ушки и носик-пуговка
+					body.Size = Vector3.new(2.2, 1.8, 2.8)
+					body.Material = Enum.Material.Fabric
+					body.BrickColor = BrickColor.new("White")
+
+					addSubPart("Head", Vector3.new(1.6, 1.5, 1.6), CFrame.new(0, 0.8, -1.8), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("Muzzle", Vector3.new(1.0, 0.8, 0.9), CFrame.new(0, 0.5, -2.5), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("Nose", Vector3.new(0.35, 0.3, 0.3), CFrame.new(0, 0.7, -3.0), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+
+					addSubPart("EarL", Vector3.new(0.4, 0.4, 0.25), CFrame.new(-0.7, 1.6, -1.7), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("EarR", Vector3.new(0.4, 0.4, 0.25), CFrame.new(0.7, 1.6, -1.7), Enum.Material.Fabric, BrickColor.new("White"))
+
+					addSubPart("EyeL", Vector3.new(0.2, 0.2, 0.2), CFrame.new(-0.4, 0.95, -2.45), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+					addSubPart("EyeR", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0.4, 0.95, -2.45), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+
+					addSubPart("LegFL", Vector3.new(0.65, 1.1, 0.65), CFrame.new(-0.85, -1.0, -0.9), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("LegFR", Vector3.new(0.65, 1.1, 0.65), CFrame.new(0.85, -1.0, -0.9), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("LegBL", Vector3.new(0.7, 1.1, 0.7), CFrame.new(-0.85, -1.0, 0.9), Enum.Material.Fabric, BrickColor.new("White"))
+					addSubPart("LegBR", Vector3.new(0.7, 1.1, 0.7), CFrame.new(0.85, -1.0, 0.9), Enum.Material.Fabric, BrickColor.new("White"))
+
+					addSubPart("Tail", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0, 0.4, 1.5), Enum.Material.Fabric, BrickColor.new("White"))
+				end
+			end
+
+			attachPetVisuals()
 			petModel.Parent = PetsFolder
 
 			print(string.format("🎉 %s отогрел и спас питомца: %s!", player.Name, cfg.Name))
+
 		else
 			print(string.format("⚠️ %s должен взять в руки зажженный Факел, чтобы отогреть лед!", player.Name))
 		end

@@ -114,21 +114,34 @@ local function spawnMob(mobType, spawnPos)
 	mobModel.Parent = MobsFolder
 end
 
--- Спавн популяций мобов исключительно в Восточной Опасной Зоне (X >= 250)
+local function getGroundHeight(x, z)
+	local rayOrigin = Vector3.new(x, 120, z)
+	local rayDirection = Vector3.new(0, -180, 0)
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Include
+	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
+
+	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+	if result then
+		return result.Position.Y
+	end
+	return 2.5
+end
+
+-- Спавн по 1 штуке каждого типа врагов на расстоянии ровно 210 метров от дома
 local MOB_SPAWN_POINTS = {
-	{ Type = "Wolf", Pos = Vector3.new(280, 4, -120) },
-	{ Type = "Wolf", Pos = Vector3.new(340, 4, 180) },
-	{ Type = "Wolf", Pos = Vector3.new(420, 4, -280) },
-	{ Type = "Yeti", Pos = Vector3.new(320, 5, 290) },
-	{ Type = "Yeti", Pos = Vector3.new(460, 5, -80) },
-	{ Type = "Bigfoot", Pos = Vector3.new(500, 6, 150) }
+	{ Type = "Wolf", Pos = Vector3.new(210, 0, 0) },       -- 🐺 Волк: 210м к востоку
+	{ Type = "Yeti", Pos = Vector3.new(148, 0, 148) },     -- ❄️ Йети: 210м к юго-востоку
+	{ Type = "Bigfoot", Pos = Vector3.new(148, 0, -148) }  -- 🦍 Бигфут: 210м к северо-востоку
 }
 
 for _, sp in ipairs(MOB_SPAWN_POINTS) do
-	spawnMob(sp.Type, sp.Pos)
+	local gy = getGroundHeight(sp.Pos.X, sp.Pos.Z)
+	local exactPos = Vector3.new(sp.Pos.X, gy + 3, sp.Pos.Z)
+	spawnMob(sp.Type, exactPos)
 end
 
--- ИИ Патруля и Агро с жестким барьером безопасной зоны
+-- ИИ Патруля и Агро с защитой околодомовой зоны (радиус 80м вокруг дома)
 task.spawn(function()
 	while true do
 		task.wait(0.5)
@@ -149,7 +162,10 @@ task.spawn(function()
 					local char = player.Character
 					if char and char:FindFirstChild("HumanoidRootPart") then
 						local pHrp = char.HumanoidRootPart
-						if pHrp.Position.X >= 170 then -- Игрок в опасной зоне!
+						local pDistToHouse = math.sqrt(pHrp.Position.X^2 + pHrp.Position.Z^2)
+
+						-- Мобы агрятся на игрока, когда он выходит за пределы домашней зоны (> 80m)
+						if pDistToHouse >= 80 then
 							local dist = (pHrp.Position - hrp.Position).Magnitude
 							if dist < closestDist then
 								closestDist = dist
@@ -182,7 +198,7 @@ task.spawn(function()
 				if targetTarget then
 					-- Движение и атака цели
 					humanoid:MoveTo(targetTarget.Position)
-					if targetIsPlayer and closestDist < 5 then
+					if targetIsPlayer and closestDist < 6 then
 						local pChar = targetTarget.Parent
 						local pHumanoid = pChar and pChar:FindFirstChild("Humanoid")
 						if pHumanoid then
@@ -190,15 +206,17 @@ task.spawn(function()
 						end
 					end
 				else
-					-- Патруль вокруг точки спавна в восточном лесу
-					if hrp.Position.X < SAFE_ZONE_BARRIER_X then
-						-- Авто-разворот при приближении к границе безопасной зоны!
+					-- Патруль в радиусе своей 210-метровой зоны обитания
+					local distFromHouse = math.sqrt(hrp.Position.X^2 + hrp.Position.Z^2)
+					if distFromHouse < 80 then
+						-- Возврат на исходную позицию 210м при случайном приближении к дому
 						humanoid:MoveTo(spawnPos)
 					else
 						local offset = Vector3.new(math.random(-cfg.PatrolRadius, cfg.PatrolRadius), 0, math.random(-cfg.PatrolRadius, cfg.PatrolRadius))
 						local targetPos = spawnPos + offset
-						if targetPos.X < SAFE_ZONE_BARRIER_X then
-							targetPos = Vector3.new(SAFE_ZONE_BARRIER_X + 20, targetPos.Y, targetPos.Z)
+						local targetDistToHouse = math.sqrt(targetPos.X^2 + targetPos.Z^2)
+						if targetDistToHouse < 80 then
+							targetPos = spawnPos
 						end
 						humanoid:MoveTo(targetPos)
 					end
@@ -207,4 +225,5 @@ task.spawn(function()
 		end
 	end
 end)
+
 

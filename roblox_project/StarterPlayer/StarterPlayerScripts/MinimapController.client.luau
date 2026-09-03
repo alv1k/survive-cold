@@ -122,8 +122,13 @@ local POI_LIST = {
 	{ Name = "Дом", Pos = Vector3.new(0, 2.5, 0), Color = Color3.fromRGB(56, 189, 248), IconKey = "Branches", Symbol = "🏡" },
 	{ Name = "Лавка", Pos = Vector3.new(-50, 4, 0), Color = Color3.fromRGB(250, 204, 21), IconKey = "Soup", Symbol = "🥫" },
 	{ Name = "Одежда", Pos = Vector3.new(70, 2.5, 0), Color = Color3.fromRGB(168, 85, 247), IconKey = "Clothing_4", Symbol = "🧥" },
-	{ Name = "Алтарь", Pos = Vector3.new(0, 2.5, -280), Color = Color3.fromRGB(239, 68, 68), IconKey = "Relic_6", Symbol = "🗿" }
+	{ Name = "Алтарь", Pos = Vector3.new(0, 2.5, -280), Color = Color3.fromRGB(239, 68, 68), IconKey = "Relic_6", Symbol = "🗿" },
+	-- Враги (210 метров от дома)
+	{ Name = "Волк", Pos = Vector3.new(210, 4, 0), Color = Color3.fromRGB(248, 113, 113), IconKey = "WolfPelt", Symbol = "🐺" },
+	{ Name = "Йети", Pos = Vector3.new(148, 5, 148), Color = Color3.fromRGB(239, 68, 68), IconKey = "YetiPelt", Symbol = "❄️" },
+	{ Name = "Бигфут", Pos = Vector3.new(148, 6, -148), Color = Color3.fromRGB(220, 38, 38), IconKey = "UI_Skull", Symbol = "🦍" }
 }
+
 
 -- Добавляем 8 Заимок
 task.spawn(function()

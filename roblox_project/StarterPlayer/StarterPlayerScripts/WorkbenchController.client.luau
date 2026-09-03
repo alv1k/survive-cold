@@ -50,11 +50,11 @@ Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+titleLabel.Size = UDim2.new(0.55, 0, 1, 0)
 titleLabel.Position = UDim2.new(0, 20, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Font = Enum.Font.GothamBlack
-titleLabel.TextSize = 17
+titleLabel.Font = Enum.Font.MontserratBlack
+titleLabel.TextSize = 19
 titleLabel.TextColor3 = Color3.fromRGB(241, 245, 249)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Text = "🛠️ ВЕРСТАК ВЫЖИВАЛЬЩИКА"
@@ -62,24 +62,24 @@ titleLabel.Parent = header
 
 local upgradeBtn = Instance.new("TextButton")
 upgradeBtn.Name = "UpgradeBtn"
-upgradeBtn.Size = UDim2.new(0, 230, 0, 36)
-upgradeBtn.Position = UDim2.new(1, -90, 0.5, 0)
+upgradeBtn.Size = UDim2.new(0, 250, 0, 38)
+upgradeBtn.Position = UDim2.new(1, -96, 0.5, 0)
 upgradeBtn.AnchorPoint = Vector2.new(1, 0.5)
 upgradeBtn.BackgroundColor3 = Color3.fromRGB(245, 158, 11)
-upgradeBtn.Font = Enum.Font.GothamBold
-upgradeBtn.TextSize = 12
+upgradeBtn.Font = Enum.Font.MontserratBold
+upgradeBtn.TextSize = 14
 upgradeBtn.TextColor3 = Color3.fromRGB(15, 23, 42)
 upgradeBtn.Text = "⬆️ Улучшить верстак"
 upgradeBtn.Parent = header
 Instance.new("UICorner", upgradeBtn).CornerRadius = UDim.new(0, 8)
 
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 36, 0, 36)
-closeBtn.Position = UDim2.new(1, -46, 0.5, 0)
+closeBtn.Size = UDim2.new(0, 38, 0, 38)
+closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
 closeBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 15
+closeBtn.Font = Enum.Font.MontserratBold
+closeBtn.TextSize = 17
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeBtn.Text = "✕"
 closeBtn.Parent = header
@@ -275,19 +275,19 @@ local function renderRecipes()
 		local tierLabel = Instance.new("TextLabel")
 		tierLabel.Size = UDim2.new(1, 0, 1, 0)
 		tierLabel.BackgroundTransparency = 1
-		tierLabel.Font = Enum.Font.GothamBlack
-		tierLabel.TextSize = 10.5
+		tierLabel.Font = Enum.Font.MontserratBlack
+		tierLabel.TextSize = 12
 		tierLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 		tierLabel.Text = string.format("УР. %d", rData.Tier)
 		tierLabel.Parent = tierBadge
 
 		-- Название предмета
 		local nameLbl = Instance.new("TextLabel")
-		nameLbl.Size = UDim2.new(0.5, 0, 0, 22)
-		nameLbl.Position = UDim2.new(0, 80, 0, 8)
+		nameLbl.Size = UDim2.new(0.5, 0, 0, 24)
+		nameLbl.Position = UDim2.new(0, 80, 0, 6)
 		nameLbl.BackgroundTransparency = 1
-		nameLbl.Font = Enum.Font.GothamBold
-		nameLbl.TextSize = 13.5
+		nameLbl.Font = Enum.Font.MontserratBold
+		nameLbl.TextSize = 15.5
 		nameLbl.TextColor3 = isAvailable and Color3.fromRGB(241, 245, 249) or Color3.fromRGB(148, 163, 184)
 		nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 		nameLbl.Text = rData.DisplayName
@@ -305,8 +305,8 @@ local function renderRecipes()
 		ingLbl.Size = UDim2.new(0.65, 0, 0, 24)
 		ingLbl.Position = UDim2.new(0, 12, 0, 36)
 		ingLbl.BackgroundTransparency = 1
-		ingLbl.Font = Enum.Font.GothamBold
-		ingLbl.TextSize = 12
+		ingLbl.Font = Enum.Font.MontserratBold
+		ingLbl.TextSize = 13.5
 		ingLbl.TextColor3 = isAvailable and Color3.fromRGB(74, 222, 128) or Color3.fromRGB(248, 113, 113)
 		ingLbl.TextXAlignment = Enum.TextXAlignment.Left
 		ingLbl.Text = ingText
@@ -314,12 +314,12 @@ local function renderRecipes()
 
 		-- Кнопка Крафта
 		local craftBtn = Instance.new("TextButton")
-		craftBtn.Size = UDim2.new(0, 110, 0, 36)
-		craftBtn.Position = UDim2.new(1, -122, 0.5, 0)
+		craftBtn.Size = UDim2.new(0, 125, 0, 38)
+		craftBtn.Position = UDim2.new(1, -135, 0.5, 0)
 		craftBtn.AnchorPoint = Vector2.new(0, 0.5)
 		craftBtn.BackgroundColor3 = isAvailable and Color3.fromRGB(34, 197, 94) or Color3.fromRGB(51, 65, 85)
-		craftBtn.Font = Enum.Font.GothamBlack
-		craftBtn.TextSize = 11.5
+		craftBtn.Font = Enum.Font.MontserratBold
+		craftBtn.TextSize = 13
 		craftBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		craftBtn.Text = isAvailable and "🛠️ Создать" or (curWbLvl < rData.Tier and string.format("🔒 Нужен Ур. %d", rData.Tier) or "❌ Мало ресурсов")
 		craftBtn.Parent = card

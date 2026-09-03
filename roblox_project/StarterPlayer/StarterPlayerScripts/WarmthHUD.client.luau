@@ -26,14 +26,14 @@ screenGui.Name = "SurviveTheColdHUD"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- 1. Верхняя панель
+-- 1. Верхний информационный бар (Квесты, Таймер, Алтарь, Слоты)
 local questBar = Instance.new("Frame")
 questBar.Name = "QuestBar"
-questBar.Size = UDim2.new(0, 720, 0, 36)
+questBar.Size = UDim2.new(0, 680, 0, 40)
 questBar.Position = UDim2.new(0.5, 0, 0, 16)
 questBar.AnchorPoint = Vector2.new(0.5, 0)
 questBar.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-questBar.BackgroundTransparency = 0.25
+questBar.BackgroundTransparency = 0.2
 questBar.BorderSizePixel = 0
 questBar.Parent = screenGui
 Instance.new("UICorner", questBar).CornerRadius = UDim.new(0, 10)
@@ -42,8 +42,8 @@ local questLabel = Instance.new("TextLabel")
 questLabel.Size = UDim2.new(1, -20, 1, 0)
 questLabel.Position = UDim2.new(0, 10, 0, 0)
 questLabel.BackgroundTransparency = 1
-questLabel.Font = Enum.Font.GothamBold
-questLabel.TextSize = 12.5
+questLabel.Font = Enum.Font.MontserratBold
+questLabel.TextSize = 14
 questLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 questLabel.Text = "⏱️ 00:00 | 👑 Цикл: #0 | 🎒 5 слотов | 🧥 Lvl 0 | 🏹 ⛏️ 0 💥 0 | 🗿 Алтарь: 0/7"
 questLabel.Parent = questBar
@@ -51,44 +51,44 @@ questLabel.Parent = questBar
 -- 2. Нижняя панель статусов (3 группы: 🔥 Тепло, 🍗 Сытость, ⚡ Бег) - над хотбаром Roblox
 local statusBar = Instance.new("Frame")
 statusBar.Name = "StatusBar"
-statusBar.Size = UDim2.new(0, 460, 0, 44)
-statusBar.Position = UDim2.new(0.5, 0, 1, -76)
+statusBar.Size = UDim2.new(0, 520, 0, 50)
+statusBar.Position = UDim2.new(0.5, 0, 1, -80)
 statusBar.AnchorPoint = Vector2.new(0.5, 1)
 statusBar.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-statusBar.BackgroundTransparency = 0.3
+statusBar.BackgroundTransparency = 0.25
 statusBar.BorderSizePixel = 0
 statusBar.Parent = screenGui
-Instance.new("UICorner", statusBar).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", statusBar).CornerRadius = UDim.new(0, 12)
 
 local statusLayout = Instance.new("UIListLayout", statusBar)
 statusLayout.FillDirection = Enum.FillDirection.Horizontal
 statusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 statusLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-statusLayout.Padding = UDim.new(0, 14)
+statusLayout.Padding = UDim.new(0, 18)
 
 local function createBarGroup(name, labelText, color)
 	local group = Instance.new("Frame")
 	group.Name = name
-	group.Size = UDim2.new(0, 130, 0, 30)
+	group.Size = UDim2.new(0, 145, 0, 36)
 	group.BackgroundTransparency = 1
 	group.Parent = statusBar
 
 	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 14)
+	title.Size = UDim2.new(1, 0, 0, 18)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 10
-	title.TextColor3 = Color3.fromRGB(203, 213, 225)
+	title.Font = Enum.Font.MontserratBold
+	title.TextSize = 13
+	title.TextColor3 = Color3.fromRGB(226, 232, 240)
 	title.Text = labelText .. ": 100%"
 	title.Parent = group
 
 	local barBg = Instance.new("Frame")
-	barBg.Size = UDim2.new(1, 0, 0, 7)
-	barBg.Position = UDim2.new(0, 0, 0, 17)
+	barBg.Size = UDim2.new(1, 0, 0, 9)
+	barBg.Position = UDim2.new(0, 0, 0, 21)
 	barBg.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
 	barBg.BorderSizePixel = 0
 	barBg.Parent = group
-	Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 4)
+	Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 5)
 
 	local barFill = Instance.new("Frame")
 	barFill.Name = "Fill"
@@ -96,7 +96,7 @@ local function createBarGroup(name, labelText, color)
 	barFill.BackgroundColor3 = color
 	barFill.BorderSizePixel = 0
 	barFill.Parent = barBg
-	Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 4)
+	Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 5)
 
 	return title, barFill
 end
@@ -108,16 +108,16 @@ local staminaTitle, staminaFill = createBarGroup("StaminaGroup", "⚡ Бег", C
 -- 3. Кнопка вызова Гайда
 local guideBtn = Instance.new("TextButton")
 guideBtn.Name = "GuideButton"
-guideBtn.Size = UDim2.new(0, 150, 0, 32)
+guideBtn.Size = UDim2.new(0, 170, 0, 38)
 guideBtn.Position = UDim2.new(0, 20, 0, 20)
 guideBtn.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-guideBtn.BackgroundTransparency = 0.25
-guideBtn.Font = Enum.Font.GothamBold
-guideBtn.TextSize = 12
+guideBtn.BackgroundTransparency = 0.2
+guideBtn.Font = Enum.Font.MontserratBold
+guideBtn.TextSize = 14
 guideBtn.TextColor3 = Color3.fromRGB(56, 189, 248)
 guideBtn.Text = "❓ Обучение & Гайд"
 guideBtn.Parent = screenGui
-Instance.new("UICorner", guideBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", guideBtn).CornerRadius = UDim.new(0, 10)
 
 guideBtn.MouseButton1Click:Connect(function()
 	local guideGui = playerGui:FindFirstChild("WelcomeGuideGui")
@@ -130,15 +130,15 @@ end)
 -- 4. Всплывающее предупреждение по центру экрана
 local notifBanner = Instance.new("Frame")
 notifBanner.Name = "NotificationBanner"
-notifBanner.Size = UDim2.new(0, 480, 0, 38)
-notifBanner.Position = UDim2.new(0.5, 0, 0, 64)
+notifBanner.Size = UDim2.new(0, 520, 0, 44)
+notifBanner.Position = UDim2.new(0.5, 0, 0, 68)
 notifBanner.AnchorPoint = Vector2.new(0.5, 0)
 notifBanner.BackgroundColor3 = Color3.fromRGB(220, 38, 38)
-notifBanner.BackgroundTransparency = 0.15
+notifBanner.BackgroundTransparency = 0.1
 notifBanner.BorderSizePixel = 0
 notifBanner.Visible = false
 notifBanner.Parent = screenGui
-Instance.new("UICorner", notifBanner).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", notifBanner).CornerRadius = UDim.new(0, 10)
 
 local notifText = Instance.new("TextLabel")
 notifText.Size = UDim2.new(1, -20, 1, 0)

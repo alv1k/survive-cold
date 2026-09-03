@@ -60,8 +60,8 @@ local function createWaypoint(key, cfg)
 
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "WaypointGui"
-	bb.Size = UDim2.new(0, 180, 0, 56)
-	bb.StudsOffset = Vector3.new(0, 2, 0)
+	bb.Size = UDim2.new(0, 195, 0, 60)
+	bb.StudsOffset = Vector3.new(0, 2.2, 0)
 	bb.AlwaysOnTop = true
 	bb.MaxDistance = cfg.MaxDist or 3000
 	bb.Parent = anchor
@@ -83,7 +83,7 @@ local function createWaypoint(key, cfg)
 	if cfg.IsPlayerHouse then
 		local avatarImg = Instance.new("ImageLabel")
 		avatarImg.Name = "Avatar"
-		avatarImg.Size = UDim2.new(0, 40, 0, 40)
+		avatarImg.Size = UDim2.new(0, 42, 0, 42)
 		avatarImg.Position = UDim2.new(0, 8, 0.5, 0)
 		avatarImg.AnchorPoint = Vector2.new(0, 0.5)
 		avatarImg.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
@@ -104,12 +104,12 @@ local function createWaypoint(key, cfg)
 	else
 		local iconLbl = Instance.new("TextLabel")
 		iconLbl.Name = "Icon"
-		iconLbl.Size = UDim2.new(0, 40, 0, 40)
+		iconLbl.Size = UDim2.new(0, 42, 0, 42)
 		iconLbl.Position = UDim2.new(0, 8, 0.5, 0)
 		iconLbl.AnchorPoint = Vector2.new(0, 0.5)
 		iconLbl.BackgroundTransparency = 1
-		iconLbl.Font = Enum.Font.GothamBlack
-		iconLbl.TextSize = 22
+		iconLbl.Font = Enum.Font.MontserratBlack
+		iconLbl.TextSize = 24
 		iconLbl.Text = cfg.Icon or "📍"
 		iconLbl.Parent = container
 	end
@@ -117,11 +117,11 @@ local function createWaypoint(key, cfg)
 	-- Название
 	local titleLbl = Instance.new("TextLabel")
 	titleLbl.Name = "Title"
-	titleLbl.Size = UDim2.new(1, -56, 0, 20)
-	titleLbl.Position = UDim2.new(0, 52, 0, 8)
+	titleLbl.Size = UDim2.new(1, -58, 0, 22)
+	titleLbl.Position = UDim2.new(0, 54, 0, 8)
 	titleLbl.BackgroundTransparency = 1
-	titleLbl.Font = Enum.Font.GothamBlack
-	titleLbl.TextSize = 12.5
+	titleLbl.Font = Enum.Font.MontserratBlack
+	titleLbl.TextSize = 14
 	titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
 	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 	titleLbl.Text = cfg.Name
@@ -130,11 +130,11 @@ local function createWaypoint(key, cfg)
 	-- Дистанция
 	local distLbl = Instance.new("TextLabel")
 	distLbl.Name = "Distance"
-	distLbl.Size = UDim2.new(1, -56, 0, 18)
-	distLbl.Position = UDim2.new(0, 52, 0, 28)
+	distLbl.Size = UDim2.new(1, -58, 0, 20)
+	distLbl.Position = UDim2.new(0, 54, 0, 30)
 	distLbl.BackgroundTransparency = 1
-	distLbl.Font = Enum.Font.GothamBold
-	distLbl.TextSize = 11
+	distLbl.Font = Enum.Font.MontserratBold
+	distLbl.TextSize = 12.5
 	distLbl.TextColor3 = cfg.Color or Color3.fromRGB(56, 189, 248)
 	distLbl.TextXAlignment = Enum.TextXAlignment.Left
 	distLbl.Text = "[ 0m ]"

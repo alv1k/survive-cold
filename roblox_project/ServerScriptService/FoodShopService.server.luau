@@ -240,23 +240,23 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 
 	-- Информационный ценник над полкой
 	local bb = Instance.new("BillboardGui", shelfPart)
-	bb.Size = UDim2.new(0, 190, 0, 42)
-	bb.StudsOffset = Vector3.new(0, 1.4, 0)
+	bb.Size = UDim2.new(0, 205, 0, 48)
+	bb.StudsOffset = Vector3.new(0, 1.5, 0)
 	bb.AlwaysOnTop = false
-	bb.MaxDistance = 25
+	bb.MaxDistance = 28
 
 	local lbl = Instance.new("TextLabel", bb)
 	lbl.Size = UDim2.new(1, 0, 1, 0)
 	lbl.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-	lbl.BackgroundTransparency = 0.25
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextSize = 11
+	lbl.BackgroundTransparency = 0.2
+	lbl.Font = Enum.Font.MontserratBold
+	lbl.TextSize = 13
 	lbl.TextColor3 = Color3.fromRGB(241, 245, 249)
-	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
+	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 8)
 
 	local stroke = Instance.new("UIStroke", lbl)
 	stroke.Color = Color3.fromRGB(74, 222, 128)
-	stroke.Thickness = 1.2
+	stroke.Thickness = 1.5
 
 	local shelfData = {
 		SectionPart = shelfPart,
@@ -383,15 +383,15 @@ local function buildFoodShopBuilding()
 	sign.Parent = FoodShopFolder
 
 	local bbSign = Instance.new("BillboardGui", sign)
-	bbSign.Size = UDim2.new(0, 300, 0, 48)
+	bbSign.Size = UDim2.new(0, 360, 0, 56)
 	bbSign.StudsOffset = Vector3.new(0, 0, 0.6)
 	bbSign.AlwaysOnTop = true
 
 	local signLbl = Instance.new("TextLabel", bbSign)
 	signLbl.Size = UDim2.new(1, 0, 1, 0)
 	signLbl.BackgroundTransparency = 1
-	signLbl.Font = Enum.Font.GothamBlack
-	signLbl.TextSize = 17
+	signLbl.Font = Enum.Font.MontserratBlack
+	signLbl.TextSize = 22
 	signLbl.TextColor3 = Color3.fromRGB(250, 204, 21)
 	signLbl.Text = "🥫 МАГАЗИН ПРОДУКТОВ"
 

@@ -165,34 +165,27 @@ local function build3DDropObject(itemName, pos)
 	return root
 end
 
-local function dropItemOnGround(player, itemName, count, customPos)
-	count = count or 1
+local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 	local displayName = ITEM_NAMES[itemName] or itemName
-
-	local char = player and player.Character
-	if not char and not customPos then return end
-	local hrp = char and char:FindFirstChild("HumanoidRootPart")
-	if not hrp and not customPos then return end
-
-	local spawnPos = customPos or (hrp.Position + hrp.CFrame.LookVector * 3.5 + Vector3.new(0, 1.0, 0))
 	local inHouse = isInsideHouse(spawnPos)
 
 	local dropPart = build3DDropObject(itemName, spawnPos)
 	dropPart:SetAttribute("ItemName", itemName)
-	dropPart:SetAttribute("Count", count)
+	dropPart:SetAttribute("Count", 1)
 	dropPart:SetAttribute("InsideHouse", inHouse)
 
-	-- Импульс броска вперед
-	if hrp and not customPos then
-		dropPart.AssemblyLinearVelocity = hrp.CFrame.LookVector * 14 + Vector3.new(0, 6, 0)
+	-- Импульс броска вперед (если выбросил игрок)
+	if isImpulse and player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local hrp = player.Character.HumanoidRootPart
+		dropPart.AssemblyLinearVelocity = hrp.CFrame.LookVector * (10 + math.random(1, 4)) + Vector3.new(math.random(-3, 3), 4, math.random(-3, 3))
 	end
 
 	dropPart.Parent = DroppedFolder
 
-	-- Интерактивный ProximityPrompt для подбора
+	-- Интерактивный ProximityPrompt для подбора ровно 1 штуки
 	local prompt = Instance.new("ProximityPrompt", dropPart)
-	prompt.ActionText = string.format("Подобрать %s (x%d)", displayName, count)
-	prompt.ObjectText = inHouse and "🏡 Склад на полу [СОХРАНЕНО]" or "📦 Брошенный предмет"
+	prompt.ActionText = string.format("Подобрать %s (x1)", displayName)
+	prompt.ObjectText = inHouse and "🏡 Склад на полу [СОХРАНЕНО]" or "📦 Предмет на земле"
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false
@@ -205,28 +198,47 @@ local function dropItemOnGround(player, itemName, count, customPos)
 		prompt.Enabled = false
 
 		local itName = dropPart:GetAttribute("ItemName")
-		local itCount = dropPart:GetAttribute("Count") or 1
 
 		local given = false
 		if _G.GiveItemToPlayer then
-			given = _G.GiveItemToPlayer(triggeringPlayer, itName, itCount)
+			given = _G.GiveItemToPlayer(triggeringPlayer, itName, 1)
 		else
 			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
 			if giveBindable and giveBindable:IsA("BindableFunction") then
-				given = giveBindable:Invoke(triggeringPlayer, itName, itCount)
+				given = giveBindable:Invoke(triggeringPlayer, itName, 1)
 			end
 		end
 
-
 		if given then
 			dropPart:Destroy()
-			print(string.format("🎒 %s подобрал %s (x%d) с земли!", triggeringPlayer.Name, displayName, itCount))
+			print(string.format("🎒 %s подобрал %s (x1) с земли!", triggeringPlayer.Name, displayName))
 		else
 			prompt.Enabled = true
 			pickingUp = false
 			ShowNotificationRemote:FireClient(triggeringPlayer, "⚠️ Рюкзак полон! Освободите место.")
 		end
 	end)
+end
+
+local function dropItemOnGround(player, itemName, count, customPos)
+	count = count or 1
+	local char = player and player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp and not customPos then return end
+
+	local basePos = customPos or (hrp.Position + hrp.CFrame.LookVector * 3.5 + Vector3.new(0, 1.0, 0))
+
+	-- Создаем ровно `count` отдельных физических объектов по 1 штуке
+	for i = 1, count do
+		local offset = Vector3.new(0, 0, 0)
+		if count > 1 or customPos then
+			local angle = (i / count) * (math.pi * 2) + (math.random(-15, 15) / 100)
+			local radius = 0.5 + (i * 0.4)
+			offset = Vector3.new(math.cos(angle) * radius, 0.15 * (i - 1), math.sin(angle) * radius)
+		end
+		local spawnPos = basePos + offset
+		spawnSingleDrop(player, itemName, spawnPos, not customPos)
+	end
 end
 
 _G.DropItemOnGround = dropItemOnGround

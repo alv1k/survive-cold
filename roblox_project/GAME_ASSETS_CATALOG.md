@@ -27,22 +27,38 @@
 | **`.OBJ`** (+ `.MTL`) | Статичные объекты: сундуки, камни, ветки, костры, здания, еда | **100 – 800 tris** (предметы), **2 000 – 8 000 tris** (здания) | Без скелета, чистая триангулированная/квадратная сетка с UV |
 | **`.GLTF` / `.GLB`** | Персонажи и PBR-сборки | **1 500 – 6 000 tris** | Поддержка embedded текстур |
 
-#### Правила моделирования и пространственной привязки:
-1. **Единицы измерения и масштаб (Scale)**:
-   - `1 Unit (Blender/Maya) = 1 Stud (Roblox)`.
-   - 1 Stud $\approx$ 28–30 см реального мира. Рост персонажа Roblox R15 $\approx$ 5.0 studs.
-2. **Ориентация осей (Coordinate System)**:
-   - **Вперед (Forward)**: ось **`-Z`**.
-   - **Вверх (Up)**: ось **`+Y`**.
-   - **Вправо (Right)**: ось **`+X`**.
-3. **Точка опоры / Центр трансформации (Pivot / Origin Point)**:
-   - **Оружие и инструменты в руках**: Origin строго в точке хвата ладонью (**Handle**).
-   - **Монстры, питомцы, деревья, сундуки, строения**: Origin в основании модели на уровне земли (`Y = 0`).
-4. **Ограничения движка Roblox Studio**:
-   - Максимум **21 000 полигонов** на один `MeshPart`.
-   - UV-координаты должны быть упакованы в пространстве `[0, 1]`.
+---
+
+### 🛠️ 3. Интеграция с локальным Blender 5.0 (Pipeline & Automation)
+
+На компьютере установлен **Blender 5.0.1** (`C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`).
+
+#### Автоматический пайплайн экспорта ([tools/blender_pipeline.py](file:///c:/Users/pc1/Documents/workingdir/roblox_project/tools/blender_pipeline.py)):
+Скрипт автоматически:
+1. Настраивает сцену под стандарты Roblox (1 метр Blender = 1 Stud Roblox).
+2. Запекает трансформации (`Location`, `Rotation`, `Scale` $\rightarrow$ `Ctrl + A`).
+3. Проверяет триангуляцию и лимит полигонов ($\le 21\,000$ tris).
+4. Экспортирует готовую 3D-модель с осями **`-Z Forward, +Y Up`** напрямую в папку проекта `assets/models/`.
+
+#### Команда запуска генерации / экспорта:
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.0\blender.exe" --background --python tools/blender_pipeline.py
+```
+
+#### Ручной чеклист для работы в Blender GUI:
+1. **Масштаб**: `Scene Properties` $\rightarrow$ `Units` $\rightarrow$ `Unit Scale: 1.0` (Метрическая).
+2. **Опорная точка (Origin)**:
+   - Для оружия: `Object` $\rightarrow$ `Set Origin` $\rightarrow$ в точку хвата `Handle` (координаты `0, 0, 0`).
+   - Для предметов/строений: `Set Origin` $\rightarrow$ в нижнюю точку соприкосновения с землей (`Z = 0` в Blender / `Y = 0` в Roblox).
+3. **Применение трансформаций**: Выделить всё $\rightarrow$ `Ctrl + A` $\rightarrow$ `All Transforms`.
+4. **Экспорт FBX**:
+   - `File` $\rightarrow$ `Export` $\rightarrow$ `FBX (.fbx)`.
+   - `Forward`: **`-Z Forward`**, `Up`: **`Y Up`**.
+   - `Apply Scalings`: **`FBX Units Scale`**.
+   - Путь сохранения: `assets/models/<name>.fbx`.
 
 ---
+
 
 ## 🎨 ЧАСТЬ 1: Каталог 2D-элементов
 

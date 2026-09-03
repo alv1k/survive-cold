@@ -18,6 +18,7 @@ local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
 local CraftItemRemote = RemotesFolder and RemotesFolder:WaitForChild("CraftItem", 10)
 local UpgradeWorkbenchRemote = RemotesFolder and RemotesFolder:WaitForChild("UpgradeWorkbench", 10)
 local CraftingRecipes = require(ReplicatedStorage:WaitForChild("CraftingRecipes", 10))
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "WorkbenchScreenGui"
@@ -263,10 +264,15 @@ local function renderRecipes()
 		cardStroke.Color = isAvailable and Color3.fromRGB(74, 222, 128) or (curWbLvl >= rData.Tier and Color3.fromRGB(71, 85, 105) or Color3.fromRGB(185, 28, 28))
 		cardStroke.Thickness = isAvailable and 1.5 or 1.0
 
+		-- Бейдж иконки предмета
+		local itemBadge = IconConfig.CreateIconBadge(card, rKey, UDim2.new(0, 48, 0, 48), 0.25)
+		itemBadge.Position = UDim2.new(0, 10, 0.5, 0)
+		itemBadge.AnchorPoint = Vector2.new(0, 0.5)
+
 		-- Бейдж уровня (Tier Badge)
 		local tierBadge = Instance.new("Frame")
 		tierBadge.Size = UDim2.new(0, 62, 0, 22)
-		tierBadge.Position = UDim2.new(0, 10, 0, 8)
+		tierBadge.Position = UDim2.new(0, 68, 0, 8)
 		tierBadge.BackgroundColor3 = (curWbLvl >= rData.Tier) and Color3.fromRGB(2, 132, 199) or Color3.fromRGB(71, 85, 105)
 		tierBadge.BorderSizePixel = 0
 		tierBadge.Parent = card
@@ -284,7 +290,7 @@ local function renderRecipes()
 		-- Название предмета
 		local nameLbl = Instance.new("TextLabel")
 		nameLbl.Size = UDim2.new(0.5, 0, 0, 24)
-		nameLbl.Position = UDim2.new(0, 80, 0, 6)
+		nameLbl.Position = UDim2.new(0, 138, 0, 6)
 		nameLbl.BackgroundTransparency = 1
 		nameLbl.Font = Enum.Font.MontserratBold
 		nameLbl.TextSize = 15.5
@@ -297,13 +303,14 @@ local function renderRecipes()
 		local ingText = ""
 		for ingKey, ingAmount in pairs(rData.Ingredients) do
 			local cur = getPlayerResourceCount(ingKey)
-			local icon = ICON_MAP[ingKey] or "📦"
-			ingText = ingText .. string.format("%s %d/%d   ", icon, cur, ingAmount)
+			local iconData = IconConfig.Icons[ingKey]
+			local iconEmoji = iconData and iconData.FallbackEmoji or "📦"
+			ingText = ingText .. string.format("%s %d/%d   ", iconEmoji, cur, ingAmount)
 		end
 
 		local ingLbl = Instance.new("TextLabel")
 		ingLbl.Size = UDim2.new(0.65, 0, 0, 24)
-		ingLbl.Position = UDim2.new(0, 12, 0, 36)
+		ingLbl.Position = UDim2.new(0, 68, 0, 36)
 		ingLbl.BackgroundTransparency = 1
 		ingLbl.Font = Enum.Font.MontserratBold
 		ingLbl.TextSize = 13.5

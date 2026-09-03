@@ -12,6 +12,8 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig"))
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -51,7 +53,7 @@ questLabel.Parent = questBar
 -- 2. Нижняя панель статусов (3 группы: 🔥 Тепло, 🍗 Сытость, ⚡ Бег) - над хотбаром Roblox
 local statusBar = Instance.new("Frame")
 statusBar.Name = "StatusBar"
-statusBar.Size = UDim2.new(0, 520, 0, 50)
+statusBar.Size = UDim2.new(0, 530, 0, 52)
 statusBar.Position = UDim2.new(0.5, 0, 1, -80)
 statusBar.AnchorPoint = Vector2.new(0.5, 1)
 statusBar.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
@@ -64,27 +66,34 @@ local statusLayout = Instance.new("UIListLayout", statusBar)
 statusLayout.FillDirection = Enum.FillDirection.Horizontal
 statusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 statusLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-statusLayout.Padding = UDim.new(0, 18)
+statusLayout.Padding = UDim.new(0, 16)
 
-local function createBarGroup(name, labelText, color)
+local function createBarGroup(name, labelText, iconKey, color)
 	local group = Instance.new("Frame")
 	group.Name = name
-	group.Size = UDim2.new(0, 145, 0, 36)
+	group.Size = UDim2.new(0, 150, 0, 38)
 	group.BackgroundTransparency = 1
 	group.Parent = statusBar
 
+	-- Бейдж иконки
+	local iconBadge = IconConfig.CreateIconBadge(group, iconKey, UDim2.new(0, 32, 0, 32), 0.3)
+	iconBadge.Position = UDim2.new(0, 0, 0.5, 0)
+	iconBadge.AnchorPoint = Vector2.new(0, 0.5)
+
 	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 18)
+	title.Size = UDim2.new(1, -38, 0, 16)
+	title.Position = UDim2.new(0, 38, 0, 2)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.MontserratBold
 	title.TextSize = 13
 	title.TextColor3 = Color3.fromRGB(226, 232, 240)
+	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Text = labelText .. ": 100%"
 	title.Parent = group
 
 	local barBg = Instance.new("Frame")
-	barBg.Size = UDim2.new(1, 0, 0, 9)
-	barBg.Position = UDim2.new(0, 0, 0, 21)
+	barBg.Size = UDim2.new(1, -38, 0, 9)
+	barBg.Position = UDim2.new(0, 38, 0, 22)
 	barBg.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
 	barBg.BorderSizePixel = 0
 	barBg.Parent = group
@@ -101,9 +110,10 @@ local function createBarGroup(name, labelText, color)
 	return title, barFill
 end
 
-local warmthTitle, warmthFill = createBarGroup("WarmthGroup", "🔥 Тепло", Color3.fromRGB(249, 115, 22))
-local hungerTitle, hungerFill = createBarGroup("HungerGroup", "🍗 Сытость", Color3.fromRGB(234, 179, 8))
-local staminaTitle, staminaFill = createBarGroup("StaminaGroup", "⚡ Бег", Color3.fromRGB(56, 189, 248))
+local warmthTitle, warmthFill = createBarGroup("WarmthGroup", "Тепло", "HUD_Warmth", Color3.fromRGB(249, 115, 22))
+local hungerTitle, hungerFill = createBarGroup("HungerGroup", "Сытость", "HUD_Hunger", Color3.fromRGB(234, 179, 8))
+local staminaTitle, staminaFill = createBarGroup("StaminaGroup", "Бег", "HUD_Stamina", Color3.fromRGB(56, 189, 248))
+
 
 -- 3. Кнопка вызова Гайда
 local guideBtn = Instance.new("TextButton")

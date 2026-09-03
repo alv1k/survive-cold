@@ -14,6 +14,8 @@ local Workspace = game:GetService("Workspace")
 local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
 RemotesFolder.Name = "Remotes"
 
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
+
 local GiveItemBindable = ReplicatedStorage:FindFirstChild("GiveItem") or Instance.new("BindableFunction", ReplicatedStorage)
 GiveItemBindable.Name = "GiveItem"
 
@@ -306,6 +308,11 @@ local function createItemTool(itemKey, count)
 
 	if itemKey == "Torch" then
 		tool:SetAttribute("TorchFuel", 120)
+	end
+
+	local iconData = IconConfig.Icons[itemKey]
+	if iconData and iconData.AssetId then
+		tool.TextureId = iconData.AssetId
 	end
 
 	attachDetailed3DModel(tool, itemKey)

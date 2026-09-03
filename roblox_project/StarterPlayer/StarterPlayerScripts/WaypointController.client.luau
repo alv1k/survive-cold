@@ -12,6 +12,9 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -28,19 +31,21 @@ local LOCATIONS = {
 	},
 	FoodShop = {
 		Name = "🥫 Продуктовая Лавка",
-		Subtitle = "🍫 Бесплатный паёк · Еда",
+		Subtitle = "Бесплатный паёк · Еда",
 		Pos = Vector3.new(-380, 18, -450),
 		Color = Color3.fromRGB(250, 204, 21),
 		BgColor = Color3.fromRGB(66, 32, 6),
+		IconKey = "Soup",
 		Icon = "🥫",
 		MaxDist = 3000
 	},
 	ClothingShop = {
 		Name = "🧥 Магазин Одежды",
-		Subtitle = "❄️ Меховые костюмы",
+		Subtitle = "Меховые костюмы",
 		Pos = Vector3.new(350, 18, -300),
 		Color = Color3.fromRGB(168, 85, 247),
 		BgColor = Color3.fromRGB(59, 7, 100),
+		IconKey = "Clothing_4",
 		Icon = "🧥",
 		MaxDist = 3000
 	}
@@ -79,7 +84,7 @@ local function createWaypoint(key, cfg)
 	stroke.Color = cfg.Color or Color3.fromRGB(56, 189, 248)
 	stroke.Thickness = 2
 
-	-- Аватарка игрока (для дома) или текстовая иконка
+	-- Аватарка игрока (для дома) или графическая иконка
 	if cfg.IsPlayerHouse then
 		local avatarImg = Instance.new("ImageLabel")
 		avatarImg.Name = "Avatar"
@@ -101,6 +106,10 @@ local function createWaypoint(key, cfg)
 				avatarImg.Image = content
 			end
 		end)
+	elseif cfg.IconKey then
+		local iconBadge = IconConfig.CreateIconBadge(container, cfg.IconKey, UDim2.new(0, 40, 0, 40), 0.3)
+		iconBadge.Position = UDim2.new(0, 8, 0.5, 0)
+		iconBadge.AnchorPoint = Vector2.new(0, 0.5)
 	else
 		local iconLbl = Instance.new("TextLabel")
 		iconLbl.Name = "Icon"
@@ -113,6 +122,7 @@ local function createWaypoint(key, cfg)
 		iconLbl.Text = cfg.Icon or "📍"
 		iconLbl.Parent = container
 	end
+
 
 	-- Название
 	local titleLbl = Instance.new("TextLabel")

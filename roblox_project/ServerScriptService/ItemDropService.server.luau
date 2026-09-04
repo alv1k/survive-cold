@@ -57,7 +57,14 @@ local ITEM_NAMES = {
 	Revolver = "🔫 Револьвер"
 }
 
+local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+
 local function build3DDropObject(itemName, pos)
+	local dropModel = ModelHelper.assembleDropModel(itemName, pos)
+	if dropModel then
+		return dropModel
+	end
+
 	local root = Instance.new("Part")
 	root.Name = "Dropped_" .. itemName
 	root.Position = pos

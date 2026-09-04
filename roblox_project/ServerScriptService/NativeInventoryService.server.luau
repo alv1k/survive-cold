@@ -49,12 +49,23 @@ local ITEM_CONFIGS = {
 	Revolver = { Name = "🔫 Револьвер", MaxStack = 1, IsWeapon = true, WeaponType = "Ranged", AmmoType = "Ammo_Revolver", Damage = 55, FireRate = 0.35 }
 }
 
+local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+
 -- Функция сборки детализированной 3D-модели для Handle инструмента
 local function attachDetailed3DModel(tool, itemKey)
+	-- 1. Пробуем собрать Tool из найденной 3D-модели через универсальный ModelHelper
+	local handle = ModelHelper.assembleTool(itemKey, tool)
+	if handle then
+		print(string.format("✅ [3D Tool] Успешно подгружена 3D-модель для '%s' через ModelHelper", itemKey))
+		return handle
+	end
+
+	-- Процедурный сборщик (Стилизованная модульная модель в точном соответствии с spear-2)
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
 	handle.CanCollide = false
 	handle.Massless = true
+	handle.Anchored = false
 	handle.Parent = tool
 
 	local function addSubPart(name, size, cfOffset, material, color)
@@ -93,13 +104,28 @@ local function attachDetailed3DModel(tool, itemKey)
 		light.Brightness = 2.5
 
 	elseif itemKey == "Spear" then
-		handle.Size = Vector3.new(0.3, 5.2, 0.3)
-		handle.Material = Enum.Material.Wood
-		handle.BrickColor = BrickColor.new("Reddish brown")
+		-- Рукоять хвата (Handle) в точке (0,0,0) с кожаной обмоткой
+		handle.Size = Vector3.new(0.35, 1.2, 0.35)
+		handle.Material = Enum.Material.SmoothPlastic
+		handle.BrickColor = BrickColor.new("Dark orange") -- leather_tan
 
-		-- Наконечник копья из кремния/стали
-		addSubPart("Blade", Vector3.new(0.5, 1.4, 0.1), CFrame.new(0, 2.7, 0), Enum.Material.Slate, BrickColor.new("Medium stone grey"))
-		addSubPart("Rope", Vector3.new(0.42, 0.4, 0.42), CFrame.new(0, 1.9, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+		-- Кольца на рукояти
+		addSubPart("GripRingTop", Vector3.new(0.38, 0.1, 0.38), CFrame.new(0, 0.6, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+		addSubPart("GripRingBot", Vector3.new(0.38, 0.1, 0.38), CFrame.new(0, -0.6, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+
+		-- Деревянное древко (Shaft)
+		addSubPart("Shaft", Vector3.new(0.3, 3.4, 0.3), CFrame.new(0, 1.8, 0), Enum.Material.Wood, BrickColor.new("Reddish brown"))
+
+		-- Нижний упор (Pommel)
+		addSubPart("Pommel", Vector3.new(0.36, 0.35, 0.36), CFrame.new(0, -0.85, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+
+		-- Верхняя обмотка и обойма (NeckWrap & Collar)
+		addSubPart("NeckWrap", Vector3.new(0.36, 0.6, 0.36), CFrame.new(0, 2.7, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+		addSubPart("Collar", Vector3.new(0.42, 0.25, 0.42), CFrame.new(0, 3.1, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+
+		-- Широкое и плотное острие (Blade spear-2)
+		addSubPart("Blade", Vector3.new(0.85, 1.35, 0.14), CFrame.new(0, 3.75, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
+		addSubPart("BladeEdge", Vector3.new(0.7, 0.8, 0.18), CFrame.new(0, 3.75, 0), Enum.Material.Metal, BrickColor.new("White"))
 
 	elseif itemKey == "Slingshot" then
 		handle.Size = Vector3.new(0.4, 1.8, 0.4)
@@ -317,6 +343,11 @@ local function createItemTool(itemKey, count)
 
 	attachDetailed3DModel(tool, itemKey)
 
+	if itemKey == "Spear" then
+		-- Наклон копья вперед в руке под естественным боевым углом 35 градусов
+		tool.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-35), 0, 0)
+	end
+
 	-- Обработка клика ЛКМ (Еда исключена от случайных нажатий по экрану)
 	tool.Activated:Connect(function()
 		local char = tool.Parent
@@ -337,6 +368,12 @@ local function createItemTool(itemKey, count)
 			local fireRate = cfg.FireRate or 0.8
 			if now - lastAttack < fireRate then return end
 			tool:SetAttribute("LastAttack", now)
+
+			-- Нативный дефолтный триггер анимации удара Roblox (toolanim = Slash)
+			local animVal = Instance.new("StringValue")
+			animVal.Name = "toolanim"
+			animVal.Value = "Slash"
+			animVal.Parent = tool
 
 			if _G.ExecuteWeaponAttack then
 				_G.ExecuteWeaponAttack(player, itemKey)
@@ -476,6 +513,14 @@ Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(char)
 		player:SetAttribute("Torch", player:GetAttribute("Torch") or 0)
 		player:SetAttribute("HasTorchInHand", false)
+		
+		task.delay(0.5, function()
+			if player.Parent then
+				-- Выдаем стартовое Копье и Факел в Backpack игрока при спавне
+				giveItemToPlayer(player, "Spear", 1)
+				giveItemToPlayer(player, "Torch", 1)
+			end
+		end)
 	end)
 end)
 

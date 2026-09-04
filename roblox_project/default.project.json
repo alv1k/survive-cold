@@ -4,9 +4,6 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$path": "ReplicatedStorage",
-      "Icons": {
-        "$path": "assets/icons"
-      },
       "Models": {
         "$path": "assets/models"
       }

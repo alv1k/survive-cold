@@ -99,15 +99,16 @@ pStroke.Color = Color3.fromRGB(255, 255, 255)
 pStroke.Thickness = 1.5
 
 -- Стрелочка направления взгляда
-local arrow = Instance.new("ImageLabel")
+local arrow = Instance.new("TextLabel")
 arrow.Name = "Arrow"
-arrow.Size = UDim2.new(0, 12, 0, 12)
+arrow.Size = UDim2.new(0, 14, 0, 14)
 arrow.Position = UDim2.new(0.5, 0, 0, -6)
 arrow.AnchorPoint = Vector2.new(0.5, 0.5)
 arrow.BackgroundTransparency = 1
-arrow.Image = "rbxasset://textures/survival_icons/ui_arrow_right.png"
-arrow.ImageColor3 = Color3.fromRGB(255, 255, 255)
-arrow.Rotation = -90
+arrow.Text = "▲"
+arrow.Font = Enum.Font.GothamBold
+arrow.TextSize = 12
+arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
 arrow.ZIndex = 16
 arrow.Parent = playerMarker
 
@@ -128,8 +129,8 @@ local function createCompassMarker(text, color)
 end
 
 local markerN = createCompassMarker("N", Color3.fromRGB(239, 68, 68)) -- Ярко-красный Север
-local markerS = createCompassMarker("S", Color3.fromRGB(148, 163, 184))
 local markerE = createCompassMarker("E", Color3.fromRGB(148, 163, 184))
+local markerS = createCompassMarker("S", Color3.fromRGB(148, 163, 184))
 local markerW = createCompassMarker("W", Color3.fromRGB(148, 163, 184))
 
 -- Нижняя плашка координат
@@ -203,13 +204,26 @@ local function getOrCreateBlip(poiKey, poiData)
 	bStroke.Color = Color3.fromRGB(15, 23, 42)
 	bStroke.Thickness = 1.2
 
-	local iconImg = Instance.new("ImageLabel", blip)
-	iconImg.Size = UDim2.new(1, -2, 1, -2)
-	iconImg.Position = UDim2.new(0.5, 0, 0.5, 0)
-	iconImg.AnchorPoint = Vector2.new(0.5, 0.5)
-	iconImg.BackgroundTransparency = 1
-	iconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
-	iconImg.Image = IconConfig.GetIconImage(poiData.IconKey or "Branches")
+	local iconKey = poiData.IconKey or "Branches"
+	local imgUrl = IconConfig.GetIconImage(iconKey)
+	if imgUrl and imgUrl ~= "" then
+		local iconImg = Instance.new("ImageLabel", blip)
+		iconImg.Size = UDim2.new(1, -2, 1, -2)
+		iconImg.Position = UDim2.new(0.5, 0, 0.5, 0)
+		iconImg.AnchorPoint = Vector2.new(0.5, 0.5)
+		iconImg.BackgroundTransparency = 1
+		iconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		iconImg.Image = imgUrl
+	else
+		local iconCfg = IconConfig.Icons[iconKey]
+		local txt = Instance.new("TextLabel", blip)
+		txt.Size = UDim2.new(1, -2, 1, -2)
+		txt.Position = UDim2.new(0.5, 0, 0.5, 0)
+		txt.AnchorPoint = Vector2.new(0.5, 0.5)
+		txt.BackgroundTransparency = 1
+		txt.TextScaled = true
+		txt.Text = poiData.Symbol or (iconCfg and iconCfg.FallbackEmoji) or "•"
+	end
 
 	blipElements[poiKey] = blip
 	return blip

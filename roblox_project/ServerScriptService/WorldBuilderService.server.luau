@@ -192,8 +192,8 @@ local function buildPlayerHouse()
 
 	local fireLight = Instance.new("PointLight", fireplace)
 	fireLight.Color = Color3.fromRGB(255, 140, 40)
-	fireLight.Brightness = 3.5
-	fireLight.Range = 35
+	fireLight.Brightness = 0.6
+	fireLight.Range = 22
 	fireLight.Enabled = false
 
 	local prompt = Instance.new("ProximityPrompt", fireplace)
@@ -208,20 +208,43 @@ local function buildPlayerHouse()
 	heatFolder.Name = "HeatSources"
 	fireplace.Parent = heatFolder
 
+	-- 4. ВЕРСТАК ВЫЖИВАЛЬЩИКА (С красивой подсветкой, верстачной столешницей и надежным ProximityPrompt)
 	local workbench = Instance.new("Part")
 	workbench.Name = "Workbench"
-	workbench.Size = Vector3.new(5, 3.0, 3.5)
-	-- Точное приземление на пол (пол 1.2, половина высоты верстака 1.5 -> Y = 2.7)
-	workbench.Position = HOUSE_POS + Vector3.new(-12, 2.7, 8)
+	workbench.Size = Vector3.new(6.0, 2.8, 3.8)
+	workbench.Position = HOUSE_POS + Vector3.new(-12, 2.6, 8)
 	workbench.Anchored = true
-	workbench.Material = Enum.Material.Wood
-	workbench.BrickColor = BrickColor.new("Lapis")
+	workbench.Material = Enum.Material.WoodPlanks
+	workbench.Color = Color3.fromRGB(120, 75, 40)
 	workbench.Parent = houseModel
 
-	local wbPrompt = Instance.new("ProximityPrompt", workbench)
-	wbPrompt.ActionText = "Открыть Верстак (Крафт)"
+	-- Столешница с тисками и инструментами
+	local tabletop = Instance.new("Part")
+	tabletop.Name = "TableTop"
+	tabletop.Size = Vector3.new(6.4, 0.4, 4.2)
+	tabletop.Position = workbench.Position + Vector3.new(0, 1.5, 0)
+	tabletop.Anchored = true
+	tabletop.Material = Enum.Material.Wood
+	tabletop.Color = Color3.fromRGB(160, 105, 55)
+	tabletop.Parent = houseModel
+
+	-- Мягкий свет от верстачной лампы
+	local wbLight = Instance.new("PointLight")
+	wbLight.Color = Color3.fromRGB(254, 240, 138)
+	wbLight.Brightness = 0.6
+	wbLight.Range = 12
+	wbLight.Parent = tabletop
+
+	local wbPrompt = Instance.new("ProximityPrompt")
+	wbPrompt.Name = "WorkbenchPrompt"
+	wbPrompt.ActionText = "Открыть Верстак [E]"
 	wbPrompt.ObjectText = "🛠️ Верстак выживальщика"
 	wbPrompt.HoldDuration = 0
+	wbPrompt.MaxActivationDistance = 16
+	wbPrompt.RequiresLineOfSight = false
+	wbPrompt.KeyboardKeyCode = Enum.KeyCode.E
+	wbPrompt:SetAttribute("IsWorkbench", true)
+	wbPrompt.Parent = workbench
 
 	local petBed = Instance.new("Part")
 	petBed.Name = "PetBed"
@@ -236,29 +259,57 @@ local function buildPlayerHouse()
 	houseModel.Parent = WorldFolder
 end
 
--- 5. РАССАДКА 280+ ЕЛЕЙ В ТАЙГЕ 3200x3200
+-- Зоны исключения для спавна деревьев (Дом игрока, Продуктовый магазин и Магазин одежды в радиусе 200, Заимки в радиусе 35)
+local TREE_EXCLUSION_ZONES = {
+	{ Pos = Vector3.new(0, 0, 0), Radius = 200, Name = "PlayerHouse" },     -- Дом игрока (R = 200)
+	{ Pos = Vector3.new(-50, 0, 0), Radius = 200, Name = "FoodShop" },       -- Продуктовый магазин (R = 200)
+	{ Pos = Vector3.new(70, 0, 0), Radius = 200, Name = "ClothingShop" },   -- Магазин одежды (R = 200)
+	
+	-- 8 Охотничьих Заимок (R = 35)
+	{ Pos = Vector3.new(0, 0, -850), Radius = 35 },
+	{ Pos = Vector3.new(200, 0, 900), Radius = 35 },
+	{ Pos = Vector3.new(-950, 0, -150), Radius = 35 },
+	{ Pos = Vector3.new(850, 0, -550), Radius = 35 },
+	{ Pos = Vector3.new(-800, 0, -900), Radius = 35 },
+	{ Pos = Vector3.new(900, 0, 850), Radius = 35 },
+	{ Pos = Vector3.new(800, 0, -1150), Radius = 35 },
+	{ Pos = Vector3.new(-850, 0, 950), Radius = 35 },
+}
+
+local function isTreeLocationAllowed(x, z)
+	for _, zone in ipairs(TREE_EXCLUSION_ZONES) do
+		local dx = x - zone.Pos.X
+		local dz = z - zone.Pos.Z
+		if (dx * dx + dz * dz) < (zone.Radius * zone.Radius) then
+			return false
+		end
+	end
+	return true
+end
+
+-- 5. РАССАДКА 280+ ЕЛЕЙ В ДИКОЙ ТАЙГЕ 3200x3200 (БЕЗ ДЕРЕВЬЕВ В ДОМЕ И В РАДИУСЕ 200 ОТ ДОМА И МАГАЗИНОВ)
 local function populateForest()
 	local forestFolder = workspace:FindFirstChild("Forest") or Instance.new("Folder", workspace)
 	forestFolder.Name = "Forest"
 	forestFolder:ClearAllChildren()
 
-	-- Роща вокруг дома (40..180 studs)
-	for i = 1, 45 do
-		local angle = math.random() * math.pi * 2
-		local dist = math.random(42, 180)
-		local x = math.cos(angle) * dist
-		local z = math.sin(angle) * dist
-		createPineTree(Vector3.new(x, 0, z), math.random(90, 140) / 100)
-	end
+	local targetTreeCount = 280
+	local spawnedCount = 0
+	local maxAttempts = 2000
+	local attempts = 0
 
-	-- Дикая тайга по всей карте 3200x3200
-	for i = 1, 240 do
+	while spawnedCount < targetTreeCount and attempts < maxAttempts do
+		attempts = attempts + 1
 		local x = math.random(-1480, 1480)
 		local z = math.random(-1480, 1480)
-		if math.abs(x) > 45 or math.abs(z) > 45 then
+
+		if isTreeLocationAllowed(x, z) then
 			createPineTree(Vector3.new(x, 0, z), math.random(80, 160) / 100)
+			spawnedCount = spawnedCount + 1
 		end
 	end
+
+	print(string.format("🌲 [Forest] Успешно высажено %d елей в тайге (строгий запрет в радиусе 200 от дома и магазинов)!", spawnedCount))
 end
 
 -- 6. ПОСТРОЙКА 8 ОХОТНИЧЬИХ ЗАИМОК ДЛЯ ДАЛЬНИХ ЭКСПЕДИЦИЙ
@@ -278,7 +329,7 @@ local function buildHunterCabins()
 		{ Name = "Юго-Западный Схрон", Pos = Vector3.new(-850, 0, 950) }
 	}
 
-	for _, c in ipairs(CABIN_POSITIONS) do
+	for i, c in ipairs(CABIN_POSITIONS) do
 		local cabin = Instance.new("Model")
 		cabin.Name = c.Name
 
@@ -322,8 +373,8 @@ local function buildHunterCabins()
 
 		local stoveLight = Instance.new("PointLight", stove)
 		stoveLight.Color = Color3.fromRGB(255, 140, 40)
-		stoveLight.Range = 30
-		stoveLight.Brightness = 3
+		stoveLight.Range = 20
+		stoveLight.Brightness = 0.6
 		stoveLight.Enabled = false
 
 		local prompt = Instance.new("ProximityPrompt", stove)

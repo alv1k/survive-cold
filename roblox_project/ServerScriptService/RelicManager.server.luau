@@ -71,8 +71,8 @@ local function attachSkyBeacon(parentPart, beamColor)
 
 	local light = Instance.new("PointLight")
 	light.Color = beamColor
-	light.Range = 24
-	light.Brightness = 3
+	light.Range = 14
+	light.Brightness = 0.6
 	light.Parent = parentPart
 end
 
@@ -89,8 +89,8 @@ AltarPart.Parent = workspace
 local altarGlow = Instance.new("PointLight", AltarPart)
 altarGlow.Name = "AltarGlow"
 altarGlow.Color = Color3.fromRGB(56, 189, 248)
-altarGlow.Range = 25
-altarGlow.Brightness = 2
+altarGlow.Range = 18
+altarGlow.Brightness = 0.6
 
 local AltarPrompt = AltarPart:FindFirstChildOfClass("ProximityPrompt") or Instance.new("ProximityPrompt", AltarPart)
 AltarPrompt.ActionText = "Освятить реликвии на Алтаре"

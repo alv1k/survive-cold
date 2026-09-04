@@ -10,7 +10,12 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local RelicsFolder = workspace:WaitForChild("Relics", 10)
 
+-- Очистка старых лучей при HotSwap перезагрузке
+local oldBeam = workspace.CurrentCamera:FindFirstChild("FoxRadarBeam")
+if oldBeam then oldBeam:Destroy() end
+
 local radarBeam = Instance.new("Beam")
+radarBeam.Name = "FoxRadarBeam"
 radarBeam.Color = ColorSequence.new(Color3.fromRGB(6, 182, 212))
 radarBeam.Width0 = 0.5
 radarBeam.Width1 = 1.2

@@ -143,67 +143,36 @@ end
 
 -- Функция зажигания / подкидывания веток в любой костер или печь
 local function tryFeedFireplace(player, firePart)
-	local branches = player:GetAttribute("Branches") or 0
-	local backpack = player:FindFirstChildOfClass("Backpack")
 	local char = player.Character
+	local equippedTool = nil
 
-	-- Проверяем наличие ветки в инвентаре
-	local hasBranch = (branches >= 1)
-	if not hasBranch and backpack then
-		for _, t in ipairs(backpack:GetChildren()) do
-			if t:IsA("Tool") and t:GetAttribute("ItemKey") == "Branches" then
-				hasBranch = true
-				break
-			end
-		end
-	end
-	if not hasBranch and char then
-		for _, t in ipairs(char:GetChildren()) do
-			if t:IsA("Tool") and t:GetAttribute("ItemKey") == "Branches" then
-				hasBranch = true
+	-- Проверяем, держит ли игрок ветки именно в руках
+	if char then
+		for _, child in ipairs(char:GetChildren()) do
+			if child:IsA("Tool") and (child:GetAttribute("ItemKey") == "Branches" or string.find(string.lower(child.Name), "ветк") or string.find(string.lower(child.Name), "branch")) then
+				equippedTool = child
 				break
 			end
 		end
 	end
 
-	if not hasBranch then
-		ShowNotificationRemote:FireClient(player, "⚠️ Нужна 🌿 Ветка, чтобы зажечь огонь!")
+	if not equippedTool then
+		ShowNotificationRemote:FireClient(player, "⚠️ Возьмите 🌿 Ветки в руки, чтобы подбросить в огонь!")
 		return false
 	end
 
-	-- Списываем 1 ветку
-	player:SetAttribute("Branches", math.max(0, branches - 1))
+	-- Списываем 1 ветку из текущего стака в руках
+	local curCount = equippedTool:GetAttribute("Count") or 1
+	if curCount > 1 then
+		equippedTool:SetAttribute("Count", curCount - 1)
+		equippedTool.Name = string.format("🌿 Ветки (x%d)", curCount - 1)
+	else
+		equippedTool:Destroy()
+	end
 
-	local deducted = false
-	if backpack then
-		for _, t in ipairs(backpack:GetChildren()) do
-			if t:IsA("Tool") and t:GetAttribute("ItemKey") == "Branches" then
-				local count = t:GetAttribute("Count") or 1
-				if count > 1 then
-					t:SetAttribute("Count", count - 1)
-					t.Name = string.format("🌿 Ветки (x%d)", count - 1)
-				else
-					t:Destroy()
-				end
-				deducted = true
-				break
-			end
-		end
-	end
-	if not deducted and char then
-		for _, t in ipairs(char:GetChildren()) do
-			if t:IsA("Tool") and t:GetAttribute("ItemKey") == "Branches" then
-				local count = t:GetAttribute("Count") or 1
-				if count > 1 then
-					t:SetAttribute("Count", count - 1)
-					t.Name = string.format("🌿 Ветки (x%d)", count - 1)
-				else
-					t:Destroy()
-				end
-				break
-			end
-		end
-	end
+	-- Синхронизируем общий счетчик веток игрока
+	local totalBranches = player:GetAttribute("Branches") or 0
+	player:SetAttribute("Branches", math.max(0, totalBranches - 1))
 
 	-- Добавляем +60 секунд горения (+ бонус с Алтаря)
 	local curFuel = firePart:GetAttribute("FuelSeconds") or 0
@@ -213,21 +182,21 @@ local function tryFeedFireplace(player, firePart)
 	firePart:SetAttribute("FuelSeconds", newFuel)
 
 	-- Включаем огонь и свет
-	local fire = firePart:FindFirstChildOfClass("Fire")
+	local fire = firePart:FindFirstChildOfClass("Fire") or firePart:FindFirstChildWhichIsA("Fire", true)
 	if fire then fire.Enabled = true end
 
-	local light = firePart:FindFirstChildOfClass("PointLight")
+	local light = firePart:FindFirstChildOfClass("PointLight") or firePart:FindFirstChildWhichIsA("PointLight", true)
 	if light then light.Enabled = true end
 
-	ShowNotificationRemote:FireClient(player, string.format("🪵 Ветка брошена в огонь! (+%dс тепла | Всего: %02d:%02d)", 60 + bonusFuel, math.floor(newFuel/60), newFuel%60))
-	print(string.format("🔥 %s подбросил 🌿 Ветку в %s! (Осталось: %d сек)", player.Name, firePart.Name, newFuel))
+	ShowNotificationRemote:FireClient(player, string.format("🪵 Ветка из рук брошена в огонь! (+%dс тепла | Всего: %02d:%02d)", 60 + bonusFuel, math.floor(newFuel/60), newFuel%60))
+	print(string.format("🔥 %s подбросил 🌿 Ветку из рук в %s! (Осталось: %d сек)", player.Name, firePart.Name, newFuel))
 	return true
 end
 
 -- Подключение ProximityPrompt для всех источников тепла
 local function bindHeatSourcePrompts()
 	for _, source in ipairs(HeatSourcesFolder:GetChildren()) do
-		local prompt = source:FindFirstChildOfClass("ProximityPrompt")
+		local prompt = source:FindFirstChildOfClass("ProximityPrompt") or source:FindFirstChildWhichIsA("ProximityPrompt", true)
 		if prompt and not prompt:GetAttribute("Bound") then
 			prompt:SetAttribute("Bound", true)
 			prompt.Triggered:Connect(function(triggerPlayer)
@@ -403,9 +372,9 @@ task.spawn(function()
 		-- А) Обновление всех костров и печей на карте
 		for _, source in ipairs(HeatSourcesFolder:GetChildren()) do
 			local fuel = source:GetAttribute("FuelSeconds") or 0
-			local prompt = source:FindFirstChildOfClass("ProximityPrompt")
-			local fire = source:FindFirstChildOfClass("Fire")
-			local light = source:FindFirstChildOfClass("PointLight")
+			local prompt = source:FindFirstChildOfClass("ProximityPrompt") or source:FindFirstChildWhichIsA("ProximityPrompt", true)
+			local fire = source:FindFirstChildOfClass("Fire") or source:FindFirstChildWhichIsA("Fire", true)
+			local light = source:FindFirstChildOfClass("PointLight") or source:FindFirstChildWhichIsA("PointLight", true)
 
 			if fuel > 0 then
 				fuel = fuel - 1
@@ -449,7 +418,8 @@ task.spawn(function()
 						local fuel = source:GetAttribute("FuelSeconds") or 0
 						if fuel > 0 then
 							local radius = source:GetAttribute("HeatRadius") or 35
-							if (source.Position - pPos).Magnitude <= radius then
+							local sourcePos = if source:IsA("Model") then (if source.PrimaryPart then source.PrimaryPart.Position else source:GetPivot().Position) elseif source:IsA("BasePart") then source.Position else nil
+							if sourcePos and (sourcePos - pPos).Magnitude <= radius then
 								nearBurningFire = true
 								break
 							end

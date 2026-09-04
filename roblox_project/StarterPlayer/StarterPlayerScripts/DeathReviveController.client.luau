@@ -176,6 +176,7 @@ houseSub.Parent = houseBtn
 -- Обработчики нажатий
 local function doRespawnInHouse()
 	mainFrame.Visible = false
+	closeBtn.Modal = false
 	if RespawnInHouseRemote then
 		RespawnInHouseRemote:FireServer()
 	end
@@ -183,6 +184,7 @@ end
 
 local function doReviveWithRobux()
 	mainFrame.Visible = false
+	closeBtn.Modal = false
 	if ReviveWithRobuxRemote then
 		ReviveWithRobuxRemote:FireServer()
 	end
@@ -196,12 +198,14 @@ robuxBtn.MouseButton1Click:Connect(doReviveWithRobux)
 if ShowDeathScreenRemote then
 	ShowDeathScreenRemote.OnClientEvent:Connect(function()
 		mainFrame.Visible = true
+		closeBtn.Modal = true
 	end)
 end
 
 if HideDeathScreenRemote then
 	HideDeathScreenRemote.OnClientEvent:Connect(function()
 		mainFrame.Visible = false
+		closeBtn.Modal = false
 	end)
 end
 

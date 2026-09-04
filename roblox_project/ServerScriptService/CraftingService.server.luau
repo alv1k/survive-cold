@@ -18,6 +18,16 @@ CraftItemRemote.Name = "CraftItem"
 local UpgradeWorkbenchRemote = RemotesFolder:FindFirstChild("UpgradeWorkbench") or Instance.new("RemoteEvent", RemotesFolder)
 UpgradeWorkbenchRemote.Name = "UpgradeWorkbench"
 
+local OpenWorkbenchRemote = RemotesFolder:FindFirstChild("OpenWorkbench") or Instance.new("RemoteEvent", RemotesFolder)
+OpenWorkbenchRemote.Name = "OpenWorkbench"
+
+local ProximityPromptService = game:GetService("ProximityPromptService")
+ProximityPromptService.PromptTriggered:Connect(function(prompt, triggerPlayer)
+	if prompt.Name == "WorkbenchPrompt" or (prompt.Parent and prompt.Parent.Name == "Workbench") or prompt:GetAttribute("IsWorkbench") then
+		OpenWorkbenchRemote:FireClient(triggerPlayer)
+	end
+end)
+
 -- 1. Функция точного подсчета ресурсов у игрока (в атрибутах и в рюкзаке)
 local function countPlayerResource(player, resourceName)
 	local attrCount = player:GetAttribute(resourceName) or 0
@@ -282,133 +292,4 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 	end
 end)
 
--- 5. Инициализация 16 Сундучков Деталей (Part Chests) с точной посадкой на рельеф
-local PartChestsFolder = workspace:FindFirstChild("PartChests") or Instance.new("Folder", workspace)
-PartChestsFolder.Name = "PartChests"
 
-local CHEST_LOCATIONS = {
-	Vector3.new(-450, 20, -480), Vector3.new(-380, 20, 620),  Vector3.new(-750, 20, 220),  Vector3.new(-240, 20, -850),
-	Vector3.new(480, 20, -680),  Vector3.new(680, 20, 520),   Vector3.new(950, 20, -350),  Vector3.new(320, 20, 850),
-	Vector3.new(-1150, 20, -450), Vector3.new(-650, 20, -1200), Vector3.new(-980, 20, 850),  Vector3.new(1150, 20, 750),
-	Vector3.new(1250, 20, -650), Vector3.new(550, 20, -1350), Vector3.new(-520, 20, 1250), Vector3.new(980, 20, 1150)
-}
-
-local function getGroundHeight(pos)
-	local rayOrigin = Vector3.new(pos.X, 100, pos.Z)
-	local rayDirection = Vector3.new(0, -200, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 3.0
-end
-
-local function buildPartChest(index, loc)
-	local groundY = getGroundHeight(loc)
-	local chestPos = Vector3.new(loc.X, groundY + 1.2, loc.Z)
-
-	local chestModel = Instance.new("Model")
-	chestModel.Name = "PartChest_" .. index
-
-	-- 1. Корпус сундука (Ровный деревянный короб)
-	local base = Instance.new("Part")
-	base.Name = "Base"
-	base.Size = Vector3.new(3.8, 2.2, 2.6)
-	base.Position = chestPos
-	base.Anchored = true
-	base.CanCollide = true
-	base.Material = Enum.Material.WoodPlanks
-	base.BrickColor = BrickColor.new("Dark orange")
-	base.Parent = chestModel
-
-	-- 2. Крышка с металлической кованой отделкой
-	local lid = Instance.new("Part")
-	lid.Name = "Lid"
-	lid.Size = Vector3.new(4.0, 0.7, 2.8)
-	lid.Position = chestPos + Vector3.new(0, 1.35, 0)
-	lid.Anchored = true
-	lid.CanCollide = true
-	lid.Material = Enum.Material.Metal
-	lid.BrickColor = BrickColor.new("Dark stone grey")
-	lid.Parent = chestModel
-
-	-- 3. Светящийся неоновый замок деталей (Cyan)
-	local lock = Instance.new("Part")
-	lock.Name = "Lock"
-	lock.Size = Vector3.new(0.8, 0.8, 0.4)
-	lock.Position = chestPos + Vector3.new(0, 0.3, 1.35)
-	lock.Anchored = true
-	lock.CanCollide = false
-	lock.Material = Enum.Material.Neon
-	lock.BrickColor = BrickColor.new("Cyan")
-	lock.Parent = chestModel
-
-	local light = Instance.new("PointLight", lock)
-	light.Color = Color3.fromRGB(56, 189, 248)
-	light.Range = 12
-	light.Brightness = 1.5
-
-	-- 4. Стабильный ProximityPrompt (Всегда виден, без сбоев видимости)
-	local prompt = Instance.new("ProximityPrompt", base)
-	prompt.ActionText = "Открыть сундук деталей"
-	prompt.ObjectText = "⚙️ Кованый сундук"
-	prompt.HoldDuration = 0 -- Моментальное открытие
-	prompt.MaxActivationDistance = 14
-	prompt.RequiresLineOfSight = false -- 100% стабильность показа подсказки!
-
-	prompt.Triggered:Connect(function(player)
-		local partsCount = math.random(1, 2)
-		local given = false
-
-		if _G.GiveItemToPlayer then
-			given = _G.GiveItemToPlayer(player, "Parts", partsCount)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				given = giveBindable:Invoke(player, "Parts", partsCount)
-			end
-		end
-
-		if not given then
-			-- Рюкзак полон! Сбрасываем найденные детали на землю прямо у сундука
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, "Parts", partsCount, chestPos + Vector3.new(0, 0.5, 2.5))
-			end
-			local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
-			if ShowNotificationRemote then
-				ShowNotificationRemote:FireClient(player, string.format("⚠️ Рюкзак полон! ⚙️ Детали (x%d) упали на землю у сундука.", partsCount))
-			end
-			print(string.format("📦 %s открыл сундук (рюкзак полон), детали (x%d) упали на землю!", player.Name, partsCount))
-		else
-			print(string.format("📦 %s открыл сундучок и нашел %dx ⚙️ Деталей в рюкзак!", player.Name, partsCount))
-		end
-
-		prompt.Enabled = false
-		base.Transparency = 0.5
-		lid.Transparency = 0.5
-		lock.Transparency = 0.8
-		light.Enabled = false
-
-		-- Респавн сундука через 3 минуты
-		task.delay(180, function()
-			if base and base.Parent then
-				base.Transparency = 0
-				lid.Transparency = 0
-				lock.Transparency = 0
-				light.Enabled = true
-				prompt.Enabled = true
-			end
-		end)
-	end)
-
-	chestModel.PrimaryPart = base
-	chestModel.Parent = PartChestsFolder
-end
-
-for i, loc in ipairs(CHEST_LOCATIONS) do
-	buildPartChest(i, loc)
-end

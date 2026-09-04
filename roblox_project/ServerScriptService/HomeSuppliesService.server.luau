@@ -1,12 +1,12 @@
 --[[
     HomeSuppliesService.server.luau
-    Сервис околодомовых ресурсов и сундуков:
-    - 10 Сундуков припасов вдоль веранды и двора дома (сбалансированный лут и ресток 90 сек)
-    - 10 Веток (Branches)
-    - 10 Волокон (Fiber)
-    - 10 Камней (Stone)
-    - 10 Досок (Planks)
-    - Индивидуальные ProximityPrompt для быстрого и удобного сбора ресурсов около дома
+    Сервис околодомовых природных ресурсов:
+    - 10 Крупных 3D-моделей Веток (Branches)
+    - 10 Крупных 3D-моделей Волокон (Fiber)
+    - 10 Крупных 3D-моделей Камней (Stone)
+    - 10 Крупных 3D-моделей Досок (Planks)
+    - 10 Крупных 3D-моделей Деталей (Parts)
+    - Приподнятая посадка над снегом (Y-offset), мягкая подсветка и ProximityPrompt
 --]]
 
 local Workspace = game:GetService("Workspace")
@@ -22,9 +22,11 @@ RemotesFolder.Name = "Remotes"
 local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
 ShowNotificationRemote.Name = "ShowNotification"
 
+local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+
 local function getGroundHeight(x, z)
 	local rayOrigin = Vector3.new(x, 100, z)
-	local rayDirection = Vector3.new(0, -150, 0)
+	local rayDirection = Vector3.new(0, -200, 0)
 	local raycastParams = RaycastParams.new()
 	raycastParams.FilterType = Enum.RaycastFilterType.Include
 	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
@@ -33,7 +35,7 @@ local function getGroundHeight(x, z)
 	if result then
 		return result.Position.Y
 	end
-	return 2.5
+	return 0
 end
 
 local function givePlayerItem(player, itemKey, count)
@@ -50,280 +52,81 @@ local function givePlayerItem(player, itemKey, count)
 end
 
 --------------------------------------------------------------------------------
--- 1. 🧰 10 СУНДУКОВ ПРИПАСОВ У ДОМА (Вдоль крыльца и веранды)
+-- 🌲 ОКОЛОДОМОВЫЕ ПРИРОДНЫЕ РЕСУРСЫ (Ветки, Волокно, Камни, Доски, Детали)
 --------------------------------------------------------------------------------
-local CHEST_OFFSETS = {
-	-- Слева от крыльца (5 шт)
-	Vector3.new(-14, 0, -10),
-	Vector3.new(-14, 0, -6),
-	Vector3.new(-14, 0, -2),
-	Vector3.new(-14, 0, 2),
-	Vector3.new(-14, 0, 6),
-	-- Справа от крыльца (5 шт)
-	Vector3.new(14, 0, -10),
-	Vector3.new(14, 0, -6),
-	Vector3.new(14, 0, -2),
-	Vector3.new(14, 0, 2),
-	Vector3.new(14, 0, 6)
-}
-
-local CHEST_LOOT_TABLES = {
-	{ { Item = "Branches", Min = 3, Max = 5 }, { Item = "Fiber", Min = 2, Max = 4 } },
-	{ { Item = "Stone", Min = 2, Max = 4 }, { Item = "Planks", Min = 2, Max = 3 } },
-	{ { Item = "Torch", Min = 1, Max = 1 }, { Item = "Bread", Min = 1, Max = 2 } },
-	{ { Item = "Parts", Min = 1, Max = 2 }, { Item = "Ammo_Slingshot", Min = 5, Max = 10 } },
-	{ { Item = "Bar", Min = 2, Max = 3 }, { Item = "Soup", Min = 1, Max = 2 } },
-	{ { Item = "Planks", Min = 3, Max = 5 }, { Item = "Branches", Min = 3, Max = 4 } },
-	{ { Item = "Stone", Min = 3, Max = 5 }, { Item = "Fiber", Min = 3, Max = 5 } },
-	{ { Item = "Spear", Min = 1, Max = 1 }, { Item = "Steak", Min = 1, Max = 2 } },
-	{ { Item = "Parts", Min = 2, Max = 3 }, { Item = "Coffee", Min = 1, Max = 2 } },
-	{ { Item = "RabbitTrap", Min = 1, Max = 1 }, { Item = "CampfireKit", Min = 1, Max = 1 } }
-}
-
-local function createHomeChest(index, offset)
-	local groundY = getGroundHeight(offset.X, offset.Z)
-	local chestPos = Vector3.new(offset.X, groundY + 1.2, offset.Z)
-
-	local chestModel = Instance.new("Model")
-	chestModel.Name = "HomeChest_" .. index
-
-	local base = Instance.new("Part")
-	base.Name = "Base"
-	base.Size = Vector3.new(3.4, 2.0, 2.4)
-	base.Position = chestPos
-	base.Anchored = true
-	base.CanCollide = true
-	base.Material = Enum.Material.WoodPlanks
-	base.BrickColor = BrickColor.new("Dark orange")
-	base.Parent = chestModel
-
-	local lid = Instance.new("Part")
-	lid.Name = "Lid"
-	lid.Size = Vector3.new(3.6, 0.6, 2.6)
-	lid.Position = chestPos + Vector3.new(0, 1.25, 0)
-	lid.Anchored = true
-	lid.CanCollide = true
-	lid.Material = Enum.Material.Metal
-	lid.BrickColor = BrickColor.new("Dark stone grey")
-	lid.Parent = chestModel
-
-	local lock = Instance.new("Part")
-	lock.Name = "Lock"
-	lock.Size = Vector3.new(0.7, 0.7, 0.3)
-	lock.Position = chestPos + Vector3.new(0, 0.25, 1.25)
-	lock.Anchored = true
-	lock.CanCollide = false
-	lock.Material = Enum.Material.Neon
-	lock.BrickColor = BrickColor.new("Bright yellow")
-	lock.Parent = chestModel
-
-	local light = Instance.new("PointLight", lock)
-	light.Color = Color3.fromRGB(250, 204, 21)
-	light.Range = 10
-	light.Brightness = 1.2
-
-	local prompt = Instance.new("ProximityPrompt", base)
-	prompt.ActionText = "Открыть сундук припасов"
-	prompt.ObjectText = string.format("🧰 Домашний сундук #%d", index)
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 12
-	prompt.RequiresLineOfSight = false
-
-	local lootPool = CHEST_LOOT_TABLES[index] or CHEST_LOOT_TABLES[1]
-
-	prompt.Triggered:Connect(function(player)
-		for i, loot in ipairs(lootPool) do
-			local qty = math.random(loot.Min, loot.Max)
-			local spreadAngle = (i / #lootPool) * (math.pi * 2)
-			local dropPos = chestPos + Vector3.new(math.cos(spreadAngle) * 2.2, 0.4, math.sin(spreadAngle) * 2.2 + 1.2)
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, loot.Item, qty, dropPos)
-			end
-		end
-
-		ShowNotificationRemote:FireClient(player, "📦 Припасы высыпались на землю! Подберите их.")
-		prompt.Enabled = false
-		lock.BrickColor = BrickColor.new("Really red")
-		light.Color = Color3.fromRGB(239, 68, 68)
-
-		-- Восполнение сундука через 90 секунд
-		task.delay(90, function()
-			if prompt and prompt.Parent then
-				prompt.Enabled = true
-				lock.BrickColor = BrickColor.new("Bright yellow")
-				light.Color = Color3.fromRGB(250, 204, 21)
-			end
-		end)
-	end)
-
-	chestModel.PrimaryPart = base
-	chestModel.Parent = HomeSuppliesFolder
-end
-
-for i, offset in ipairs(CHEST_OFFSETS) do
-	createHomeChest(i, offset)
-end
 
 --------------------------------------------------------------------------------
--- 1.2 ⚙️ 10 СУНДУКОВ ДЕТАЛЕЙ (PART CHESTS) У ДОМА
---------------------------------------------------------------------------------
-local PART_CHEST_OFFSETS = {
-	-- Спереди дома вдоль забора (5 шт)
-	Vector3.new(-10, 0, -18),
-	Vector3.new(-5, 0, -18),
-	Vector3.new(0, 0, -18),
-	Vector3.new(5, 0, -18),
-	Vector3.new(10, 0, -18),
-	-- Сзади дома вдоль забора (5 шт)
-	Vector3.new(-10, 0, 18),
-	Vector3.new(-5, 0, 18),
-	Vector3.new(0, 0, 18),
-	Vector3.new(5, 0, 18),
-	Vector3.new(10, 0, 18)
-}
-
-local function createHomePartChest(index, offset)
-	local groundY = getGroundHeight(offset.X, offset.Z)
-	local chestPos = Vector3.new(offset.X, groundY + 1.2, offset.Z)
-
-	local chestModel = Instance.new("Model")
-	chestModel.Name = "HomePartChest_" .. index
-
-	local base = Instance.new("Part")
-	base.Name = "Base"
-	base.Size = Vector3.new(3.4, 2.0, 2.4)
-	base.Position = chestPos
-	base.Anchored = true
-	base.CanCollide = true
-	base.Material = Enum.Material.DiamondPlate
-	base.BrickColor = BrickColor.new("Dark stone grey")
-	base.Parent = chestModel
-
-	local lid = Instance.new("Part")
-	lid.Name = "Lid"
-	lid.Size = Vector3.new(3.6, 0.6, 2.6)
-	lid.Position = chestPos + Vector3.new(0, 1.25, 0)
-	lid.Anchored = true
-	lid.CanCollide = true
-	lid.Material = Enum.Material.Metal
-	lid.BrickColor = BrickColor.new("Black")
-	lid.Parent = chestModel
-
-	local lock = Instance.new("Part")
-	lock.Name = "Lock"
-	lock.Size = Vector3.new(0.7, 0.7, 0.3)
-	lock.Position = chestPos + Vector3.new(0, 0.25, 1.25)
-	lock.Anchored = true
-	lock.CanCollide = false
-	lock.Material = Enum.Material.Neon
-	lock.BrickColor = BrickColor.new("Cyan")
-	lock.Parent = chestModel
-
-	local light = Instance.new("PointLight", lock)
-	light.Color = Color3.fromRGB(56, 189, 248)
-	light.Range = 10
-	light.Brightness = 1.4
-
-	local prompt = Instance.new("ProximityPrompt", base)
-	prompt.ActionText = "Открыть сундук деталей"
-	prompt.ObjectText = string.format("⚙️ Сундук деталей #%d", index)
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 12
-	prompt.RequiresLineOfSight = false
-
-	prompt.Triggered:Connect(function(player)
-		local partsCount = math.random(1, 3)
-		for p = 1, partsCount do
-			local offsetDrop = Vector3.new(math.random(-15, 15) / 10, 0.4, math.random(10, 22) / 10)
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, "Parts", 1, chestPos + offsetDrop)
-			end
-		end
-
-		ShowNotificationRemote:FireClient(player, string.format("⚙️ Из сундука выпали Детали (x%d)!", partsCount))
-		prompt.Enabled = false
-		lock.BrickColor = BrickColor.new("Really red")
-		light.Color = Color3.fromRGB(239, 68, 68)
-
-		task.delay(60, function()
-			if prompt and prompt.Parent then
-				prompt.Enabled = true
-				lock.BrickColor = BrickColor.new("Cyan")
-				light.Color = Color3.fromRGB(56, 189, 248)
-			end
-		end)
-	end)
-
-	chestModel.PrimaryPart = base
-	chestModel.Parent = HomeSuppliesFolder
-end
-
-for i, offset in ipairs(PART_CHEST_OFFSETS) do
-	createHomePartChest(i, offset)
-end
-
-
---------------------------------------------------------------------------------
--- 2. 🌲 10 ВЕТОК, 10 ВОЛОКОН, 10 КАМНЕЙ, 10 ДОСОК У ДОМА
+-- 2. 🌲 10 ВЕТОК, 10 ВОЛОКОН, 10 КАМНЕЙ, 10 ДОСОК У ДОМА (С КРУПНЫМИ 3D-МОДЕЛЯМИ)
 --------------------------------------------------------------------------------
 
 local function createHomeResourceNode(resType, pos, index)
 	local groundY = getGroundHeight(pos.X, pos.Z)
-	local exactPos = Vector3.new(pos.X, groundY, pos.Z)
+	local exactPos = Vector3.new(pos.X, math.max(0.6, groundY + 0.4), pos.Z)
+	local nodeCF = CFrame.new(exactPos + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad((index * 37) % 360), 0)
 
-	local nodeModel = Instance.new("Model")
-	nodeModel.Name = string.format("HomeNode_%s_%d", resType, index)
-
-	local basePart = Instance.new("Part")
-	basePart.Name = "HitBox"
-	basePart.Size = Vector3.new(2.4, 2.0, 2.4)
-	basePart.Position = exactPos + Vector3.new(0, 1.0, 0)
-	basePart.Transparency = 1
-	basePart.Anchored = true
-	basePart.CanCollide = false
-	basePart.Parent = nodeModel
-
-	-- Визуальная 3D геометрия ноды
-	local visual = Instance.new("Part")
-	visual.Name = "Visual"
-	visual.Anchored = true
-	visual.CanCollide = false
-	visual.Parent = nodeModel
-
-	local actionTitle = ""
-	local promptName = ""
-
-	if resType == "Branches" then
-		visual.Size = Vector3.new(1.8, 0.6, 2.6)
-		visual.Position = exactPos + Vector3.new(0, 0.3, 0)
-		visual.Material = Enum.Material.Wood
-		visual.BrickColor = BrickColor.new("Reddish brown")
-		actionTitle = "Взять ветки (x2)"
-		promptName = "🌿 Ветки"
-	elseif resType == "Fiber" then
-		visual.Size = Vector3.new(1.4, 1.8, 1.4)
-		visual.Position = exactPos + Vector3.new(0, 0.9, 0)
-		visual.Material = Enum.Material.Grass
-		visual.BrickColor = BrickColor.new("Bright green")
-		actionTitle = "Собрать волокно (x2)"
-		promptName = "🌱 Волокно"
-	elseif resType == "Stone" then
-		visual.Size = Vector3.new(2.2, 1.4, 2.0)
-		visual.Position = exactPos + Vector3.new(0, 0.7, 0)
-		visual.Material = Enum.Material.Slate
-		visual.BrickColor = BrickColor.new("Medium stone grey")
-		actionTitle = "Взять камень (x2)"
-		promptName = "⚪ Камень"
-	elseif resType == "Planks" then
-		visual.Size = Vector3.new(1.6, 0.8, 2.8)
-		visual.Position = exactPos + Vector3.new(0, 0.4, 0)
-		visual.Material = Enum.Material.WoodPlanks
-		visual.BrickColor = BrickColor.new("Dark orange")
-		actionTitle = "Взять доски (x2)"
-		promptName = "🌲 Доски"
+	local nodeModel = nil
+	local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
+	if genMod and genMod:FindFirstChild(resType) then
+		local success, mod = pcall(require, genMod[resType])
+		if success and mod and type(mod.create) == "function" then
+			nodeModel = mod.create(HomeSuppliesFolder, nodeCF)
+		end
 	end
 
-	local prompt = Instance.new("ProximityPrompt", basePart)
+	if not nodeModel then
+		nodeModel = Instance.new("Model", HomeSuppliesFolder)
+	end
+
+	nodeModel.Name = string.format("HomeNode_%s_%d", resType, index)
+
+	-- 1. Позиционируем 3D-модель на поверхности снега (приподнято над сугробами)
+	nodeModel:PivotTo(CFrame.new(exactPos + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad((index * 37) % 360), 0))
+
+	-- 2. Включаем видимость и закрепляем все физические детали
+	for _, part in ipairs(nodeModel:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+			part.CanCollide = false
+			part.Transparency = 0
+		end
+	end
+
+	-- 3. Прозрачный хитбокс для взаимодействия
+	local hitBox = Instance.new("Part")
+	hitBox.Name = "HitBox"
+	hitBox.Size = Vector3.new(3.6, 2.4, 3.6)
+	hitBox.CFrame = CFrame.new(exactPos + Vector3.new(0, 0.8, 0))
+	hitBox.Transparency = 1
+	hitBox.CanCollide = false
+	hitBox.Anchored = true
+	hitBox.Parent = nodeModel
+
+	-- Мягкая подсветка ноды
+	local glowLight = Instance.new("PointLight", hitBox)
+	glowLight.Range = 9
+	glowLight.Brightness = 0.7
+	if resType == "Branches" then glowLight.Color = Color3.fromRGB(245, 158, 11)
+	elseif resType == "Fiber" then glowLight.Color = Color3.fromRGB(250, 204, 21)
+	elseif resType == "Stone" then glowLight.Color = Color3.fromRGB(186, 230, 253)
+	elseif resType == "Planks" then glowLight.Color = Color3.fromRGB(251, 191, 36)
+	elseif resType == "Parts" then glowLight.Color = Color3.fromRGB(56, 189, 248)
+	end
+
+	local actionTitle = (resType == "Branches" and "Взять ветки (x2)")
+		or (resType == "Fiber" and "Собрать волокно (x2)")
+		or (resType == "Stone" and "Взять камень (x2)")
+		or (resType == "Planks" and "Взять доски (x2)")
+		or (resType == "Parts" and "Взять детали (x2)")
+		or "Взять ресурс (x2)"
+
+	local promptName = (resType == "Branches" and "🌿 Ветки")
+		or (resType == "Fiber" and "🌱 Волокно")
+		or (resType == "Stone" and "⚪ Камень")
+		or (resType == "Planks" and "🌲 Доски")
+		or (resType == "Parts" and "⚙️ Детали")
+		or "📦 Ресурс"
+
+	local prompt = Instance.new("ProximityPrompt", hitBox)
 	prompt.ActionText = actionTitle
 	prompt.ObjectText = promptName
 	prompt.HoldDuration = 0
@@ -333,55 +136,72 @@ local function createHomeResourceNode(resType, pos, index)
 	prompt.Triggered:Connect(function(player)
 		local given = givePlayerItem(player, resType, 2)
 		if not given and _G.DropItemOnGround then
-			_G.DropItemOnGround(player, resType, 2, exactPos + Vector3.new(0, 0.5, 0))
+			_G.DropItemOnGround(player, resType, 2, exactPos + Vector3.new(0, 1.0, 0))
 		end
 
 		prompt.Enabled = false
-		visual.Transparency = 1
+		for _, desc in ipairs(nodeModel:GetDescendants()) do
+			if desc:IsA("BasePart") then
+				desc.Transparency = 1
+			end
+		end
+		glowLight.Enabled = false
 
 		-- Быстрый респавн 45 секунд
 		task.delay(45, function()
-			if visual and visual.Parent then
-				visual.Transparency = 0
+			if nodeModel and nodeModel.Parent then
+				for _, desc in ipairs(nodeModel:GetDescendants()) do
+					if desc:IsA("BasePart") and desc.Name ~= "HitBox" then
+						desc.Transparency = 0
+					end
+				end
+				glowLight.Enabled = true
 				prompt.Enabled = true
 			end
 		end)
 	end)
 
-	nodeModel.PrimaryPart = basePart
 	nodeModel.Parent = HomeSuppliesFolder
 end
 
--- 10 ВЕТОК (Передний левый двор: X = -22..-8, Z = -24..-12)
+-- 10 ВЕТОК (Левый передний двор: X = -22 .. -34, Z = 5 .. 25)
 for i = 1, 10 do
-	local angle = (i / 10) * math.pi
-	local x = -16 + math.cos(angle) * 7
-	local z = -18 + math.sin(angle) * 6
+	local angle = (i / 10) * (math.pi * 1.5)
+	local x = -26 + math.cos(angle) * 7
+	local z = 15 + math.sin(angle) * 8
 	createHomeResourceNode("Branches", Vector3.new(x, 0, z), i)
 end
 
--- 10 ВОЛОКОН (Передний правый двор: X = 8..22, Z = -24..-12)
+-- 10 ВОЛОКОН (Правый передний двор: X = 22 .. 34, Z = 5 .. 25)
 for i = 1, 10 do
-	local angle = (i / 10) * math.pi
-	local x = 16 + math.cos(angle) * 7
-	local z = -18 + math.sin(angle) * 6
+	local angle = (i / 10) * (math.pi * 1.5)
+	local x = 26 + math.cos(angle) * 7
+	local z = 15 + math.sin(angle) * 8
 	createHomeResourceNode("Fiber", Vector3.new(x, 0, z), i)
 end
 
--- 10 КАМНЕЙ (Задний левый двор: X = -22..-8, Z = 12..24)
+-- 10 КАМНЕЙ (Задний левый двор: X = -18 .. -32, Z = -18 .. -32)
 for i = 1, 10 do
-	local angle = (i / 10) * math.pi
-	local x = -16 + math.cos(angle) * 7
-	local z = 18 + math.sin(angle) * 6
+	local angle = (i / 10) * (math.pi * 1.5)
+	local x = -24 + math.cos(angle) * 7
+	local z = -24 + math.sin(angle) * 7
 	createHomeResourceNode("Stone", Vector3.new(x, 0, z), i)
 end
 
--- 10 ДОСОК (Задний правый двор: X = 8..22, Z = 12..24)
+-- 10 ДОСОК (Задний правый двор: X = 18 .. 32, Z = -18 .. -32)
 for i = 1, 10 do
-	local angle = (i / 10) * math.pi
-	local x = 16 + math.cos(angle) * 7
-	local z = 18 + math.sin(angle) * 6
+	local angle = (i / 10) * (math.pi * 1.5)
+	local x = 24 + math.cos(angle) * 7
+	local z = -24 + math.sin(angle) * 7
 	createHomeResourceNode("Planks", Vector3.new(x, 0, z), i)
 end
 
-print("🏡 [HomeSuppliesService] 10 сундуков и 40 ресурсов (10 веток, 10 волокон, 10 камней, 10 досок) установлены вокруг дома!")
+-- 10 ДЕТАЛЕЙ (Правый фасад: X = 15 .. 28, Z = 5 .. 20)
+for i = 1, 10 do
+	local angle = (i / 10) * (math.pi * 1.5)
+	local x = 22 + math.cos(angle) * 6
+	local z = 10 + math.sin(angle) * 6
+	createHomeResourceNode("Parts", Vector3.new(x, 0, z), i)
+end
+
+print("🏡 [HomeSuppliesService] 50 околодомовых 3D-ресурсов (Ветки, Волокно, Камни, Доски, Детали) успешно расставлены вокруг дома!")

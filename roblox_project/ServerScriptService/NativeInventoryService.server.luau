@@ -100,8 +100,8 @@ local function attachDetailed3DModel(tool, itemKey)
 
 		local light = Instance.new("PointLight", head)
 		light.Color = Color3.fromRGB(255, 160, 50)
-		light.Range = 25
-		light.Brightness = 2.5
+		light.Range = 18
+		light.Brightness = 0.6
 
 	elseif itemKey == "Spear" then
 		-- Рукоять хвата (Handle) в точке (0,0,0) с кожаной обмоткой
@@ -224,40 +224,40 @@ local function attachDetailed3DModel(tool, itemKey)
 		addSubPart("Cap", Vector3.new(0.7, 0.3, 0.7), CFrame.new(0, 0.8, 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
 
 	elseif itemKey == "Parts" then
-		handle.Size = Vector3.new(0.8, 0.8, 0.8)
+		handle.Size = Vector3.new(0.45, 0.45, 0.45)
 		handle.Material = Enum.Material.Metal
 		handle.BrickColor = BrickColor.new("Cyan")
 
-		addSubPart("Core", Vector3.new(0.5, 0.5, 0.5), CFrame.new(0, 0, 0), Enum.Material.Neon, BrickColor.new("Bright blue"))
+		addSubPart("Core", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0, 0, 0), Enum.Material.Neon, BrickColor.new("Bright blue"))
 
 	elseif itemKey == "Stone" then
-		handle.Size = Vector3.new(1.2, 0.9, 1.1)
+		handle.Size = Vector3.new(0.6, 0.45, 0.55)
 		handle.Material = Enum.Material.Slate
 		handle.BrickColor = BrickColor.new("Medium stone grey")
 
-		addSubPart("Snow", Vector3.new(0.9, 0.2, 0.8), CFrame.new(0, 0.5, 0), Enum.Material.Snow, BrickColor.new("White"))
+		addSubPart("Snow", Vector3.new(0.45, 0.1, 0.4), CFrame.new(0, 0.25, 0), Enum.Material.Snow, BrickColor.new("White"))
 
 	elseif itemKey == "Planks" then
-		handle.Size = Vector3.new(0.8, 0.4, 2.2)
+		handle.Size = Vector3.new(0.4, 0.2, 1.1)
 		handle.Material = Enum.Material.WoodPlanks
 		handle.BrickColor = BrickColor.new("Dark orange")
 
-		addSubPart("P2", Vector3.new(0.8, 0.4, 2.0), CFrame.new(0, 0.4, 0.1), Enum.Material.WoodPlanks, BrickColor.new("Medium orange"))
+		addSubPart("P2", Vector3.new(0.4, 0.2, 1.0), CFrame.new(0, 0.2, 0.05), Enum.Material.WoodPlanks, BrickColor.new("Medium orange"))
 
 	elseif itemKey == "Branches" then
-		handle.Size = Vector3.new(0.4, 0.4, 2.4)
+		handle.Size = Vector3.new(0.2, 0.2, 1.2)
 		handle.Material = Enum.Material.Wood
 		handle.BrickColor = BrickColor.new("Reddish brown")
-		addSubPart("Twig2", Vector3.new(0.3, 0.3, 2.0), CFrame.new(0, 0.1, 0) * CFrame.Angles(0, math.rad(35), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
+		addSubPart("Twig2", Vector3.new(0.15, 0.15, 1.0), CFrame.new(0, 0.05, 0) * CFrame.Angles(0, math.rad(35), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
 
 	elseif itemKey == "Fiber" then
-		handle.Size = Vector3.new(0.6, 1.2, 0.6)
+		handle.Size = Vector3.new(0.3, 0.6, 0.3)
 		handle.Material = Enum.Material.Grass
 		handle.BrickColor = BrickColor.new("Sand green")
-		addSubPart("Leaf2", Vector3.new(0.5, 1.0, 0.5), CFrame.new(0, 0.1, 0) * CFrame.Angles(0, math.rad(45), 0), Enum.Material.Grass, BrickColor.new("Bright yellow"))
+		addSubPart("Leaf2", Vector3.new(0.25, 0.5, 0.25), CFrame.new(0, 0.05, 0) * CFrame.Angles(0, math.rad(45), 0), Enum.Material.Grass, BrickColor.new("Bright yellow"))
 
 	elseif itemKey == "WolfPelt" or itemKey == "YetiPelt" then
-		handle.Size = Vector3.new(1.4, 0.3, 1.4)
+		handle.Size = Vector3.new(0.7, 0.15, 0.7)
 		handle.Material = Enum.Material.Fabric
 		handle.BrickColor = (itemKey == "WolfPelt") and BrickColor.new("Dark stone grey") or BrickColor.new("White")
 
@@ -513,14 +513,6 @@ Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(char)
 		player:SetAttribute("Torch", player:GetAttribute("Torch") or 0)
 		player:SetAttribute("HasTorchInHand", false)
-		
-		task.delay(0.5, function()
-			if player.Parent then
-				-- Выдаем стартовое Копье и Факел в Backpack игрока при спавне
-				giveItemToPlayer(player, "Spear", 1)
-				giveItemToPlayer(player, "Torch", 1)
-			end
-		end)
 	end)
 end)
 

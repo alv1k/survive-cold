@@ -14,10 +14,18 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 
+-- 0. Очистка предыдущих звуковых инстансов при перезагрузке (HotSwap)
+for _, soundName in ipairs({"WindAmbient", "BlizzardHowl", "FrostHeartbeat", "SnowStep"}) do
+	local existingSound = SoundService:FindFirstChild(soundName)
+	if existingSound then
+		existingSound:Destroy()
+	end
+end
+
 -- 1. Создание фоновых звуков
 local windSound = Instance.new("Sound")
 windSound.Name = "WindAmbient"
-windSound.SoundId = "rbxassetid://9114223171" -- Зимний ветер
+windSound.SoundId = "rbxassetid://6455667685" -- Зимний ветер
 windSound.Looped = true
 windSound.Volume = 0.25
 windSound.Parent = SoundService
@@ -25,7 +33,7 @@ windSound:Play()
 
 local blizzardSound = Instance.new("Sound")
 blizzardSound.Name = "BlizzardHowl"
-blizzardSound.SoundId = "rbxassetid://9114223171" -- Свирепый вой метели
+blizzardSound.SoundId = "rbxassetid://5739033130" -- Свирепый вой метели
 blizzardSound.Looped = true
 blizzardSound.Volume = 0
 blizzardSound.PlaybackSpeed = 0.85
@@ -34,7 +42,7 @@ blizzardSound:Play()
 
 local heartbeatSound = Instance.new("Sound")
 heartbeatSound.Name = "FrostHeartbeat"
-heartbeatSound.SoundId = "rbxassetid://9114223171"
+heartbeatSound.SoundId = "rbxassetid://2867269913" -- Стук сердца
 heartbeatSound.Looped = true
 heartbeatSound.Volume = 0
 heartbeatSound.PlaybackSpeed = 1.3
@@ -44,7 +52,7 @@ heartbeatSound:Play()
 -- 2. Звук шагов по снегу
 local stepSound = Instance.new("Sound")
 stepSound.Name = "SnowStep"
-stepSound.SoundId = "rbxassetid://9114223171"
+stepSound.SoundId = "rbxassetid://10787645847" -- Хруст снега
 stepSound.Volume = 0.35
 stepSound.PlaybackSpeed = 1.6
 stepSound.Parent = SoundService

@@ -64,21 +64,17 @@ function TorchModel.create(parent)
 
 	local light = Instance.new("PointLight", head)
 	light.Color = Color3.fromRGB(255, 160, 50)
-	light.Range = 28
-	light.Brightness = 2.8
+	light.Range = 18
+	light.Brightness = 0.6
 	light.Shadows = true
 
 	-- Сварка
 	for _, p in ipairs(container:GetChildren()) do
 		if p:IsA("BasePart") and p ~= handle then
-			local relCF = handle.CFrame:ToObjectSpace(p.CFrame)
-			local weld = Instance.new("Weld")
-			weld.Name = "Weld_" .. p.Name
+			local weld = Instance.new("WeldConstraint")
 			weld.Part0 = handle
 			weld.Part1 = p
-			weld.C0 = relCF
-			weld.C1 = CFrame.identity
-			weld.Parent = handle
+			weld.Parent = p
 		end
 	end
 

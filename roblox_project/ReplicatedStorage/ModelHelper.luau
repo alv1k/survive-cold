@@ -1,9 +1,9 @@
 --[[
     ReplicatedStorage/ModelHelper.luau
     Универсальный менеджер и фабрика 3D-моделей для Survive the Cold:
-    1. Автоматический поиск импортированных MeshPart моделей (ReplicatedStorage.Models / Workspace / ServerStorage).
-    2. Автоматический fallback на сгенерированные модули (ReplicatedStorage.GeneratedModels).
-    3. Автоматическая подготовка: Unanchor, CanCollide = false, Massless = true, точный Weld с C0/C1.
+    1. Автоматическая генерация высокоточных 3D-моделей из ReplicatedStorage.GeneratedModels.
+    2. Поиск импортированных MeshPart моделей (ReplicatedStorage.Models / ServerStorage).
+    3. Автоматическая подготовка: Unanchor, CanCollide, Massless, точный Weld с C0/C1.
     4. Автоматическая сборка в Tool для рук и Dropped Model для земли.
 --]]
 
@@ -12,6 +12,26 @@ local Workspace = game:GetService("Workspace")
 
 local ModelHelper = {}
 
+local function isValid3DModel(inst)
+	if not inst then return false end
+	if inst:IsA("MeshPart") then
+		return inst.MeshId ~= "" and inst.MeshId ~= "rbxassetid://0"
+	end
+	if inst:IsA("BasePart") then return true end
+	if inst:IsA("Model") or inst:IsA("Folder") then
+		for _, desc in ipairs(inst:GetDescendants()) do
+			if desc:IsA("MeshPart") then
+				if desc.MeshId ~= "" and desc.MeshId ~= "rbxassetid://0" then
+					return true
+				end
+			elseif desc:IsA("BasePart") then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 -- Поиск мастер-модели предмета
 function ModelHelper.findTemplate(itemKey)
 	local lowerKey = string.lower(itemKey)
@@ -19,40 +39,94 @@ function ModelHelper.findTemplate(itemKey)
 	local function isMatch(name)
 		local l = string.lower(name)
 		if l == lowerKey then return true end
+
+		if lowerKey == "parts" or lowerKey == "part" or lowerKey == "детали" or lowerKey == "деталь" then
+			if (l == "parts" or l == "part" or string.find(l, "детал", 1, true) or string.find(l, "шестерен", 1, true)) and not string.find(l, "chest", 1, true) then
+				return true
+			end
+			return false
+		end
+
 		if string.find(l, lowerKey, 1, true) ~= nil then return true end
 		if lowerKey == "spear" then
 			if string.find(l, "spear", 1, true) or string.find(l, "копье", 1, true) or string.find(l, "копьё", 1, true) then
 				return true
 			end
 		end
+		if lowerKey == "torch" then
+			if string.find(l, "torch", 1, true) or string.find(l, "факел", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "chest_parts" or lowerKey == "chestparts" or lowerKey == "partchest" or lowerKey == "homepartchest" then
+			if string.find(l, "parts", 1, true) and string.find(l, "chest", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "campfire" or lowerKey == "campfirekit" or lowerKey == "костер" or lowerKey == "костёр" then
+			if string.find(l, "campfire", 1, true) or string.find(l, "fire", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "rabbittrap" or lowerKey == "rabbit_trap" or lowerKey == "капкан" then
+			if string.find(l, "rabbit", 1, true) or string.find(l, "trap", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "spiketrap" or lowerKey == "spike_trap" or lowerKey == "шипы" then
+			if string.find(l, "spike", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "icecrystal" or lowerKey == "ice_crystal" or lowerKey == "iceblock" or lowerKey == "глыба" then
+			if string.find(l, "crystal", 1, true) or string.find(l, "ice", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "branches" or lowerKey == "branch" or lowerKey == "ветки" or lowerKey == "ветка" or lowerKey == "палки" then
+			if string.find(l, "branch", 1, true) or string.find(l, "stick", 1, true) or string.find(l, "ветк", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "stone" or lowerKey == "rock" or lowerKey == "boulder" or lowerKey == "камень" or lowerKey == "валун" then
+			if string.find(l, "stone", 1, true) or string.find(l, "boulder", 1, true) or string.find(l, "rock", 1, true) or string.find(l, "камен", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "fiber" or lowerKey == "straw" or lowerKey == "волокно" or lowerKey == "трава" then
+			if string.find(l, "fiber", 1, true) or string.find(l, "straw", 1, true) or string.find(l, "волокн", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "planks" or lowerKey == "plank" or lowerKey == "wood" or lowerKey == "доски" or lowerKey == "доска" then
+			if string.find(l, "plank", 1, true) or string.find(l, "доск", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "firtree" or lowerKey == "fir_tree" or lowerKey == "tree" or lowerKey == "елка" or lowerKey == "ель" or lowerKey == "дерево" then
+			if string.find(l, "fir", 1, true) or string.find(l, "tree", 1, true) or string.find(l, "ель", 1, true) or string.find(l, "елк", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "wolf" or lowerKey == "волк" then
+			if string.find(l, "wolf", 1, true) or string.find(l, "волк", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "yeti" or lowerKey == "йети" then
+			if string.find(l, "yeti", 1, true) or string.find(l, "йети", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "bigfoot" or lowerKey == "бигфут" or lowerKey == "sasquatch" then
+			if string.find(l, "bigfoot", 1, true) or string.find(l, "бигфут", 1, true) or string.find(l, "sasquatch", 1, true) then
+				return true
+			end
+		end
 		return false
 	end
 
-	-- 1. ReplicatedStorage.Models (импортированные сетки MeshPart)
-	local modelsFolder = ReplicatedStorage:FindFirstChild("Models")
-	if modelsFolder then
-		for _, child in ipairs(modelsFolder:GetChildren()) do
-			if isMatch(child.Name) and (child:IsA("Model") or child:IsA("Folder") or child:IsA("BasePart")) then
-				-- Убедимся, что это не пустая папка или StringValue
-				if child:IsA("BasePart") or #child:GetDescendants() > 0 then
-					print(string.format("🔍 [ModelHelper] Найдена 3D-модель '%s' в ReplicatedStorage.Models: '%s'", itemKey, child.Name))
-					return child
-				end
-			end
-		end
-	end
-
-	-- 2. Workspace (импортированные меши в сцене)
-	for _, child in ipairs(Workspace:GetChildren()) do
-		if isMatch(child.Name) and not child:FindFirstChildOfClass("Humanoid") and (child:IsA("Model") or child:IsA("Folder") or child:IsA("BasePart")) then
-			if child:IsA("BasePart") or #child:GetDescendants() > 0 then
-				print(string.format("🔍 [ModelHelper] Найдена 3D-модель '%s' в Workspace: '%s'", itemKey, child.Name))
-				return child
-			end
-		end
-	end
-
-	-- 3. ReplicatedStorage.GeneratedModels (автоматически скомпилированные 3D-модули)
+	-- 1. ReplicatedStorage.GeneratedModels (высокоточные 3D-модели из процедурных модулей)
 	local genFolder = ReplicatedStorage:FindFirstChild("GeneratedModels")
 	if genFolder then
 		local modScript = genFolder:FindFirstChild(itemKey)
@@ -68,23 +142,29 @@ function ModelHelper.findTemplate(itemKey)
 			local success, genModule = pcall(require, modScript)
 			if success and genModule and type(genModule.create) == "function" then
 				local generated = genModule.create(nil)
-				if generated then
-					print(string.format("⚡ [ModelHelper] Сгенерирована высокоточная 3D-модель '%s' из GeneratedModels", itemKey))
+				if generated and isValid3DModel(generated) then
 					return generated
 				end
 			end
 		end
 	end
 
-	-- 4. ServerStorage
+	-- 2. ReplicatedStorage.Models (импортированные сетки MeshPart, если они импортированы в студии)
+	local modelsFolder = ReplicatedStorage:FindFirstChild("Models")
+	if modelsFolder then
+		for _, child in ipairs(modelsFolder:GetDescendants()) do
+			if isMatch(child.Name) and isValid3DModel(child) then
+				return child
+			end
+		end
+	end
+
+	-- 3. ServerStorage
 	local serverStorage = game:GetService("ServerStorage")
 	if serverStorage then
 		for _, child in ipairs(serverStorage:GetChildren()) do
-			if isMatch(child.Name) and (child:IsA("Model") or child:IsA("Folder") or child:IsA("BasePart")) then
-				if child:IsA("BasePart") or #child:GetDescendants() > 0 then
-					print(string.format("🔍 [ModelHelper] Найдена модель '%s' в ServerStorage: '%s'", itemKey, child.Name))
-					return child
-				end
+			if isMatch(child.Name) and isValid3DModel(child) then
+				return child
 			end
 		end
 	end
@@ -96,11 +176,9 @@ end
 function ModelHelper.assembleTool(itemKey, parentTool)
 	local template = ModelHelper.findTemplate(itemKey)
 	if not template then 
-		print(string.format("⚠️ [ModelHelper] Шаблон 3D-модели для '%s' не найден", itemKey))
 		return nil 
 	end
 
-	-- Если template уже был создан через GeneratedModels, используем его, иначе клонируем
 	local clone = (template.Parent == nil) and template or template:Clone()
 	local handle = nil
 
@@ -143,35 +221,29 @@ function ModelHelper.assembleTool(itemKey, parentTool)
 		handle.Massless = true
 		handle.Parent = parentTool
 
-		-- Переносим остальные части и свариваем через математический Weld (C0/C1)
+		-- Переносим остальные части и свариваем через современный WeldConstraint
 		for _, otherPart in ipairs(allParts) do
 			if otherPart ~= handle then
 				otherPart.Anchored = false
 				otherPart.CanCollide = false
 				otherPart.Massless = true
-				
-				local relCF = handle.CFrame:ToObjectSpace(otherPart.CFrame)
 				otherPart.Parent = parentTool
 
-				-- Удаляем старые Weld
 				for _, w in ipairs(otherPart:GetChildren()) do
-					if w:IsA("Weld") or w:IsA("WeldConstraint") then
+					if w:IsA("Weld") or w:IsA("ManualWeld") or w:IsA("WeldConstraint") then
 						w:Destroy()
 					end
 				end
 
-				local weld = Instance.new("Weld")
+				local weld = Instance.new("WeldConstraint")
 				weld.Name = "Weld_" .. otherPart.Name
 				weld.Part0 = handle
 				weld.Part1 = otherPart
-				weld.C0 = relCF
-				weld.C1 = CFrame.identity
-				weld.Parent = handle
+				weld.Parent = otherPart
 			end
 		end
 
 		clone:Destroy()
-		print(string.format("✅ [ModelHelper] Tool '%s' успешно собран из %d мешей модели!", itemKey, #allParts))
 		return handle
 	end
 
@@ -184,23 +256,21 @@ function ModelHelper.assembleDropModel(itemName, pos)
 	if not template then return nil end
 
 	local clone = (template.Parent == nil) and template or template:Clone()
-	local root = nil
 	local randYaw = CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
 
-	-- Для длинных предметов (копье, факел) укладываем их горизонтально на землю
 	local lower = string.lower(itemName)
 	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
-	local flatTilt = isElongated and CFrame.Angles(0, 0, math.rad(90)) or CFrame.identity
+	local flatTilt = isElongated and CFrame.Angles(math.rad(90), 0, 0) or CFrame.identity
 	local targetCF = CFrame.new(pos) * randYaw * flatTilt
 
 	if clone:IsA("BasePart") then
-		root = clone
-		root.Name = "Dropped_" .. itemName
-		root.CFrame = targetCF
-		root.Anchored = false
-		root.CanCollide = true
-		root.Massless = false
-		return root
+		clone.Name = "Dropped_" .. itemName
+		clone.CFrame = targetCF
+		clone.Anchored = false
+		clone.CanCollide = true
+		clone.Massless = false
+		clone.Transparency = 0
+		return clone
 	else
 		local allParts = {}
 		for _, desc in ipairs(clone:GetDescendants()) do
@@ -215,42 +285,42 @@ function ModelHelper.assembleDropModel(itemName, pos)
 		end
 
 		local primary = clone:FindFirstChild("Handle") or clone.PrimaryPart or allParts[1]
-		local primaryOriginCF = primary.CFrame
-
-		root = Instance.new("Part")
-		root.Name = "Dropped_" .. itemName
-		root.Size = Vector3.new(0.6, 0.6, 0.6)
-		root.Transparency = 1
-		root.CFrame = targetCF
-		root.Anchored = false
-		root.CanCollide = true
-		root.Massless = false
+		clone.PrimaryPart = primary
+		clone.Name = "Dropped_" .. itemName
+		clone:PivotTo(targetCF)
 
 		for _, p in ipairs(allParts) do
-			local relCF = primaryOriginCF:ToObjectSpace(p.CFrame)
-			p.CFrame = root.CFrame * relCF
 			p.Anchored = false
-			p.CanCollide = false
-			p.Massless = true
-			p.Parent = root
+			p.Transparency = 0
+			p.CastShadow = true
 
 			for _, w in ipairs(p:GetChildren()) do
-				if w:IsA("Weld") or w:IsA("WeldConstraint") then
+				if w:IsA("Weld") or w:IsA("ManualWeld") then
 					w:Destroy()
 				end
 			end
 
-			local weld = Instance.new("Weld")
-			weld.Name = "Weld_" .. p.Name
-			weld.Part0 = root
-			weld.Part1 = p
-			weld.C0 = relCF
-			weld.C1 = CFrame.identity
-			weld.Parent = root
+			if p == primary then
+				p.CanCollide = true
+				p.Massless = false
+			else
+				p.CanCollide = false
+				p.Massless = true
+				local wc = p:FindFirstChildOfClass("WeldConstraint")
+				if not wc then
+					wc = Instance.new("WeldConstraint")
+					wc.Name = "Weld_" .. p.Name
+					wc.Part0 = primary
+					wc.Part1 = p
+					wc.Parent = p
+				else
+					wc.Part0 = primary
+					wc.Part1 = p
+				end
+			end
 		end
 
-		clone:Destroy()
-		return root
+		return clone
 	end
 end
 

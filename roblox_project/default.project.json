@@ -3,10 +3,7 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "$path": "ReplicatedStorage",
-      "Models": {
-        "$path": "assets/models"
-      }
+      "$path": "ReplicatedStorage"
     },
     "ServerScriptService": {
       "$path": "ServerScriptService"

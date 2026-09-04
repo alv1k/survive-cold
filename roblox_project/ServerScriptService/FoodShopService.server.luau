@@ -358,19 +358,19 @@ local function buildFoodShopBuilding()
 	roof.BrickColor = BrickColor.new("White")
 	roof.Parent = FoodShopFolder
 
-	-- 7. Потолочное теплое освещение (Без костров и дыма)
+	-- 7. Потолочное теплое освещение (Без костров и ослепляющего неона)
 	local ceilingLightPart = Instance.new("Part", FoodShopFolder)
 	ceilingLightPart.Name = "CeilingLight"
-	ceilingLightPart.Size = Vector3.new(3, 0.5, 3)
+	ceilingLightPart.Size = Vector3.new(3, 0.4, 3)
 	ceilingLightPart.Position = FOOD_SHOP_POSITION + Vector3.new(0, 9.2, 0)
 	ceilingLightPart.Anchored = true
-	ceilingLightPart.Material = Enum.Material.Neon
-	ceilingLightPart.BrickColor = BrickColor.new("Bright yellow")
+	ceilingLightPart.Material = Enum.Material.SmoothPlastic
+	ceilingLightPart.Color = Color3.fromRGB(245, 235, 205)
 
 	local shopLight = Instance.new("PointLight", ceilingLightPart)
-	shopLight.Color = Color3.fromRGB(255, 220, 140)
-	shopLight.Range = 36
-	shopLight.Brightness = 2.5
+	shopLight.Color = Color3.fromRGB(255, 220, 150)
+	shopLight.Range = 18
+	shopLight.Brightness = 0.6
 
 	----------------------------------------------------------------------------
 	-- 🛒 РАССТАНОВКА СТЕЛЛАЖЕЙ И ПОЛОК С ЕДОЙ (ПО 4 ШТ КАЖДАЯ)

@@ -8,6 +8,7 @@
 --]]
 
 local UserInputService = game:GetService("UserInputService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -17,8 +18,14 @@ local playerGui = player:WaitForChild("PlayerGui")
 local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
 local CraftItemRemote = RemotesFolder and RemotesFolder:WaitForChild("CraftItem", 10)
 local UpgradeWorkbenchRemote = RemotesFolder and RemotesFolder:WaitForChild("UpgradeWorkbench", 10)
+local OpenWorkbenchRemote = RemotesFolder and RemotesFolder:WaitForChild("OpenWorkbench", 5)
 local CraftingRecipes = require(ReplicatedStorage:WaitForChild("CraftingRecipes", 10))
 local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
+
+local existingWorkbenchGui = playerGui:FindFirstChild("WorkbenchScreenGui")
+if existingWorkbenchGui then
+	existingWorkbenchGui:Destroy()
+end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "WorkbenchScreenGui"
@@ -78,6 +85,7 @@ local closeBtn = IconConfig.CreateIconButton(header, "UI_Close", UDim2.new(0, 36
 closeBtn.Name = "CloseButton"
 closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
+closeBtn.Modal = true -- Разблокирует мышь и курсор при открытии интерфейса
 
 -- 2. Вкладки категорий
 local catBar = Instance.new("Frame")
@@ -408,38 +416,72 @@ upgradeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
-closeBtn.MouseButton1Click:Connect(function()
+local function closeWorkbench()
 	screenGui.Enabled = false
-end)
+	closeBtn.Modal = false
+end
+
+closeBtn.MouseButton1Click:Connect(closeWorkbench)
 
 local function openWorkbench()
 	screenGui.Enabled = true
+	closeBtn.Modal = true
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	UserInputService.MouseIconEnabled = true
 	renderRecipes()
 end
 
-local function bindWorkbenchPrompt()
+local function getWorkbenchDistance()
+	local char = player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return math.huge end
+
 	local house = workspace:FindFirstChild("WorldStructures") and workspace.WorldStructures:FindFirstChild("PlayerHouse")
 	local wb = house and house:FindFirstChild("Workbench")
-	if wb then
-		local prompt = wb:FindFirstChildOfClass("ProximityPrompt")
-		if prompt and not prompt:GetAttribute("Bound") then
-			prompt:SetAttribute("Bound", true)
-			prompt.Triggered:Connect(function(triggerPlayer)
-				if triggerPlayer == player then
-					openWorkbench()
-				end
-			end)
-		end
+	if wb and wb:IsA("BasePart") then
+		return (hrp.Position - wb.Position).Magnitude
 	end
+	return (hrp.Position - Vector3.new(-12, 2.6, 8)).Magnitude
 end
 
-workspace.DescendantAdded:Connect(function(desc)
-	if desc.Name == "Workbench" then
-		task.wait(0.2)
-		bindWorkbenchPrompt()
+-- 1. Обработка клавиш [E], [Esc], [Tab]
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if input.KeyCode == Enum.KeyCode.E then
+		if screenGui.Enabled then
+			closeWorkbench()
+		else
+			if not gameProcessed and getWorkbenchDistance() <= 18 then
+				openWorkbench()
+			end
+		end
+	elseif screenGui.Enabled and (input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.Tab) then
+		closeWorkbench()
 	end
 end)
-bindWorkbenchPrompt()
+
+-- 2. Глобальный слушатель ProximityPrompt на клиенте
+ProximityPromptService.PromptTriggered:Connect(function(prompt, triggerPlayer)
+	if triggerPlayer and triggerPlayer ~= player then return end
+	local parent = prompt.Parent
+	local promptName = prompt.Name
+	local objText = prompt.ObjectText or ""
+	local actText = prompt.ActionText or ""
+
+	if promptName == "WorkbenchPrompt"
+		or (parent and parent.Name == "Workbench")
+		or prompt:GetAttribute("IsWorkbench")
+		or string.find(string.lower(objText), "верстак")
+		or string.find(string.lower(actText), "верстак") then
+		openWorkbench()
+	end
+end)
+
+-- 3. Слушатель удаленного вызова от сервера
+if OpenWorkbenchRemote then
+	OpenWorkbenchRemote.OnClientEvent:Connect(function()
+		openWorkbench()
+	end)
+end
 
 -- Автоматический пересчет рецептов при изменении любых атрибутов или инвентаря
 player.AttributeChanged:Connect(function()

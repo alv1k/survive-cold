@@ -133,8 +133,8 @@ EquipItemRemote.OnServerEvent:Connect(function(player, itemKey)
 
 		local light = Instance.new("PointLight", itemPart)
 		light.Color = Color3.fromRGB(255, 160, 50)
-		light.Range = 25
-		light.Brightness = 2.5
+		light.Range = 18
+		light.Brightness = 0.6
 	end
 
 	itemPart.Parent = char

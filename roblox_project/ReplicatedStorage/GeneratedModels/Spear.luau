@@ -221,13 +221,9 @@ function SpearModel.create(parent)
 	-- =========================================================================
 	for _, p in ipairs(container:GetChildren()) do
 		if p:IsA("BasePart") and p ~= handle then
-			local relCF = handle.CFrame:ToObjectSpace(p.CFrame)
-			local weld = Instance.new("Weld")
-			weld.Name = "Weld_" .. p.Name
+			local weld = Instance.new("WeldConstraint")
 			weld.Part0 = handle
 			weld.Part1 = p
-			weld.C0 = relCF
-			weld.C1 = CFrame.identity
 			weld.Parent = p
 		end
 	end

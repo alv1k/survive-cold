@@ -13,6 +13,11 @@ local player = Players.LocalPlayer
 
 local playerGui = player:WaitForChild("PlayerGui")
 
+local existingGui = playerGui:FindFirstChild("WelcomeGuideGui")
+if existingGui then
+	existingGui:Destroy()
+end
+
 local guideGui = Instance.new("ScreenGui")
 guideGui.Name = "WelcomeGuideGui"
 guideGui.ResetOnSpawn = false
@@ -63,6 +68,7 @@ local closeBtn, closeImg = IconConfig.CreateIconButton(header, "UI_Close", UDim2
 closeBtn.Name = "CloseButton"
 closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
 closeBtn.AnchorPoint = Vector2.new(0, 0.5)
+closeBtn.Modal = true
 
 
 -- 2. Панель переключения вкладок
@@ -116,7 +122,7 @@ local TABS_DATA = {
 		       "• [ЛКМ (4 клика)] — Рубка деревьев, камней, кустов и веток для сбора ресурсов!\n" ..
 		       "• [1..9] — Выбор слота в хотбаре по центру снизу | [G] — Выбросить 1 предмет\n" ..
 		       "• [F] — Быстро покормить питомца | [T] — Переключить режим (Поход / Дом)\n" ..
-		       "• [E] — Открыть верстак, сундуки деталей, магазины одежды и продуктов"
+		       "• [E] — Открыть верстак, магазины одежды и продуктов"
 	},
 	{
 		Title = "🍗 3. Тепло и Сытость",
@@ -131,8 +137,8 @@ local TABS_DATA = {
 		Title = "🛠️ 4. Верстак и Дом",
 		Body = "🏡 ЖИЛОЙ ДОМ:\n" ..
 		       "• Спавн происходит внутри дома. При смерти рюкзак теряется, но ВСЁ ВНУТРИ ДОМА СОХРАНЯЕТСЯ НАВСЕГДА!\n\n" ..
-		       "⚙️ СУНДУКИ ДЕТАЛЕЙ (16 шт на карте):\n" ..
-		       "• Дают 1–2 детали для прокачки верстака и авто-турелей!\n\n" ..
+		       "⚙️ ДЕТАЛИ (PARTS):\n" ..
+		       "• Собирайте детали у дома и в дикой природе для прокачки верстака и авто-турелей!\n\n" ..
 		       "🏹 СУМКА БОЕПРИПАСОВ (AMMO POUCH):\n" ..
 		       "• Снаряды для рогатки (🪨) и патроны револьвера (💥) НЕ занимают слоты инвентаря!"
 	},
@@ -246,6 +252,7 @@ selectTab(1)
 
 local function closeAndStartGame()
 	mainFrame.Visible = false
+	closeBtn.Modal = false
 	player:SetAttribute("IsGameStarted", true)
 	task.spawn(function()
 		local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:WaitForChild("Remotes", 5)

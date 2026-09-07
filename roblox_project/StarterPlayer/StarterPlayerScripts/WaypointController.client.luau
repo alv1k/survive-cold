@@ -16,36 +16,26 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
 
+local GameConfig = require(ReplicatedStorage:WaitForChild("GameConfig"))
+
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
--- Позиции ключевых объектов (50м и 70м от дома)
-local LOCATIONS = {
-	PlayerHouse = {
-		Name = "Дом",
-		Pos = Vector3.new(0, 14, 0),
-		Color = Color3.fromRGB(56, 189, 248),
-		BgColor = Color3.fromRGB(15, 23, 42),
-		MaxDist = 3500,
-		IsPlayerHouse = true
-	},
-	FoodShop = {
-		Name = "Лавка",
-		Pos = Vector3.new(-50, 12, 0),
-		Color = Color3.fromRGB(250, 204, 21),
-		BgColor = Color3.fromRGB(15, 23, 42),
-		IconKey = "Soup",
-		MaxDist = 3000
-	},
-	ClothingShop = {
-		Name = "Одежда",
-		Pos = Vector3.new(70, 12, 0),
-		Color = Color3.fromRGB(168, 85, 247),
-		BgColor = Color3.fromRGB(15, 23, 42),
-		IconKey = "Clothing_4",
-		MaxDist = 3000
+-- Позиции ключевых объектов из GameConfig
+local LOCATIONS = {}
+for key, loc in pairs(GameConfig.Locations) do
+	local pos = loc.Position
+	local height = loc.WaypointHeight or 12
+	LOCATIONS[key] = {
+		Name = loc.Name,
+		Pos = Vector3.new(pos.X, height, pos.Z),
+		Color = loc.Color,
+		BgColor = loc.BgColor,
+		IconKey = loc.IconKey,
+		MaxDist = loc.MaxDist or 3000,
+		IsPlayerHouse = loc.IsPlayerHouse or false
 	}
-}
+end
 
 local activeWaypoints = {}
 

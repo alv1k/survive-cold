@@ -20,11 +20,11 @@ WorldChestsFolder.Name = "WorldChests"
 local WorldPartChestsFolder = workspace:FindFirstChild("WorldPartChests") or Instance.new("Folder", workspace)
 WorldPartChestsFolder.Name = "WorldPartChests"
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
 
@@ -244,17 +244,7 @@ local function getPartsLoot(targetCount)
 end
 
 local function getGroundHeight(x, z)
-	local rayOrigin = Vector3.new(x, 150, z)
-	local rayDirection = Vector3.new(0, -300, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 0
+	return SurfaceUtil.getGroundHeight(x, z)
 end
 
 -- Плавная медленная анимация исчезновения сундука (Fade Out)
@@ -318,8 +308,7 @@ end
 -- Создание интерактивного сундука
 local function createInteractiveChest(index, loc, isPartsChest)
 	local groundY = getGroundHeight(loc.X, loc.Z)
-	-- Поднимаем на 10 пунктов (+1.0 студ над снежным покровом)
-	local chestPos = Vector3.new(loc.X, math.max(1.2, groundY + HEIGHT_OFFSET), loc.Z)
+	local chestPos = Vector3.new(loc.X, groundY, loc.Z)
 	local randYaw = math.rad(math.random(0, 360))
 	local chestCF = CFrame.new(chestPos) * CFrame.Angles(0, randYaw, 0)
 
@@ -389,13 +378,12 @@ local function createInteractiveChest(index, loc, isPartsChest)
 		local items = isPartsChest and getPartsLoot(ITEMS_PER_CHEST) or getRandomSupplyLoot(ITEMS_PER_CHEST)
 
 		for i, dropData in ipairs(items) do
-			local angle = (i / #items) * (math.pi * 2)
-			local dropOffset = Vector3.new(math.cos(angle) * 2.4, 0, math.sin(angle) * 2.4)
-			local dropPos = chestPos + dropOffset
+			local angle = (i / #items) * (math.pi * 2) + math.rad((index * 23) % 45)
+			local radius = 3.2 + (i % 2) * 0.5
+			local dropOffset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+			local dropPos = Vector3.new(chestPos.X + dropOffset.X, groundY, chestPos.Z + dropOffset.Z)
 
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, dropData.Item, dropData.Count, dropPos)
-			end
+			InventoryService.dropItem(player, dropData.Item, dropData.Count, dropPos)
 		end
 
 		if isPartsChest then

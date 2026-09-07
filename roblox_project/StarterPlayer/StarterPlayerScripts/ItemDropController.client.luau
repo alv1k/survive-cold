@@ -11,9 +11,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-local DropItemRemote = RemotesFolder and RemotesFolder:WaitForChild("DropItem", 10)
-local ShowNotificationRemote = RemotesFolder and RemotesFolder:WaitForChild("ShowNotification", 10)
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local DropItemRemote = Network.getEvent("DropItem")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end

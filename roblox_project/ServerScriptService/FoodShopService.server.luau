@@ -12,16 +12,14 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local GameConfig = require(ReplicatedStorage:WaitForChild("GameConfig"))
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
-local BuyFoodRemote = RemotesFolder:FindFirstChild("BuyFood") or Instance.new("RemoteFunction", RemotesFolder)
-BuyFoodRemote.Name = "BuyFood"
+local BuyFoodRemote = Network.getFunction("BuyFood")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
-
-local FOOD_SHOP_POSITION = Vector3.new(-50, 4.0, 0)
+local FOOD_SHOP_POSITION = GameConfig.Locations.FoodShop.Position
 
 local FoodShopFolder = workspace:FindFirstChild("FoodShop") or Instance.new("Folder", workspace)
 FoodShopFolder.Name = "FoodShop"
@@ -125,15 +123,7 @@ local function spawnShelfItem(foodKey, slotIndex)
 		if isClaiming then return end
 		isClaiming = true
 
-		local given = false
-		if _G.GiveItemToPlayer then
-			given = _G.GiveItemToPlayer(player, foodKey, 1)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				given = giveBindable:Invoke(player, foodKey, 1)
-			end
-		end
+		local given = InventoryService.giveItem(player, foodKey, 1)
 
 		if given then
 			shelfData.Items[slotIndex] = nil
@@ -185,15 +175,7 @@ local function handleBuyFood(player, foodKey)
 		return { Success = false, Message = "Товар закончился на полках магазина!" }
 	end
 
-	local given = false
-	if _G.GiveItemToPlayer then
-		given = _G.GiveItemToPlayer(player, foodKey, 1)
-	else
-		local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-		if giveBindable and giveBindable:IsA("BindableFunction") then
-			given = giveBindable:Invoke(player, foodKey, 1)
-		end
-	end
+	local given = InventoryService.giveItem(player, foodKey, 1)
 
 	if given then
 		shelfData.Items[availableSlot] = nil

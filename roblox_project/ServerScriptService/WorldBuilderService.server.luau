@@ -12,6 +12,9 @@
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace.Terrain
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
+
 local WorldFolder = workspace:FindFirstChild("WorldStructures") or Instance.new("Folder", workspace)
 WorldFolder.Name = "WorldStructures"
 
@@ -49,6 +52,17 @@ end
 local function generateSnowTerrain()
 	-- Заливка основной карты снегом 3400x3400 studs
 	Terrain:FillBlock(CFrame.new(0, -5, 0), Vector3.new(3400, 10, 3400), Enum.Material.Snow)
+
+	-- 100% защита от падения в пустоту: Монолитный базовый слой (Bedrock Plate)
+	local bedrock = Instance.new("Part")
+	bedrock.Name = "WorldBedrockPlate"
+	bedrock.Size = Vector3.new(3800, 10, 3800)
+	bedrock.Position = Vector3.new(0, -5, 0)
+	bedrock.Anchored = true
+	bedrock.CanCollide = true
+	bedrock.Transparency = 1
+	bedrock.Material = Enum.Material.Slate
+	bedrock.Parent = WorldFolder
 
 	-- Большое замерзшее озеро на западе
 	Terrain:FillBlock(CFrame.new(-650, -4.5, -350), Vector3.new(450, 9.5, 400), Enum.Material.Ice)
@@ -129,19 +143,21 @@ local function buildPlayerHouse()
 	floor.Size = Vector3.new(34, 1.2, 28)
 	floor.Position = HOUSE_POS + Vector3.new(0, 0.6, 0)
 	floor.Anchored = true
+	floor.CanCollide = true
 	floor.Material = Enum.Material.WoodPlanks
 	floor.BrickColor = BrickColor.new("Brown")
 	floor.Parent = houseModel
 
 	local houseSpawn = Instance.new("SpawnLocation")
 	houseSpawn.Name = "HouseSpawnLocation"
-	houseSpawn.Size = Vector3.new(8, 0.5, 8)
-	houseSpawn.Position = HOUSE_POS + Vector3.new(0, 1.2, 0)
+	houseSpawn.Size = Vector3.new(12, 0.5, 12)
+	houseSpawn.Position = HOUSE_POS + Vector3.new(0, 1.25, 0)
 	houseSpawn.Anchored = true
-	houseSpawn.CanCollide = false
+	houseSpawn.CanCollide = true
 	houseSpawn.Transparency = 1
 	houseSpawn.Neutral = true
 	houseSpawn.Duration = 0
+	houseSpawn.Enabled = true
 	houseSpawn.Parent = houseModel
 
 	local wallConfigs = {
@@ -167,6 +183,8 @@ local function buildPlayerHouse()
 	roof.Size = Vector3.new(38, 2, 32)
 	roof.Position = HOUSE_POS + Vector3.new(0, 13, 0)
 	roof.Anchored = true
+	roof.CanCollide = true
+	roof.CanQuery = false -- Исключает попадание луча спавнера Roblox на крышу
 	roof.Material = Enum.Material.WoodPlanks
 	roof.BrickColor = BrickColor.new("Dark stone grey")
 	roof.Parent = houseModel
@@ -304,7 +322,8 @@ local function populateForest()
 		local z = math.random(-1480, 1480)
 
 		if isTreeLocationAllowed(x, z) then
-			createPineTree(Vector3.new(x, 0, z), math.random(80, 160) / 100)
+			local groundY = SurfaceUtil.getGroundHeight(x, z, 50)
+			createPineTree(Vector3.new(x, groundY, z), math.random(80, 160) / 100)
 			spawnedCount = spawnedCount + 1
 		end
 	end
@@ -333,10 +352,13 @@ local function buildHunterCabins()
 		local cabin = Instance.new("Model")
 		cabin.Name = c.Name
 
+		local groundY = SurfaceUtil.getGroundHeight(c.Pos.X, c.Pos.Z, 50)
+		local basePos = Vector3.new(c.Pos.X, groundY, c.Pos.Z)
+
 		local base = Instance.new("Part")
 		base.Name = "Floor"
 		base.Size = Vector3.new(20, 1.2, 20)
-		base.Position = c.Pos + Vector3.new(0, 0.6, 0)
+		base.Position = basePos + Vector3.new(0, 0.6, 0)
 		base.Anchored = true
 		base.Material = Enum.Material.WoodPlanks
 		base.BrickColor = BrickColor.new("Reddish brown")
@@ -345,7 +367,7 @@ local function buildHunterCabins()
 		-- Крыша
 		local roof = Instance.new("Part")
 		roof.Size = Vector3.new(22, 1.2, 22)
-		roof.Position = c.Pos + Vector3.new(0, 10, 0)
+		roof.Position = basePos + Vector3.new(0, 10, 0)
 		roof.Anchored = true
 		roof.Material = Enum.Material.Wood
 		roof.BrickColor = BrickColor.new("Dark stone grey")
@@ -356,7 +378,7 @@ local function buildHunterCabins()
 		stove.Name = "CabinStove_" .. i
 		stove.Size = Vector3.new(4, 4, 4)
 		-- Точное приземление на пол заимки (пол 1.2, половина печи 2.0 -> Y = 3.2)
-		stove.Position = c.Pos + Vector3.new(-5, 3.2, -5)
+		stove.Position = basePos + Vector3.new(-5, 3.2, -5)
 		stove.Anchored = true
 		stove.Material = Enum.Material.Brick
 		stove.BrickColor = BrickColor.new("Dark stone grey")

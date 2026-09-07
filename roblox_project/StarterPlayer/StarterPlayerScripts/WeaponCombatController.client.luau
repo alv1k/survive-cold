@@ -14,11 +14,9 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-if not RemotesFolder then return end
-
-local AttackMeleeRemote = RemotesFolder:WaitForChild("AttackMelee", 10)
-local ShootRangedRemote = RemotesFolder:WaitForChild("ShootRanged", 10)
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local AttackMeleeRemote = Network.getEvent("AttackMelee")
+local ShootRangedRemote = Network.getEvent("ShootRanged")
 
 local WEAPON_FIRERATES = {
 	Spear = 0.8,

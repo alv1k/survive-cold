@@ -47,12 +47,12 @@ function PartsGenerator.create(parent, targetCF)
 	gear2.CanCollide = false
 	gear2.Parent = model
 
-	-- 4. Светящийся неоновый энергоблок (Energy Core)
+	-- 4. Энергоблок (Energy Core)
 	local core = Instance.new("Part")
 	core.Name = "Core"
 	core.Size = Vector3.new(0.7, 0.7, 0.7)
 	core.CFrame = targetCF * CFrame.new(0, 0.65, 0)
-	core.Material = Enum.Material.Neon
+	core.Material = Enum.Material.SmoothPlastic
 	core.Color = Color3.fromRGB(56, 189, 248) -- bright cyan
 	core.Anchored = true
 	core.CanCollide = false

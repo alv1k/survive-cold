@@ -183,14 +183,17 @@
 > **Папка размещения:** `assets/models/nature/` (также синхронизировано в `assets/models/resources/` и `assets/models/`)
 > **Стандарт сборки:** Корневой Empty в `(0,0,0)`, именованные дочерние `MeshPart`, `Shade Flat`, 100% UV-маппинг на `palette.png`.
 
-1. **Ветки / Fallen Branches (`assets/models/nature/branches.fbx`, `branches.obj`, `branches.blend`)**:
-   - **Модульная структура:** Корневой Empty `Branches` + 2 дочерние части: `Sticks` (3 скрещенные ветки из кедра и сосны `wood_cedar` / `wood_pine`), `Needles` (4 пучка стилизованной хвои `pine_green` / `pine_dark`) (64 tris).
-2. **Камень / Stone Boulder (`assets/models/nature/stone.fbx`, `stone.obj`, `stone.blend`)**:
-   - **Модульная структура:** Корневой Empty `Stone` + 2 дочерние части: `Boulder` (граненый валун из сланца `stone_slate` и `stone_dark`), `SnowCap` (мультяшная снежная шапка `snow_pure` / `snow_ambient`) (76 tris).
-3. **Волокно / Plant Fiber (`assets/models/nature/fiber.fbx`, `fiber.obj`, `fiber.blend`)**:
-   - **Модульная структура:** Корневой Empty `Fiber` + 2 дочерние части: `Stalks` (3 изогнутых золотых стебелька травы `twine_straw` / `fiber_gold`), `Base` (кожаный пучок-узел `leather_tan` / `leather_warm`) (36 tris).
-4. **Штабель досок / Lumber Planks (`assets/models/nature/planks.fbx`, `planks.obj`, `planks.blend`)**:
-   - **Модульная структура:** Корневой Empty `Planks` + `Planks` (4 аккуратно сложенных крест-накрест бруска 2x2 из медового дуба и сосны `wood_honey_oak` / `wood_cedar` / `wood_pine`) (48 tris).
+1. **Ветки / Хворост (`assets/models/nature/branches.fbx`, `branches.obj`, `branches.blend`, `Branches.luau`)**:
+   - **Куст для сбора в мире (World Node):** Зимний сухой кустик из **8 голых веток** без листьев и хвои (~1.1–2.4 студа), расходящихся веером из снега.
+   - **Пучок для дропа и инвентаря (Kindling Bundle):** Аккуратная связка из **4 голых сухих веточек**, перевязанных посередине джутовой бечевкой (`TwineBand`).
+2. **Камень / Stone (`assets/models/nature/stone.fbx`, `stone.obj`, `stone.blend`, `assets/models/nature/stone_boulder.fbx`, `Stone.luau`)**:
+   - **Валун для сбора в мире (World Node / Boulder):** Овальной формы граненый сланцевый валун (`Boulder`) с боковым осколком (`SideRock`) из сланца (`stone_slate` / `stone_dark`), без снежной шапки.
+   - **Камень для дропа и инвентаря в руках (Pebble / Hand Item):** Аккуратная овальная сфера — круглый гладкий сланцевый камешек (`Handle` ~0.75 x 0.55 x 0.65 студа), удобно лежащий в ладони игрока.
+3. **Волокно / Камыш (`assets/models/nature/fiber.fbx`, `fiber.obj`, `fiber.blend`, `assets/models/nature/fiber_bush.fbx`, `Fiber.luau`)**:
+   - **Кустик камыша для сбора в мире (World Node):** 5 стеблей камыша (рогоза) с бархатистыми цилиндрическими коричневыми початками (`wood_walnut` / `soil_rich`) и 8 раскидистых изогнутых золотисто-зеленых листьев (`fiber_gold`, `twine_straw`, `plant_sprout`).
+   - **Пучок камышей для дропа и инвентаря (Cattail Bundle):** 3 аккуратных стебля камыша с початками и сухими листьями, перевязанные посередине джутовой бечевкой (`TwineBand`) с узелком.
+4. **Штабель досок / Lumber Planks (`assets/models/nature/planks.fbx`, `planks.obj`, `planks.blend`, `Planks.luau`)**:
+   - **Модульная структура:** Корневой Empty `Planks` + 6 дочерних `MeshPart` (`Plank_1` – `Plank_6`): 6 аккуратно сложенных друг на друга горизонтальных досок в одном направлении с различием углов 4–15° между слоями, каждая в своем натуральном оттенке коричневого дерева (`wood_walnut`, `wood_cedar`, `wood_honey_oak`, `wood_pine`, `leather_warm`) (72 tris, Flat Shading, `palette.png`).
 5. **Елочки / Fir Tree (`assets/models/nature/fir_tree.fbx`, `fir_tree.obj`, `fir_tree.blend`)**:
    - **Модульная структура:** Корневой Empty `FirTree` + 3 дочерние части: `Trunk` (ствол `wood_bark`), `Foliage` (3-ярусная конусная мультяшная крона `pine_dark` / `pine_green`), `SnowTrim` (снежные фестоны на ярусах `snow_pure`) (144 tris).
 

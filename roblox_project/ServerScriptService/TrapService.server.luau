@@ -17,11 +17,13 @@ local TweenService = game:GetService("TweenService")
 local TrapsFolder = workspace:FindFirstChild("PlacedTraps") or Instance.new("Folder", workspace)
 TrapsFolder.Name = "PlacedTraps"
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
+
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
 -- 1. Создание 3D модели Капкана (RabbitTrap)
 local function spawnPlacedRabbitTrap(ownerPlayer, spawnPos)
@@ -59,8 +61,8 @@ local function spawnPlacedRabbitTrap(ownerPlayer, spawnPos)
 	end
 	trapModel.PrimaryPart = primary
 
-	-- Позиционируем на снегу
-	trapModel:PivotTo(CFrame.new(spawnPos + Vector3.new(0, 0.25, 0)))
+	-- Позиционируем ровно на поверхности земли/пола с учетом габаритов
+	SurfaceUtil.placeOnSurface(trapModel, spawnPos, 0.1, false)
 	for _, desc in ipairs(trapModel:GetDescendants()) do
 		if desc:IsA("BasePart") then
 			desc.Anchored = true
@@ -164,25 +166,10 @@ local function spawnPlacedRabbitTrap(ownerPlayer, spawnPos)
 		local hasPrey = trapModel:GetAttribute("HasPrey")
 
 		if hasPrey then
-			if _G.GiveItemToPlayer then
-				_G.GiveItemToPlayer(triggerPlayer, "Steak", 1)
-			else
-				local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-				if giveBindable and giveBindable:IsA("BindableFunction") then
-					giveBindable:Invoke(triggerPlayer, "Steak", 1)
-				end
-			end
+			InventoryService.giveItem(triggerPlayer, "Steak", 1)
 		end
 
-		local picked = false
-		if _G.GiveItemToPlayer then
-			picked = _G.GiveItemToPlayer(triggerPlayer, "RabbitTrap", 1)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				picked = giveBindable:Invoke(triggerPlayer, "RabbitTrap", 1)
-			end
-		end
+		local picked = InventoryService.giveItem(triggerPlayer, "RabbitTrap", 1)
 
 		if picked then
 			trapModel:Destroy()
@@ -252,7 +239,8 @@ local function spawnPlacedSpikeTrap(ownerPlayer, spawnPos)
 	end
 	trapModel.PrimaryPart = primary
 
-	trapModel:PivotTo(CFrame.new(spawnPos + Vector3.new(0, 0.15, 0)))
+	-- Позиционируем ровно на поверхности
+	SurfaceUtil.placeOnSurface(trapModel, spawnPos, 0.1, false)
 	for _, desc in ipairs(trapModel:GetDescendants()) do
 		if desc:IsA("BasePart") then
 			desc.Anchored = true
@@ -286,15 +274,7 @@ local function spawnPlacedSpikeTrap(ownerPlayer, spawnPos)
 
 	-- Взаимодействие [E]: забрать шипы в рюкзак
 	prompt.Triggered:Connect(function(triggerPlayer)
-		local picked = false
-		if _G.GiveItemToPlayer then
-			picked = _G.GiveItemToPlayer(triggerPlayer, "SpikeTrap", 1)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				picked = giveBindable:Invoke(triggerPlayer, "SpikeTrap", 1)
-			end
-		end
+		local picked = InventoryService.giveItem(triggerPlayer, "SpikeTrap", 1)
 
 		if picked then
 			trapModel:Destroy()
@@ -340,12 +320,13 @@ local function spawnPlacedCampfire(ownerPlayer, spawnPos)
 		primary.Name = "Base"
 		primary.Size = Vector3.new(2.0, 0.4, 2.0)
 		primary.Transparency = 1
-		primary.CanCollide = false
+			primary.CanCollide = false
 		primary.Parent = campfireModel
 	end
 	campfireModel.PrimaryPart = primary
 
-	campfireModel:PivotTo(CFrame.new(spawnPos + Vector3.new(0, 0.1, 0)))
+	-- Позиционируем ровно на поверхности
+	SurfaceUtil.placeOnSurface(campfireModel, spawnPos, 0.1, false)
 	for _, desc in ipairs(campfireModel:GetDescendants()) do
 		if desc:IsA("BasePart") then
 			desc.Anchored = true
@@ -431,15 +412,7 @@ local function spawnPlacedCampfire(ownerPlayer, spawnPos)
 	end)
 
 	promptPickup.Triggered:Connect(function(triggerPlayer)
-		local picked = false
-		if _G.GiveItemToPlayer then
-			picked = _G.GiveItemToPlayer(triggerPlayer, "CampfireKit", 1)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				picked = giveBindable:Invoke(triggerPlayer, "CampfireKit", 1)
-			end
-		end
+		local picked = InventoryService.giveItem(triggerPlayer, "CampfireKit", 1)
 
 		if picked then
 			campfireModel:Destroy()
@@ -463,12 +436,8 @@ _G.PlaceTrapFromHand = function(player, itemKey, toolInstance)
 	toolInstance:SetAttribute("IsPlacing", true)
 
 	local hrp = char.HumanoidRootPart
-	local placePos = (hrp.CFrame * CFrame.new(0, -2.5, -5)).Position
-
-	local ray = workspace:Raycast(placePos + Vector3.new(0, 10, 0), Vector3.new(0, -20, 0))
-	if ray then
-		placePos = ray.Position
-	end
+	local rawPos = (hrp.CFrame * CFrame.new(0, 0, -5)).Position
+	local placePos, _, _ = SurfaceUtil.getSurfacePosition(rawPos, { char })
 
 	if itemKey == "RabbitTrap" then
 		spawnPlacedRabbitTrap(player, placePos)

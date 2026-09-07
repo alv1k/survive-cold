@@ -12,12 +12,8 @@ local Players = game:GetService("Players")
 local GLOBAL_CHAT_TOPIC = "GlobalSurvivalRadio_v1"
 local SPAM_COOLDOWN_SECONDS = 1.5
 
--- Папка Remotes
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
-
-local GlobalChatEvent = RemotesFolder:FindFirstChild("GlobalChatMessage") or Instance.new("RemoteEvent", RemotesFolder)
-GlobalChatEvent.Name = "GlobalChatMessage"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local GlobalChatEvent = Network.getEvent("GlobalChatMessage")
 
 local playerCooldowns = {}
 

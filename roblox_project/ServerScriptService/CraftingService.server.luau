@@ -7,19 +7,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local CraftingRecipes = require(ReplicatedStorage:WaitForChild("CraftingRecipes"))
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
--- Папка RemoteEvents
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
-
-local CraftItemRemote = RemotesFolder:FindFirstChild("CraftItem") or Instance.new("RemoteEvent", RemotesFolder)
-CraftItemRemote.Name = "CraftItem"
-
-local UpgradeWorkbenchRemote = RemotesFolder:FindFirstChild("UpgradeWorkbench") or Instance.new("RemoteEvent", RemotesFolder)
-UpgradeWorkbenchRemote.Name = "UpgradeWorkbench"
-
-local OpenWorkbenchRemote = RemotesFolder:FindFirstChild("OpenWorkbench") or Instance.new("RemoteEvent", RemotesFolder)
-OpenWorkbenchRemote.Name = "OpenWorkbench"
+local CraftItemRemote = Network.getEvent("CraftItem")
+local UpgradeWorkbenchRemote = Network.getEvent("UpgradeWorkbench")
+local OpenWorkbenchRemote = Network.getEvent("OpenWorkbench")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local ProximityPromptService = game:GetService("ProximityPromptService")
 ProximityPromptService.PromptTriggered:Connect(function(prompt, triggerPlayer)
@@ -268,24 +262,10 @@ CraftItemRemote.OnServerEvent:Connect(function(player, recipeKey, targetPosition
 			end
 		end
 
-		local given = false
-		if _G.GiveItemToPlayer then
-			given = _G.GiveItemToPlayer(player, resultKey, resultCount)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				given = giveBindable:Invoke(player, resultKey, resultCount)
-			end
-		end
-
+		local given = InventoryService.giveItem(player, resultKey, resultCount)
 		if not given then
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, resultKey, resultCount)
-			end
-			local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
-			if ShowNotificationRemote then
-				ShowNotificationRemote:FireClient(player, string.format("⚠️ Рюкзак полон! %s упал на землю.", recipe.DisplayName))
-			end
+			InventoryService.dropItem(player, resultKey, resultCount)
+			ShowNotificationRemote:FireClient(player, string.format("⚠️ Рюкзак полон! %s упал на землю.", recipe.DisplayName))
 		end
 
 		print(string.format("🛠️ %s успешно скрафтил: %s (x%d)!", player.Name, recipe.DisplayName, resultCount))

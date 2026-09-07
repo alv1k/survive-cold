@@ -16,39 +16,20 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HomeSuppliesFolder = workspace:FindFirstChild("HomeSupplies") or Instance.new("Folder", workspace)
 HomeSuppliesFolder.Name = "HomeSupplies"
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
 local function getGroundHeight(x, z)
-	local rayOrigin = Vector3.new(x, 100, z)
-	local rayDirection = Vector3.new(0, -200, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 0
+	return SurfaceUtil.getGroundHeight(x, z)
 end
 
 local function givePlayerItem(player, itemKey, count)
-	count = count or 1
-	if _G.GiveItemToPlayer then
-		return _G.GiveItemToPlayer(player, itemKey, count)
-	else
-		local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-		if giveBindable and giveBindable:IsA("BindableFunction") then
-			return giveBindable:Invoke(player, itemKey, count)
-		end
-	end
-	return false
+	return InventoryService.giveItem(player, itemKey, count or 1)
 end
 
 --------------------------------------------------------------------------------
@@ -61,8 +42,8 @@ end
 
 local function createHomeResourceNode(resType, pos, index)
 	local groundY = getGroundHeight(pos.X, pos.Z)
-	local exactPos = Vector3.new(pos.X, math.max(0.6, groundY + 0.4), pos.Z)
-	local nodeCF = CFrame.new(exactPos + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad((index * 37) % 360), 0)
+	local exactPos = Vector3.new(pos.X, groundY, pos.Z)
+	local nodeCF = CFrame.new(exactPos) * CFrame.Angles(0, math.rad((index * 37) % 360), 0)
 
 	local nodeModel = nil
 	local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
@@ -75,14 +56,12 @@ local function createHomeResourceNode(resType, pos, index)
 
 	if not nodeModel then
 		nodeModel = Instance.new("Model", HomeSuppliesFolder)
+		nodeModel:PivotTo(nodeCF)
 	end
 
 	nodeModel.Name = string.format("HomeNode_%s_%d", resType, index)
 
-	-- 1. Позиционируем 3D-модель на поверхности снега (приподнято над сугробами)
-	nodeModel:PivotTo(CFrame.new(exactPos + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, math.rad((index * 37) % 360), 0))
-
-	-- 2. Включаем видимость и закрепляем все физические детали
+	-- 1. Включаем видимость и закрепляем все физические детали
 	for _, part in ipairs(nodeModel:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Anchored = true
@@ -100,17 +79,6 @@ local function createHomeResourceNode(resType, pos, index)
 	hitBox.CanCollide = false
 	hitBox.Anchored = true
 	hitBox.Parent = nodeModel
-
-	-- Мягкая подсветка ноды
-	local glowLight = Instance.new("PointLight", hitBox)
-	glowLight.Range = 9
-	glowLight.Brightness = 0.7
-	if resType == "Branches" then glowLight.Color = Color3.fromRGB(245, 158, 11)
-	elseif resType == "Fiber" then glowLight.Color = Color3.fromRGB(250, 204, 21)
-	elseif resType == "Stone" then glowLight.Color = Color3.fromRGB(186, 230, 253)
-	elseif resType == "Planks" then glowLight.Color = Color3.fromRGB(251, 191, 36)
-	elseif resType == "Parts" then glowLight.Color = Color3.fromRGB(56, 189, 248)
-	end
 
 	local actionTitle = (resType == "Branches" and "Взять ветки (x2)")
 		or (resType == "Fiber" and "Собрать волокно (x2)")
@@ -134,9 +102,9 @@ local function createHomeResourceNode(resType, pos, index)
 	prompt.RequiresLineOfSight = false
 
 	prompt.Triggered:Connect(function(player)
-		local given = givePlayerItem(player, resType, 2)
-		if not given and _G.DropItemOnGround then
-			_G.DropItemOnGround(player, resType, 2, exactPos + Vector3.new(0, 1.0, 0))
+		local given = InventoryService.giveItem(player, resType, 2)
+		if not given then
+			InventoryService.dropItem(player, resType, 2, exactPos + Vector3.new(0, 1.0, 0))
 		end
 
 		prompt.Enabled = false
@@ -145,7 +113,6 @@ local function createHomeResourceNode(resType, pos, index)
 				desc.Transparency = 1
 			end
 		end
-		glowLight.Enabled = false
 
 		-- Быстрый респавн 45 секунд
 		task.delay(45, function()
@@ -155,7 +122,6 @@ local function createHomeResourceNode(resType, pos, index)
 						desc.Transparency = 0
 					end
 				end
-				glowLight.Enabled = true
 				prompt.Enabled = true
 			end
 		end)
@@ -188,12 +154,21 @@ for i = 1, 10 do
 	createHomeResourceNode("Stone", Vector3.new(x, 0, z), i)
 end
 
--- 10 ДОСОК (Задний правый двор: X = 18 .. 32, Z = -18 .. -32)
-for i = 1, 10 do
-	local angle = (i / 10) * (math.pi * 1.5)
-	local x = 24 + math.cos(angle) * 7
-	local z = -24 + math.sin(angle) * 7
-	createHomeResourceNode("Planks", Vector3.new(x, 0, z), i)
+-- 10 ДОСОК (4 на переднем крыльце у входа: X = 12..18, Z = 15..20; 6 на заднем дворе: X = 20..30, Z = -20..-30)
+local plankPositions = {
+	Vector3.new(14, 0, 16),  -- Прямо справа от входа
+	Vector3.new(17, 0, 19),  -- Справа на полянке перед домом
+	Vector3.new(-14, 0, 16), -- Прямо слева от входа
+	Vector3.new(-17, 0, 19), -- Слева на полянке перед домом
+	Vector3.new(22, 0, -18), -- Задний правый угол
+	Vector3.new(26, 0, -22), -- Задний правый двор
+	Vector3.new(28, 0, -26), -- Задний правый двор
+	Vector3.new(24, 0, -28), -- Задний правый двор
+	Vector3.new(20, 0, -24), -- Задний правый угол
+	Vector3.new(25, 0, -31), -- Задний правый двор
+}
+for i, pos in ipairs(plankPositions) do
+	createHomeResourceNode("Planks", pos, i)
 end
 
 -- 10 ДЕТАЛЕЙ (Правый фасад: X = 15 .. 28, Z = 5 .. 20)

@@ -10,7 +10,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
+
 local ModelHelper = {}
+ModelHelper.SurfaceUtil = SurfaceUtil
 
 local function isValid3DModel(inst)
 	if not inst then return false end
@@ -259,17 +262,19 @@ function ModelHelper.assembleDropModel(itemName, pos)
 	local randYaw = CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
 
 	local lower = string.lower(itemName)
-	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
-	local flatTilt = isElongated and CFrame.Angles(math.rad(90), 0, 0) or CFrame.identity
-	local targetCF = CFrame.new(pos) * randYaw * flatTilt
+	local isFlatBundle = (lower == "spear" or lower == "torch" or lower == "branches" or lower == "branch" or lower == "fiber" or lower == "straw" or string.find(lower, "spear") or string.find(lower, "torch") or string.find(lower, "branch") or string.find(lower, "fiber") or string.find(lower, "ветк") or string.find(lower, "камыш") or string.find(lower, "волокн"))
+	local flatTilt = isFlatBundle and CFrame.Angles(math.rad(90), 0, 0) or CFrame.identity
 
 	if clone:IsA("BasePart") then
 		clone.Name = "Dropped_" .. itemName
-		clone.CFrame = targetCF
-		clone.Anchored = false
+		clone.CFrame = CFrame.new(pos) * randYaw * flatTilt
+		clone.Anchored = true
 		clone.CanCollide = true
 		clone.Massless = false
 		clone.Transparency = 0
+		clone.AssemblyLinearVelocity = Vector3.zero
+		clone.AssemblyAngularVelocity = Vector3.zero
+		SurfaceUtil.placeOnSurface(clone, pos, 0.05)
 		return clone
 	else
 		local allParts = {}
@@ -287,12 +292,19 @@ function ModelHelper.assembleDropModel(itemName, pos)
 		local primary = clone:FindFirstChild("Handle") or clone.PrimaryPart or allParts[1]
 		clone.PrimaryPart = primary
 		clone.Name = "Dropped_" .. itemName
-		clone:PivotTo(targetCF)
+
+		-- Применяем поворот
+		clone:PivotTo(CFrame.new(pos) * randYaw * flatTilt)
+
+		-- Автоматически сажаем дном на снег/пол через BoundingBox
+		SurfaceUtil.placeOnSurface(clone, pos, 0.05)
 
 		for _, p in ipairs(allParts) do
-			p.Anchored = false
+			p.Anchored = true
 			p.Transparency = 0
 			p.CastShadow = true
+			p.AssemblyLinearVelocity = Vector3.zero
+			p.AssemblyAngularVelocity = Vector3.zero
 
 			for _, w in ipairs(p:GetChildren()) do
 				if w:IsA("Weld") or w:IsA("ManualWeld") then

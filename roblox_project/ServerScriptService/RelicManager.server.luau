@@ -34,11 +34,10 @@ workspace:SetAttribute("PetStarveRateModifier", 1.0)
 workspace:SetAttribute("TeamSpeedBonus", 0)
 workspace:SetAttribute("TeamColdProtection", 0)
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local RelicsFolder = workspace:FindFirstChild("Relics") or Instance.new("Folder", workspace)
 RelicsFolder.Name = "Relics"
@@ -237,7 +236,9 @@ end
 
 -- 1. РЕЛИКВИЯ #1: 🏆 Древняя Чаша Вечности (Огненный пазл: 3 чаши)
 task.spawn(function()
-	local sitePos = Vector3.new(-180, 2, -120)
+	local rawPos = Vector3.new(-180, 2, -120)
+	local groundY = SurfaceUtil.getGroundHeight(rawPos.X, rawPos.Z, 50)
+	local sitePos = Vector3.new(rawPos.X, groundY + 1.0, rawPos.Z)
 
 	local siteModel = Instance.new("Model", RelicsFolder)
 	siteModel.Name = "RelicSite_1_Chalice"
@@ -318,7 +319,9 @@ end)
 
 -- 2. РЕЛИКВИЯ #2: 🧊 Сердце Северной Бури (Отогрев векового льда)
 task.spawn(function()
-	local pos = Vector3.new(220, 2.5, -190)
+	local rawPos = Vector3.new(220, 2.5, -190)
+	local groundY = SurfaceUtil.getGroundHeight(rawPos.X, rawPos.Z, 50)
+	local pos = Vector3.new(rawPos.X, groundY + 1.6, rawPos.Z)
 
 	local siteModel = Instance.new("Model", RelicsFolder)
 	siteModel.Name = "RelicSite_2_IceHeart"
@@ -371,7 +374,9 @@ end)
 
 -- 3. РЕЛИКВИЯ #3: 🐺 Зуб Ледяного Хищника (Охрана Белым Волком-Стражем)
 task.spawn(function()
-	local pos = Vector3.new(140, 2.5, 280)
+	local rawPos = Vector3.new(140, 2.5, 280)
+	local groundY = SurfaceUtil.getGroundHeight(rawPos.X, rawPos.Z, 50)
+	local pos = Vector3.new(rawPos.X, groundY + 1.5, rawPos.Z)
 
 	local siteModel = Instance.new("Model", RelicsFolder)
 	siteModel.Name = "RelicSite_3_WolfFang"
@@ -421,7 +426,9 @@ end)
 
 -- 4. РЕЛИКВИЯ #4: 🧭 Рунический Компас Геологов (Замерзший ящик: требуется 2 детали)
 task.spawn(function()
-	local pos = Vector3.new(-260, 2.5, 160)
+	local rawPos = Vector3.new(-260, 2.5, 160)
+	local groundY = SurfaceUtil.getGroundHeight(rawPos.X, rawPos.Z, 50)
+	local pos = Vector3.new(rawPos.X, groundY + 2.5, rawPos.Z)
 
 	local siteModel = Instance.new("Model", RelicsFolder)
 	siteModel.Name = "RelicSite_4_Compass"
@@ -517,7 +524,9 @@ end)
 
 -- 6. РЕЛИКВИЯ #6: 👑 Корона Ледяного Короля (Разбивание валунов)
 task.spawn(function()
-	local pos = Vector3.new(-120, 2.5, 310)
+	local rawPos = Vector3.new(-120, 2.5, 310)
+	local groundY = SurfaceUtil.getGroundHeight(rawPos.X, rawPos.Z, 50)
+	local pos = Vector3.new(rawPos.X, groundY + 1.0, rawPos.Z)
 
 	local siteModel = Instance.new("Model", RelicsFolder)
 	siteModel.Name = "RelicSite_6_Crown"

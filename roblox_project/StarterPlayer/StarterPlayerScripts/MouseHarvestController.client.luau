@@ -14,11 +14,8 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-if not RemotesFolder then return end
-
-local HarvestResourceRemote = RemotesFolder:WaitForChild("HarvestResource", 10)
-if not HarvestResourceRemote then return end
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local HarvestResourceRemote = Network.getEvent("HarvestResource")
 
 local lastClickTime = 0
 local CLICK_COOLDOWN = 0.18

@@ -9,11 +9,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-if not RemotesFolder then return end
-
-local GlobalChatEvent = RemotesFolder:WaitForChild("GlobalChatMessage", 10)
-if not GlobalChatEvent then return end
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local GlobalChatEvent = Network.getEvent("GlobalChatMessage")
 
 -- Получение глобального сообщения со всех серверов мира
 GlobalChatEvent.OnClientEvent:Connect(function(data)

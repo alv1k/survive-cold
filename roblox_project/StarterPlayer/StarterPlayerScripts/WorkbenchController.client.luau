@@ -15,10 +15,10 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-local CraftItemRemote = RemotesFolder and RemotesFolder:WaitForChild("CraftItem", 10)
-local UpgradeWorkbenchRemote = RemotesFolder and RemotesFolder:WaitForChild("UpgradeWorkbench", 10)
-local OpenWorkbenchRemote = RemotesFolder and RemotesFolder:WaitForChild("OpenWorkbench", 5)
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local CraftItemRemote = Network.getEvent("CraftItem")
+local UpgradeWorkbenchRemote = Network.getEvent("UpgradeWorkbench")
+local OpenWorkbenchRemote = Network.getEvent("OpenWorkbench")
 local CraftingRecipes = require(ReplicatedStorage:WaitForChild("CraftingRecipes", 10))
 local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
 

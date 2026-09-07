@@ -29,7 +29,8 @@ local function spawnFootprint(pos, cframe)
 	local footprint = Instance.new("Part")
 	footprint.Name = "Footprint"
 	footprint.Size = Vector3.new(0.65, 0.05, 1.1)
-	footprint.CFrame = CFrame.new(result.Position + Vector3.new(0, 0.04, 0)) * CFrame.Angles(0, math.rad(cframe.Rotation.Y), 0)
+	local _, yaw, _ = cframe:ToOrientation()
+	footprint.CFrame = CFrame.new(result.Position + Vector3.new(0, 0.04, 0)) * CFrame.Angles(0, yaw, 0)
 	footprint.Anchored = true
 	footprint.CanCollide = false
 	footprint.CastShadow = false

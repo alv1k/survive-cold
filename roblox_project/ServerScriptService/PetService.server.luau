@@ -72,6 +72,29 @@ for petId, cfg in pairs(PET_CONFIG) do
 		if hasTorch then
 			iceBlock:Destroy()
 
+			local petModel = Instance.new("Model")
+			petModel.Name = cfg.Name
+			petModel:SetAttribute("PetId", petId)
+			petModel:SetAttribute("OwnerUserId", player.UserId)
+			petModel:SetAttribute("Hunger", 100)
+			petModel:SetAttribute("Mode", "follow")
+
+			local body = Instance.new("Part")
+			body.Name = "Body"
+			body.Size = Vector3.new(2, 2, 2)
+			body.Position = cfg.IceLocation + Vector3.new(0, 1.5, 0)
+			body.Anchored = false
+			body.CanCollide = true
+			body.Material = Enum.Material.Fabric
+			body.Parent = petModel
+			petModel.PrimaryPart = body
+
+			local petHum = Instance.new("Humanoid")
+			petHum.MaxHealth = 100
+			petHum.Health = 100
+			petHum.WalkSpeed = 16
+			petHum.Parent = petModel
+
 			local function addSubPart(name, size, cfOffset, material, color, isNeon)
 				local sub = Instance.new("Part")
 				sub.Name = name

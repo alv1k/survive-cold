@@ -1605,27 +1605,74 @@ def create_fiber():
     ])
 
 def create_planks():
-    """Creates a neat 2x2 criss-cross stack of 4 lumber planks."""
+    """
+    Creates a stack of 6 lumber planks laid horizontally on top of each other,
+    in the same general direction with 4-15 degree angle variance between layers,
+    each with distinct brown palette shades.
+    """
     clear_scene()
     setup_roblox_scene()
 
-    bm_planks = bmesh.new()
-    add_box_bm(bm_planks, -0.80, 0.78, -0.48, -0.14, 0.0, 0.14, "wood_honey_oak")
-    add_box_bm(bm_planks, -0.76, 0.82, 0.14, 0.48, 0.0, 0.14, "wood_cedar")
-    add_box_bm(bm_planks, -0.48, -0.14, -0.78, 0.80, 0.14, 0.28, "wood_pine")
-    add_box_bm(bm_planks, 0.14, 0.48, -0.82, 0.76, 0.14, 0.28, "wood_honey_oak")
+    def create_plank_part(name, cx, cy, cz, length, width, thickness, angle_deg, color_name):
+        bm = bmesh.new()
+        rad = math.radians(angle_deg)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        
+        dx = length / 2.0
+        dy = width / 2.0
+        z0 = cz - thickness / 2.0
+        z1 = cz + thickness / 2.0
+        
+        corners = [
+            (-dx, -dy),
+            ( dx, -dy),
+            ( dx,  dy),
+            (-dx,  dy)
+        ]
+        
+        pts_bottom = []
+        pts_top = []
+        for lx, ly in corners:
+            rx = cx + (lx * cos_a - ly * sin_a)
+            ry = cy + (lx * sin_a + ly * cos_a)
+            pts_bottom.append(bm.verts.new((rx, ry, z0)))
+            pts_top.append(bm.verts.new((rx, ry, z1)))
+            
+        faces = [
+            bm.faces.new((pts_bottom[0], pts_bottom[1], pts_bottom[2], pts_bottom[3])),
+            bm.faces.new((pts_top[0], pts_top[3], pts_top[2], pts_top[1])),
+            bm.faces.new((pts_bottom[0], pts_top[0], pts_top[1], pts_bottom[1])),
+            bm.faces.new((pts_bottom[1], pts_top[1], pts_top[2], pts_bottom[2])),
+            bm.faces.new((pts_bottom[2], pts_top[2], pts_top[3], pts_bottom[3])),
+            bm.faces.new((pts_bottom[3], pts_top[3], pts_top[0], pts_bottom[0]))
+        ]
+        if color_name:
+            set_bmesh_uv(bm, faces, color_name)
+            
+        bm.normal_update()
+        mesh = bpy.data.meshes.new(f"{name}Mesh")
+        bm.to_mesh(mesh)
+        bm.free()
+        
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.context.collection.objects.link(obj)
+        return obj
 
-    bm_planks.normal_update()
-    m_planks = bpy.data.meshes.new("PlanksMesh")
-    bm_planks.to_mesh(m_planks)
-    bm_planks.free()
-    obj_planks = bpy.data.objects.new("Planks", m_planks)
-    bpy.context.collection.objects.link(obj_planks)
+    # 6 horizontally stacked planks with 4-15 deg difference between layers
+    parts = [
+        create_plank_part("Plank_1",  0.00,  0.00, 0.06, 2.10, 0.52, 0.12, -2.0, "wood_walnut"),
+        create_plank_part("Plank_2",  0.03,  0.02, 0.18, 2.08, 0.50, 0.12,  6.0, "wood_cedar"),     # Diff: 8°
+        create_plank_part("Plank_3", -0.02, -0.03, 0.30, 2.12, 0.53, 0.12, -3.0, "wood_honey_oak"), # Diff: 9°
+        create_plank_part("Plank_4",  0.04,  0.01, 0.42, 2.06, 0.51, 0.12,  7.0, "wood_pine"),      # Diff: 10°
+        create_plank_part("Plank_5", -0.03,  0.03, 0.54, 2.10, 0.50, 0.12, -4.0, "leather_warm"),   # Diff: 11°
+        create_plank_part("Plank_6",  0.01, -0.02, 0.66, 2.08, 0.52, 0.12,  3.0, "wood_honey_oak"), # Diff: 7°
+    ]
 
     root = bpy.data.objects.new("Planks", None)
     root.location = (0, 0, 0)
     bpy.context.collection.objects.link(root)
-    export_modular_model(root, [obj_planks], "planks", [
+    export_modular_model(root, parts, "planks", [
         MODELS_DIR,
         os.path.join(MODELS_DIR, "nature"),
         os.path.join(MODELS_DIR, "resources")

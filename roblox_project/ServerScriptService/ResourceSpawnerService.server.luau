@@ -15,11 +15,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ResourcesFolder = workspace:FindFirstChild("WorldResources") or Instance.new("Folder", workspace)
 ResourcesFolder.Name = "WorldResources"
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
-local HarvestResourceRemote = RemotesFolder:FindFirstChild("HarvestResource") or Instance.new("RemoteEvent", RemotesFolder)
-HarvestResourceRemote.Name = "HarvestResource"
+local HarvestResourceRemote = Network.getEvent("HarvestResource")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
 
@@ -29,26 +29,16 @@ local function isInsideHouseZone(pos)
 end
 
 local function getGroundHeight(pos)
-	local rayOrigin = Vector3.new(pos.X, 150, pos.Z)
-	local rayDirection = Vector3.new(0, -300, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 0
+	return SurfaceUtil.getGroundHeight(pos.X, pos.Z)
 end
 
 local function spawnResourceNode(resType, rawPos)
 	if isInsideHouseZone(rawPos) then return end
 
 	local groundY = getGroundHeight(rawPos)
-	local exactPos = Vector3.new(rawPos.X, math.max(0.6, groundY + 0.4), rawPos.Z)
+	local exactPos = Vector3.new(rawPos.X, groundY, rawPos.Z)
 	local randYaw = math.rad(math.random(0, 360))
-	local targetCF = CFrame.new(exactPos + Vector3.new(0, 0.35, 0)) * CFrame.Angles(0, randYaw, 0)
+	local targetCF = CFrame.new(exactPos) * CFrame.Angles(0, randYaw, 0)
 
 	local model = nil
 	local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
@@ -142,7 +132,7 @@ local function spawnWorldResources()
 	print(string.format("🌲 [Респавн] Равномерно распределено %d 3D-ресурсов по всей карте!", totalSpawned))
 end
 
-spawnWorldResources()
+task.defer(spawnWorldResources)
 
 task.spawn(function()
 	while true do
@@ -202,20 +192,9 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 			gain = gain + 1
 		end
 
-		local given = false
-		if _G.GiveItemToPlayer then
-			given = _G.GiveItemToPlayer(player, resourceType, gain)
-		else
-			local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-			if giveBindable and giveBindable:IsA("BindableFunction") then
-				given = giveBindable:Invoke(player, resourceType, gain)
-			end
-		end
-
+		local given = InventoryService.giveItem(player, resourceType, gain)
 		if not given then
-			if _G.DropItemOnGround then
-				_G.DropItemOnGround(player, resourceType, gain)
-			end
+			InventoryService.dropItem(player, resourceType, gain)
 		end
 
 		print(string.format("⛏️ %s добыл %s (x%d)! Нода истощена.", player.Name, resourceType, gain))

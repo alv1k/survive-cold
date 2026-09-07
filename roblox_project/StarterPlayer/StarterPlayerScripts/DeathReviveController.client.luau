@@ -12,11 +12,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-local ShowDeathScreenRemote = RemotesFolder and RemotesFolder:WaitForChild("ShowDeathScreen", 10)
-local HideDeathScreenRemote = RemotesFolder and RemotesFolder:WaitForChild("HideDeathScreen", 10)
-local RespawnInHouseRemote = RemotesFolder and RemotesFolder:WaitForChild("RespawnInHouse", 10)
-local ReviveWithRobuxRemote = RemotesFolder and RemotesFolder:WaitForChild("ReviveWithRobux", 10)
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local ShowDeathScreenRemote = Network.getEvent("ShowDeathScreen")
+local HideDeathScreenRemote = Network.getEvent("HideDeathScreen")
+local RespawnInHouseRemote = Network.getEvent("RespawnInHouse")
+local ReviveWithRobuxRemote = Network.getEvent("ReviveWithRobux")
 
 local IconConfig = require(ReplicatedStorage:WaitForChild("IconConfig", 10))
 

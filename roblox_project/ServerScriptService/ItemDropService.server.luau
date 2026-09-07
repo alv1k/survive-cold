@@ -13,14 +13,11 @@ local Workspace = game:GetService("Workspace")
 local DroppedFolder = workspace:FindFirstChild("DroppedItems") or Instance.new("Folder", workspace)
 DroppedFolder.Name = "DroppedItems"
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 
-local DropItemRemote = RemotesFolder:FindFirstChild("DropItem") or Instance.new("RemoteEvent", RemotesFolder)
-DropItemRemote.Name = "DropItem"
-
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local DropItemRemote = Network.getEvent("DropItem")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local PLAYER_HOUSE = {
 	Position = Vector3.new(0, 5, 0),
@@ -67,8 +64,9 @@ local function build3DDropObject(itemName, pos)
 
 	local root = Instance.new("Part")
 	root.Name = "Dropped_" .. itemName
-	root.Position = pos
-	root.Anchored = false
+	local surfPos, _, _ = SurfaceUtil.getSurfacePosition(pos)
+	root.Position = surfPos + Vector3.new(0, 0.4, 0)
+	root.Anchored = true
 	root.CanCollide = true
 	root.Massless = false
 
@@ -81,6 +79,7 @@ local function build3DDropObject(itemName, pos)
 		sub.BrickColor = color
 		sub.CanCollide = false
 		sub.Massless = true
+		sub.Anchored = true
 		sub.Parent = root
 
 		local weld = Instance.new("WeldConstraint")
@@ -128,10 +127,12 @@ local function build3DDropObject(itemName, pos)
 		addSubPart("Lid", Vector3.new(0.85, 0.05, 0.85), CFrame.new(0, 0.56, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
 
 	elseif itemName == "Stone" then
-		root.Size = Vector3.new(3.2, 2.2, 2.8)
+		root.Size = Vector3.new(0.75, 0.55, 0.65)
 		root.Material = Enum.Material.Slate
 		root.BrickColor = BrickColor.new("Medium stone grey")
-		addSubPart("Snow", Vector3.new(2.7, 0.55, 2.3), CFrame.new(0, 1.1, 0), Enum.Material.Snow, BrickColor.new("White"))
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = root
 
 	elseif itemName == "Planks" then
 		root.Size = Vector3.new(3.4, 0.55, 1.0)
@@ -146,15 +147,15 @@ local function build3DDropObject(itemName, pos)
 		addSubPart("B2", Vector3.new(0.58, 0.58, 3.0), CFrame.new(0, 0.3, 0) * CFrame.Angles(0, math.rad(40), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
 
 	elseif itemName == "Fiber" then
-		root.Size = Vector3.new(1.8, 2.8, 1.8)
+		root.Size = Vector3.new(0.6, 0.6, 2.2)
 		root.Material = Enum.Material.Grass
-		root.BrickColor = BrickColor.new("Bright green")
+		root.BrickColor = BrickColor.new("Sand yellow")
 
 	elseif itemName == "Parts" then
 		root.Size = Vector3.new(1.6, 0.45, 1.6)
 		root.Material = Enum.Material.Metal
 		root.BrickColor = BrickColor.new("Dark stone grey")
-		addSubPart("Core", Vector3.new(0.7, 0.7, 0.7), CFrame.new(0, 0.3, 0), Enum.Material.Neon, BrickColor.new("Cyan"))
+		addSubPart("Core", Vector3.new(0.7, 0.7, 0.7), CFrame.new(0, 0.3, 0), Enum.Material.SmoothPlastic, BrickColor.new("Cyan"))
 
 	elseif itemName == "RabbitTrap" then
 		root.Size = Vector3.new(1.8, 0.2, 1.8)
@@ -190,38 +191,22 @@ local function build3DDropObject(itemName, pos)
 end
 
 local function getGroundHeight(x, z)
-	local rayOrigin = Vector3.new(x, 60, z)
-	local rayDirection = Vector3.new(0, -120, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	local structFolder = workspace:FindFirstChild("WorldStructures")
-	if structFolder then
-		raycastParams.FilterDescendantsInstances = { workspace.Terrain, structFolder }
-	else
-		raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-	end
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 0
+	return SurfaceUtil.getGroundHeight(x, z, 5)
 end
 
 local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 	local displayName = ITEM_NAMES[itemName] or itemName
 	local inHouse = isInsideHouse(spawnPos)
 
-	local groundY = getGroundHeight(spawnPos.X, spawnPos.Z)
 	local lower = string.lower(itemName)
 	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
-	local restingHeight = isElongated and 0.16 or 0.35
-	local safeRestingY = math.max(0.4, groundY + restingHeight)
+	local restingHeight = isElongated and 0.22 or 0.42
 
-	-- Для дропа из сундука спавним прямо на поверхности земли в зафиксированном виде
-	local initialPos = isImpulse and Vector3.new(spawnPos.X, math.max(1.6, spawnPos.Y), spawnPos.Z) or Vector3.new(spawnPos.X, safeRestingY, spawnPos.Z)
+	-- Находим точную точку посадки на верхней границе поверхности
+	local surfacePos, _, _ = SurfaceUtil.getSurfacePosition(spawnPos)
+	local safeRestingPos = surfacePos + Vector3.new(0, restingHeight, 0)
 
-	local dropObj = build3DDropObject(itemName, initialPos)
+	local dropObj = build3DDropObject(itemName, spawnPos)
 	if not dropObj then return end
 
 	dropObj:SetAttribute("ItemName", itemName)
@@ -234,70 +219,64 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 		return
 	end
 
-	local randYaw = CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
-	local flatTilt = isElongated and (randYaw * CFrame.Angles(math.rad(90), 0, 0)) or randYaw
+	-- Точный CFrame посадки на снег
+	local landCF = dropObj:IsA("Model") and dropObj:GetPivot() or dropObj.CFrame
+	local landPos = landCF.Position
+
+	-- Гарантируем закрепление всех частей модели
+	for _, p in ipairs(dropObj:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored = true
+			p.CanCollide = false
+			p.Transparency = 0
+			p.AssemblyLinearVelocity = Vector3.zero
+			p.AssemblyAngularVelocity = Vector3.zero
+		end
+	end
+	if dropObj:IsA("BasePart") then
+		dropObj.Anchored = true
+		dropObj.CanCollide = true
+		dropObj.Transparency = 0
+		dropObj.AssemblyLinearVelocity = Vector3.zero
+		dropObj.AssemblyAngularVelocity = Vector3.zero
+	end
+	rootPart.CanCollide = true
 
 	if isImpulse and player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 		local hrp = player.Character.HumanoidRootPart
-		rootPart.AssemblyLinearVelocity = hrp.CFrame.LookVector * (10 + math.random(1, 4)) + Vector3.new(math.random(-2, 2), 4, math.random(-2, 2))
+		local startPos = hrp.Position + hrp.CFrame.LookVector * 1.5 + Vector3.new(0, 0.4, 0)
+		local startCF = CFrame.new(startPos) * landCF.Rotation
+
+		if dropObj:IsA("Model") then
+			dropObj:PivotTo(startCF)
+		else
+			dropObj.CFrame = startCF
+		end
+
 		dropObj.Parent = DroppedFolder
 
-		-- Мягкое приземление брошенного игроком предмета и фиксация плашмя над уровнем снега
+		-- Плавная дуговая CFrame-анимация броска в зафиксированном состоянии (без провала под землю)
 		task.spawn(function()
-			local elapsed = 0
-			while elapsed < 0.6 and dropObj and dropObj.Parent and rootPart and not rootPart.Anchored do
-				task.wait(0.05)
-				elapsed = elapsed + 0.05
-				local curGroundY = getGroundHeight(rootPart.Position.X, rootPart.Position.Z)
-				if rootPart.Position.Y <= curGroundY + 0.4 then
-					break
+			local steps = 8
+			for s = 1, steps do
+				task.wait(0.03)
+				if not dropObj or not dropObj.Parent then break end
+				local t = s / steps
+				local currentPos = startPos:Lerp(landPos, t) + Vector3.new(0, math.sin(t * math.pi) * 1.0, 0)
+				local currentCF = CFrame.new(currentPos) * landCF.Rotation
+				if dropObj:IsA("Model") then
+					dropObj:PivotTo(currentCF)
+				else
+					dropObj.CFrame = currentCF
 				end
 			end
-			if dropObj and dropObj.Parent and rootPart then
-				local finalGroundY = getGroundHeight(rootPart.Position.X, rootPart.Position.Z)
-				local finalY = math.max(0.4, finalGroundY + restingHeight)
-				local landCF = CFrame.new(rootPart.Position.X, finalY, rootPart.Position.Z) * flatTilt
-
-				if dropObj:IsA("Model") then
-					dropObj:PivotTo(landCF)
-				else
-					dropObj.CFrame = landCF
-				end
-				for _, p in ipairs(dropObj:GetDescendants()) do
-					if p:IsA("BasePart") then
-						p.Anchored = true
-						p.AssemblyLinearVelocity = Vector3.zero
-					end
-				end
-				if dropObj:IsA("BasePart") then
-					dropObj.Anchored = true
-					dropObj.AssemblyLinearVelocity = Vector3.zero
-				end
+			if dropObj and dropObj.Parent then
+				SurfaceUtil.placeOnSurface(dropObj, spawnPos, 0.05)
 			end
 		end)
 	else
-		-- Предмет из сундука: мгновенно фиксируем плашмя на снегу
-		local landCF = CFrame.new(spawnPos.X, safeRestingY, spawnPos.Z) * flatTilt
-		if dropObj:IsA("Model") then
-			dropObj:PivotTo(landCF)
-		else
-			dropObj.CFrame = landCF
-		end
-		for _, p in ipairs(dropObj:GetDescendants()) do
-			if p:IsA("BasePart") then
-				p.Anchored = true
-				p.CanCollide = false
-				p.Transparency = 0
-				p.AssemblyLinearVelocity = Vector3.zero
-			end
-		end
-		if dropObj:IsA("BasePart") then
-			dropObj.Anchored = true
-			dropObj.CanCollide = false
-			dropObj.Transparency = 0
-			dropObj.AssemblyLinearVelocity = Vector3.zero
-		end
-		rootPart.CanCollide = true
+		-- Мгновенная фиксация на поверхности (из сундуков/контейнеров)
+		SurfaceUtil.placeOnSurface(dropObj, spawnPos, 0.05)
 		dropObj.Parent = DroppedFolder
 	end
 

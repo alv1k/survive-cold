@@ -14,9 +14,9 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
-local RemotesFolder = ReplicatedStorage:WaitForChild("Remotes", 10)
-local EatFoodRemote = RemotesFolder and RemotesFolder:WaitForChild("EatFood", 10)
-local ShowNotificationRemote = RemotesFolder and RemotesFolder:WaitForChild("ShowNotification", 10)
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local EatFoodRemote = Network.getEvent("EatFood")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local FOOD_KEYS = {
 	Bar = true, Bread = true, Chips = true, Soup = true, Pepper = true, Coffee = true, Steak = true

@@ -6,9 +6,15 @@
     - Дроп шкур при убийстве: Волк -> WolfPelt (85%), Йети -> YetiPelt (90%).
 --]]
 
-local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
+local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
+
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local MobsFolder = workspace:FindFirstChild("Mobs") or Instance.new("Folder", workspace)
 MobsFolder.Name = "Mobs"
@@ -174,16 +180,16 @@ local function spawnMob(mobType, spawnPos)
 	-- Обработка гибели моба и выпадения шкуры
 	humanoid.Died:Connect(function()
 		if cfg.Loot and math.random() <= cfg.Loot.Chance then
-			-- Создание лута на земле
+			-- Создание лута на земле через SurfaceUtil
 			local lootPart = Instance.new("Part")
 			lootPart.Name = "Dropped_" .. cfg.Loot.Item
-			lootPart.Size = Vector3.new(2, 1, 2)
-			lootPart.Position = hrp.Position + Vector3.new(0, 1, 0)
+			lootPart.Size = Vector3.new(2, 0.4, 2)
 			lootPart.Anchored = true
 			lootPart.CanCollide = false
 			lootPart.Material = Enum.Material.Fabric
 			lootPart.BrickColor = (cfg.Loot.Item == "WolfPelt") and BrickColor.new("Dark stone grey") or BrickColor.new("White")
 			lootPart.Parent = workspace:FindFirstChild("DroppedItems") or workspace
+			SurfaceUtil.placeOnSurface(lootPart, hrp.Position, 0.15)
 
 			local prompt = Instance.new("ProximityPrompt", lootPart)
 			prompt.ActionText = string.format("Подобрать %s (x%d)", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count)
@@ -193,29 +199,14 @@ local function spawnMob(mobType, spawnPos)
 			prompt.RequiresLineOfSight = false
 
 			prompt.Triggered:Connect(function(player)
-				local given = false
-				if _G.GiveItemToPlayer then
-					given = _G.GiveItemToPlayer(player, cfg.Loot.Item, cfg.Loot.Count)
-				else
-					local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-					if giveBindable and giveBindable:IsA("BindableFunction") then
-						given = giveBindable:Invoke(player, cfg.Loot.Item, cfg.Loot.Count)
-					end
-				end
-
+				local given = InventoryService.giveItem(player, cfg.Loot.Item, cfg.Loot.Count)
 				if not given then
-					local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
-					if ShowNotificationRemote then
-						ShowNotificationRemote:FireClient(player, "⚠️ Рюкзак полон! Освободите место, чтобы поднять шкуру.")
-					end
+					ShowNotificationRemote:FireClient(player, "⚠️ Рюкзак полон! Освободите место, чтобы поднять шкуру.")
 					return
 				end
 
 				lootPart:Destroy()
-				local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification")
-				if ShowNotificationRemote then
-					ShowNotificationRemote:FireClient(player, string.format("🎒 Вы подобрали %s (x%d)!", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count))
-				end
+				ShowNotificationRemote:FireClient(player, string.format("🎒 Вы подобрали %s (x%d)!", (cfg.Loot.Item == "WolfPelt" and "🐺 Шкуру волка" or "❄️ Шкуру Йети"), cfg.Loot.Count))
 				print(string.format("🎒 %s подобрал %dx %s!", player.Name, cfg.Loot.Count, cfg.Loot.Item))
 			end)
 		end
@@ -235,17 +226,7 @@ local function spawnMob(mobType, spawnPos)
 end
 
 local function getGroundHeight(x, z)
-	local rayOrigin = Vector3.new(x, 120, z)
-	local rayDirection = Vector3.new(0, -180, 0)
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Include
-	raycastParams.FilterDescendantsInstances = { workspace.Terrain }
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	if result then
-		return result.Position.Y
-	end
-	return 2.5
+	return SurfaceUtil.getGroundHeight(x, z, 50)
 end
 
 -- Спавн по 1 штуке каждого типа врагов на расстоянии ровно 210 метров от дома

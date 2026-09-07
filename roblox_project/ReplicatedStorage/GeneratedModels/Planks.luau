@@ -1,75 +1,97 @@
 --[[
     ReplicatedStorage/GeneratedModels/Planks.luau
-    Процедурный генератор 3D-модели штабеля досок (Planks) - в размер дропа из сундука:
-    - 4 доски крест-накрест (длина 2.8 студа)
-    - Металлическая кованая стяжка
+    Процедурный генератор 3D-модели штабеля досок (Planks):
+    - 6 досок, положенных друг на друга горизонтально в одном направлении
+    - Различие углов между слоями: 4-15 градусов
+    - Разные натуральные древесные оттенки коричневого цвета
+    - Базовая высота установки: Y = 2.0 (поверхность снежной равнины)
 --]]
 
 local PlanksGenerator = {}
 
 function PlanksGenerator.create(parent, targetCF)
-	targetCF = targetCF or CFrame.identity
+	targetCF = targetCF or CFrame.new(0, 2.0, 0)
 	local model = Instance.new("Model")
 	model.Name = "Planks"
 
-	-- Нижний слой (2 доски вдоль X)
-	local p1 = Instance.new("Part")
-	p1.Name = "Plank_Bottom_1"
-	p1.Size = Vector3.new(3.4, 0.55, 1.0)
-	p1.CFrame = targetCF * CFrame.new(0, 0.28, -0.6)
-	p1.Material = Enum.Material.Wood
-	p1.Color = Color3.fromRGB(198, 139, 89) -- wood_honey_oak
-	p1.Anchored = true
-	p1.CanCollide = false
-	p1.Parent = model
-	model.PrimaryPart = p1
+	-- Конфигурация 6 горизонтальных досок в штабеле:
+	-- Поворот вокруг Y (в градусах), смещение (X, Y, Z), размеры (X, Y, Z), цвет дерева
+	local plankConfigs = {
+		{
+			name = "Plank_1",
+			offset = Vector3.new(0.00, 0.09, 0.00),
+			angleDeg = -2.0,
+			size = Vector3.new(2.60, 0.18, 0.65),
+			color = Color3.fromRGB(92, 46, 11), -- wood_walnut (глубокий темный орех)
+		},
+		{
+			name = "Plank_2",
+			offset = Vector3.new(0.04, 0.27, 0.03),
+			angleDeg = 6.0, -- Разница с Plank_1: 8°
+			size = Vector3.new(2.55, 0.18, 0.62),
+			color = Color3.fromRGB(140, 69, 26), -- wood_cedar (теплый кедр)
+		},
+		{
+			name = "Plank_3",
+			offset = Vector3.new(-0.03, 0.45, -0.04),
+			angleDeg = -3.0, -- Разница с Plank_2: 9°
+			size = Vector3.new(2.65, 0.18, 0.66),
+			color = Color3.fromRGB(198, 139, 89), -- wood_honey_oak (медовый дуб)
+		},
+		{
+			name = "Plank_4",
+			offset = Vector3.new(0.05, 0.63, 0.02),
+			angleDeg = 7.0, -- Разница с Plank_3: 10°
+			size = Vector3.new(2.52, 0.18, 0.63),
+			color = Color3.fromRGB(229, 195, 158), -- wood_pine (светлая сосна)
+		},
+		{
+			name = "Plank_5",
+			offset = Vector3.new(-0.04, 0.81, 0.04),
+			angleDeg = -4.0, -- Разница с Plank_4: 11°
+			size = Vector3.new(2.58, 0.18, 0.62),
+			color = Color3.fromRGB(161, 98, 7), -- leather_warm (янтарное дерево)
+		},
+		{
+			name = "Plank_6",
+			offset = Vector3.new(0.02, 0.99, -0.03),
+			angleDeg = 3.0, -- Разница с Plank_5: 7°
+			size = Vector3.new(2.56, 0.18, 0.65),
+			color = Color3.fromRGB(180, 130, 85), -- wood_oak (натуральный дуб)
+		},
+	}
 
-	local p2 = Instance.new("Part")
-	p2.Name = "Plank_Bottom_2"
-	p2.Size = Vector3.new(3.4, 0.55, 1.0)
-	p2.CFrame = targetCF * CFrame.new(0.08, 0.28, 0.6)
-	p2.Material = Enum.Material.Wood
-	p2.Color = Color3.fromRGB(140, 69, 26) -- wood_cedar
-	p2.Anchored = true
-	p2.CanCollide = false
-	p2.Parent = model
+	local parts = {}
+	local primaryPart = nil
 
-	-- Верхний слой (2 доски поперек вдоль Z)
-	local p3 = Instance.new("Part")
-	p3.Name = "Plank_Top_1"
-	p3.Size = Vector3.new(1.0, 0.55, 3.4)
-	p3.CFrame = targetCF * CFrame.new(-0.6, 0.8, 0)
-	p3.Material = Enum.Material.Wood
-	p3.Color = Color3.fromRGB(229, 195, 158) -- wood_pine
-	p3.Anchored = true
-	p3.CanCollide = false
-	p3.Parent = model
+	for i, cfg in ipairs(plankConfigs) do
+		local p = Instance.new("Part")
+		p.Name = cfg.name
+		p.Size = cfg.size
+		p.CFrame = targetCF * CFrame.new(cfg.offset) * CFrame.Angles(0, math.rad(cfg.angleDeg), 0)
+		p.Material = Enum.Material.Wood
+		p.Color = cfg.color
+		p.Anchored = true
+		p.CanCollide = false
+		p.Transparency = 0
+		p.CastShadow = true
+		p.TopSurface = Enum.SurfaceType.Smooth
+		p.BottomSurface = Enum.SurfaceType.Smooth
+		p.Parent = model
 
-	local p4 = Instance.new("Part")
-	p4.Name = "Plank_Top_2"
-	p4.Size = Vector3.new(1.0, 0.55, 3.4)
-	p4.CFrame = targetCF * CFrame.new(0.6, 0.8, -0.04)
-	p4.Material = Enum.Material.Wood
-	p4.Color = Color3.fromRGB(198, 139, 89) -- wood_honey_oak
-	p4.Anchored = true
-	p4.CanCollide = false
-	p4.Parent = model
+		if i == 1 then
+			primaryPart = p
+			model.PrimaryPart = p
+		else
+			table.insert(parts, p)
+		end
+	end
 
-	-- Металлическая стяжка
-	local bracket = Instance.new("Part")
-	bracket.Name = "Bracket"
-	bracket.Size = Vector3.new(2.4, 0.1, 0.45)
-	bracket.CFrame = targetCF * CFrame.new(0, 1.1, 0)
-	bracket.Material = Enum.Material.Metal
-	bracket.Color = Color3.fromRGB(30, 41, 59) -- cast iron
-	bracket.Anchored = true
-	bracket.CanCollide = false
-	bracket.Parent = model
-
-	-- Welds
-	for _, p in ipairs({p2, p3, p4, bracket}) do
+	-- Welds для единой сборки
+	for _, p in ipairs(parts) do
 		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = p1
+		weld.Name = "Weld_" .. p.Name
+		weld.Part0 = primaryPart
 		weld.Part1 = p
 		weld.Parent = p
 	end

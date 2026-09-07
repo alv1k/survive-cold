@@ -12,17 +12,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
 
-local AttackMeleeRemote = RemotesFolder:FindFirstChild("AttackMelee") or Instance.new("RemoteEvent", RemotesFolder)
-AttackMeleeRemote.Name = "AttackMelee"
-
-local ShootRangedRemote = RemotesFolder:FindFirstChild("ShootRanged") or Instance.new("RemoteEvent", RemotesFolder)
-ShootRangedRemote.Name = "ShootRanged"
-
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
+local AttackMeleeRemote = Network.getEvent("AttackMelee")
+local ShootRangedRemote = Network.getEvent("ShootRanged")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local MobsFolder = workspace:FindFirstChild("Mobs") or Instance.new("Folder", workspace)
 MobsFolder.Name = "Mobs"

@@ -228,14 +228,15 @@ local function attachDetailed3DModel(tool, itemKey)
 		handle.Material = Enum.Material.Metal
 		handle.BrickColor = BrickColor.new("Cyan")
 
-		addSubPart("Core", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0, 0, 0), Enum.Material.Neon, BrickColor.new("Bright blue"))
+		addSubPart("Core", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright blue"))
 
 	elseif itemKey == "Stone" then
-		handle.Size = Vector3.new(0.6, 0.45, 0.55)
+		handle.Size = Vector3.new(0.75, 0.55, 0.65)
 		handle.Material = Enum.Material.Slate
 		handle.BrickColor = BrickColor.new("Medium stone grey")
-
-		addSubPart("Snow", Vector3.new(0.45, 0.1, 0.4), CFrame.new(0, 0.25, 0), Enum.Material.Snow, BrickColor.new("White"))
+		
+		local mesh = Instance.new("SpecialMesh", handle)
+		mesh.MeshType = Enum.MeshType.Sphere
 
 	elseif itemKey == "Planks" then
 		handle.Size = Vector3.new(0.4, 0.2, 1.1)
@@ -245,16 +246,45 @@ local function attachDetailed3DModel(tool, itemKey)
 		addSubPart("P2", Vector3.new(0.4, 0.2, 1.0), CFrame.new(0, 0.2, 0.05), Enum.Material.WoodPlanks, BrickColor.new("Medium orange"))
 
 	elseif itemKey == "Branches" then
-		handle.Size = Vector3.new(0.2, 0.2, 1.2)
-		handle.Material = Enum.Material.Wood
-		handle.BrickColor = BrickColor.new("Reddish brown")
-		addSubPart("Twig2", Vector3.new(0.15, 0.15, 1.0), CFrame.new(0, 0.05, 0) * CFrame.Angles(0, math.rad(35), 0), Enum.Material.Wood, BrickColor.new("Dark orange"))
+		handle.Size = Vector3.new(0.25, 0.25, 0.25)
+		handle.Transparency = 1
+		
+		-- 4 круглые веточки пучка
+		local t1 = addSubPart("Twig1", Vector3.new(0.16, 1.8, 0.16), CFrame.new(-0.06, 0, -0.05) * CFrame.Angles(math.rad(2), 0, math.rad(2)), Enum.Material.Wood, BrickColor.new("Reddish brown"))
+		local mesh1 = Instance.new("CylinderMesh", t1)
+		
+		local t2 = addSubPart("Twig2", Vector3.new(0.18, 1.85, 0.18), CFrame.new(0.06, 0, -0.04) * CFrame.Angles(math.rad(-3), 0, math.rad(-2)), Enum.Material.Wood, BrickColor.new("Dark orange"))
+		local mesh2 = Instance.new("CylinderMesh", t2)
+		
+		local t3 = addSubPart("Twig3", Vector3.new(0.15, 1.75, 0.15), CFrame.new(-0.02, 0, 0.06) * CFrame.Angles(math.rad(1), 0, math.rad(1)), Enum.Material.Wood, BrickColor.new("Brown"))
+		local mesh3 = Instance.new("CylinderMesh", t3)
+		
+		local t4 = addSubPart("Twig4", Vector3.new(0.16, 1.8, 0.16), CFrame.new(0.04, 0, 0.05) * CFrame.Angles(math.rad(-2), 0, math.rad(-1)), Enum.Material.Wood, BrickColor.new("Reddish brown"))
+		local mesh4 = Instance.new("CylinderMesh", t4)
+		
+		-- Бечевка
+		local tw = addSubPart("Twine", Vector3.new(0.38, 0.1, 0.35), CFrame.new(0, 0, 0), Enum.Material.Fabric, BrickColor.new("Brick yellow"))
+		local meshTw = Instance.new("CylinderMesh", tw)
 
 	elseif itemKey == "Fiber" then
-		handle.Size = Vector3.new(0.3, 0.6, 0.3)
-		handle.Material = Enum.Material.Grass
-		handle.BrickColor = BrickColor.new("Sand green")
-		addSubPart("Leaf2", Vector3.new(0.25, 0.5, 0.25), CFrame.new(0, 0.05, 0) * CFrame.Angles(0, math.rad(45), 0), Enum.Material.Grass, BrickColor.new("Bright yellow"))
+		handle.Size = Vector3.new(0.25, 0.25, 0.25)
+		handle.Transparency = 1
+
+		-- Стебли камыша с початками
+		local s1 = addSubPart("Stem1", Vector3.new(0.08, 1.7, 0.08), CFrame.new(0, 0.1, 0) * CFrame.Angles(math.rad(2), 0, math.rad(-1)), Enum.Material.Wood, BrickColor.new("Brick yellow"))
+		local _ = Instance.new("CylinderMesh", s1)
+		local h1 = addSubPart("Head1", Vector3.new(0.16, 0.42, 0.16), CFrame.new(0.02, 0.75, 0.01) * CFrame.Angles(math.rad(2), 0, math.rad(-1)), Enum.Material.Fabric, BrickColor.new("Brown"))
+		local _ = Instance.new("CylinderMesh", h1)
+
+		local s2 = addSubPart("Stem2", Vector3.new(0.07, 1.55, 0.07), CFrame.new(0.06, 0.05, -0.04) * CFrame.Angles(math.rad(-3), 0, math.rad(-6)), Enum.Material.Wood, BrickColor.new("Dark orange"))
+		local _ = Instance.new("CylinderMesh", s2)
+		local h2 = addSubPart("Head2", Vector3.new(0.15, 0.38, 0.15), CFrame.new(0.08, 0.65, -0.06) * CFrame.Angles(math.rad(-3), 0, math.rad(-6)), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+		local _ = Instance.new("CylinderMesh", h2)
+
+		-- Листья и бечевка
+		addSubPart("Leaf", Vector3.new(0.12, 1.2, 0.03), CFrame.new(-0.06, 0.1, 0.05) * CFrame.Angles(math.rad(6), 0, math.rad(15)), Enum.Material.Grass, BrickColor.new("Bright yellow"))
+		local tw = addSubPart("Twine", Vector3.new(0.32, 0.08, 0.30), CFrame.new(0, 0.1, 0), Enum.Material.Fabric, BrickColor.new("Medium orange"))
+		local _ = Instance.new("CylinderMesh", tw)
 
 	elseif itemKey == "WolfPelt" or itemKey == "YetiPelt" then
 		handle.Size = Vector3.new(0.7, 0.15, 0.7)
@@ -346,6 +376,9 @@ local function createItemTool(itemKey, count)
 	if itemKey == "Spear" then
 		-- Наклон копья вперед в руке под естественным боевым углом 35 градусов
 		tool.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-35), 0, 0)
+	elseif itemKey == "Branches" or itemKey == "Fiber" then
+		-- Естественный наклон пучка в руке
+		tool.Grip = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-30), 0, 0)
 	end
 
 	-- Обработка клика ЛКМ (Еда исключена от случайных нажатий по экрану)
@@ -509,10 +542,19 @@ end
 GiveItemBindable.OnInvoke = giveItemToPlayer
 _G.GiveItemToPlayer = giveItemToPlayer
 
-Players.PlayerAdded:Connect(function(player)
+local function onPlayerAdded(player)
 	player.CharacterAdded:Connect(function(char)
 		player:SetAttribute("Torch", player:GetAttribute("Torch") or 0)
 		player:SetAttribute("HasTorchInHand", false)
 	end)
-end)
+	if player.Character then
+		player:SetAttribute("Torch", player:GetAttribute("Torch") or 0)
+		player:SetAttribute("HasTorchInHand", false)
+	end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, player)
+end
+Players.PlayerAdded:Connect(onPlayerAdded)
 

@@ -94,6 +94,8 @@ local HAND_MODELS = {
 	}
 }
 
+local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+
 local function removeCurrentEquipped(char)
 	local existing = char:FindFirstChild("EquippedHandItem")
 	if existing then existing:Destroy() end
@@ -106,39 +108,113 @@ EquipItemRemote.OnServerEvent:Connect(function(player, itemKey)
 	removeCurrentEquipped(char)
 	player:SetAttribute("EquippedItem", itemKey or "")
 
-	if not itemKey or not HAND_MODELS[itemKey] then return end
+	if not itemKey or itemKey == "" then return end
 
 	local hand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
 	if not hand then return end
 
-	local cfg = HAND_MODELS[itemKey]
-	local itemPart = Instance.new("Part")
-	itemPart.Name = "EquippedHandItem"
-	itemPart.Size = cfg.Size
-	itemPart.Material = cfg.Material
-	itemPart.BrickColor = cfg.Color
-	itemPart.CanCollide = false
-	itemPart.Massless = true
+	-- 1. Пробуем собрать полноценную многокомпонентную 3D-модель из ModelHelper
+	local template = ModelHelper.findTemplate(itemKey)
+	if template then
+		local modelClone = template:Clone()
+		modelClone.Name = "EquippedHandItem"
 
-	local weld = Instance.new("WeldConstraint")
-	itemPart.CFrame = hand.CFrame * CFrame.new(0, -0.6, 0)
-	weld.Part0 = hand
-	weld.Part1 = itemPart
-	weld.Parent = itemPart
+		local allParts = {}
+		for _, desc in ipairs(modelClone:GetDescendants()) do
+			if desc:IsA("BasePart") then
+				table.insert(allParts, desc)
+			end
+		end
 
-	if cfg.HasFire then
-		local fire = Instance.new("Fire", itemPart)
-		fire.Size = 4
-		fire.Heat = 10
+		if #allParts > 0 then
+			local primary = modelClone.PrimaryPart or allParts[1]
+			modelClone.PrimaryPart = primary
 
-		local light = Instance.new("PointLight", itemPart)
-		light.Color = Color3.fromRGB(255, 160, 50)
-		light.Range = 18
-		light.Brightness = 0.6
+			for _, p in ipairs(allParts) do
+				p.Anchored = false
+				p.CanCollide = false
+				p.Massless = true
+				p.Transparency = 0
+				p.CastShadow = true
+			end
+
+			local handCF = hand.CFrame * CFrame.new(0, -0.6, 0)
+			if itemKey == "Branches" or itemKey == "Fiber" then
+				handCF = hand.CFrame * CFrame.new(0, -0.4, -0.1) * CFrame.Angles(math.rad(-30), 0, 0)
+			end
+			modelClone:PivotTo(handCF)
+
+			for _, p in ipairs(allParts) do
+				if p ~= primary then
+					local weld = p:FindFirstChildOfClass("WeldConstraint")
+					if not weld then
+						weld = Instance.new("WeldConstraint")
+						weld.Name = "Weld_" .. p.Name
+						weld.Part0 = primary
+						weld.Part1 = p
+						weld.Parent = p
+					end
+				end
+			end
+
+			local rootWeld = Instance.new("WeldConstraint")
+			rootWeld.Name = "Weld_HandToPrimary"
+			rootWeld.Part0 = hand
+			rootWeld.Part1 = primary
+			rootWeld.Parent = primary
+
+			if itemKey == "Torch" then
+				local fire = Instance.new("Fire", primary)
+				fire.Size = 4
+				fire.Heat = 10
+
+				local light = Instance.new("PointLight", primary)
+				light.Color = Color3.fromRGB(255, 160, 50)
+				light.Range = 18
+				light.Brightness = 0.6
+			end
+
+			modelClone.Parent = char
+			print(string.format("✋ %s взял в руки (3D Model): %s", player.Name, itemKey))
+			return
+		end
 	end
 
-	itemPart.Parent = char
-	print(string.format("✋ %s взял в руки: %s", player.Name, itemKey))
+	-- 2. Fallback на HAND_MODELS если шаблона нет
+	if HAND_MODELS[itemKey] then
+		local cfg = HAND_MODELS[itemKey]
+		local itemPart = Instance.new("Part")
+		itemPart.Name = "EquippedHandItem"
+		itemPart.Size = cfg.Size
+		itemPart.Material = cfg.Material
+		itemPart.BrickColor = cfg.Color
+		itemPart.CanCollide = false
+		itemPart.Massless = true
+
+		local weld = Instance.new("WeldConstraint")
+		if itemKey == "Branches" or itemKey == "Fiber" then
+			itemPart.CFrame = hand.CFrame * CFrame.new(0, -0.5, -0.1) * CFrame.Angles(math.rad(-30), 0, 0)
+		else
+			itemPart.CFrame = hand.CFrame * CFrame.new(0, -0.6, 0)
+		end
+		weld.Part0 = hand
+		weld.Part1 = itemPart
+		weld.Parent = itemPart
+
+		if cfg.HasFire then
+			local fire = Instance.new("Fire", itemPart)
+			fire.Size = 4
+			fire.Heat = 10
+
+			local light = Instance.new("PointLight", itemPart)
+			light.Color = Color3.fromRGB(255, 160, 50)
+			light.Range = 18
+			light.Brightness = 0.6
+		end
+
+		itemPart.Parent = char
+		print(string.format("✋ %s взял в руки (Fallback): %s", player.Name, itemKey))
+	end
 end)
 
 Players.PlayerRemoving:Connect(function(player)

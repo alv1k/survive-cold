@@ -10,26 +10,16 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
-RemotesFolder.Name = "Remotes"
+local GameConfig = require(ReplicatedStorage:WaitForChild("GameConfig"))
+local Network = require(ReplicatedStorage:WaitForChild("Network"))
+local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
-local StartGameRemote = RemotesFolder:FindFirstChild("StartGame") or Instance.new("RemoteEvent", RemotesFolder)
-StartGameRemote.Name = "StartGame"
-
-local ShowNotificationRemote = RemotesFolder:FindFirstChild("ShowNotification") or Instance.new("RemoteEvent", RemotesFolder)
-ShowNotificationRemote.Name = "ShowNotification"
-
-local ShowDeathScreenRemote = RemotesFolder:FindFirstChild("ShowDeathScreen") or Instance.new("RemoteEvent", RemotesFolder)
-ShowDeathScreenRemote.Name = "ShowDeathScreen"
-
-local HideDeathScreenRemote = RemotesFolder:FindFirstChild("HideDeathScreen") or Instance.new("RemoteEvent", RemotesFolder)
-HideDeathScreenRemote.Name = "HideDeathScreen"
-
-local RespawnInHouseRemote = RemotesFolder:FindFirstChild("RespawnInHouse") or Instance.new("RemoteEvent", RemotesFolder)
-RespawnInHouseRemote.Name = "RespawnInHouse"
-
-local ReviveWithRobuxRemote = RemotesFolder:FindFirstChild("ReviveWithRobux") or Instance.new("RemoteEvent", RemotesFolder)
-ReviveWithRobuxRemote.Name = "ReviveWithRobux"
+local StartGameRemote = Network.getEvent("StartGame")
+local ShowNotificationRemote = Network.getEvent("ShowNotification")
+local ShowDeathScreenRemote = Network.getEvent("ShowDeathScreen")
+local HideDeathScreenRemote = Network.getEvent("HideDeathScreen")
+local RespawnInHouseRemote = Network.getEvent("RespawnInHouse")
+local ReviveWithRobuxRemote = Network.getEvent("ReviveWithRobux")
 
 -- Увеличиваем время авто-спавна, чтобы игрок мог выбрать возрождение или быть воскрешен
 Players.RespawnTime = 999999
@@ -57,16 +47,7 @@ local function restoreSavedInventory(player)
 
 		if saved.Items and #saved.Items > 0 then
 			for _, itemData in ipairs(saved.Items) do
-				local given = false
-				if _G.GiveItemToPlayer then
-					given = _G.GiveItemToPlayer(player, itemData.Key, itemData.Count)
-				else
-					local giveBindable = ReplicatedStorage:FindFirstChild("GiveItem")
-					if giveBindable and giveBindable:IsA("BindableFunction") then
-						given = giveBindable:Invoke(player, itemData.Key, itemData.Count)
-					end
-				end
-
+				InventoryService.giveItem(player, itemData.Key, itemData.Count)
 			end
 		end
 		SavedInventoriesOnDeath[player.UserId] = nil
@@ -219,8 +200,8 @@ local function onPlayerSpawn(player, character)
 		player:SetAttribute("StartGameTimestamp", os.clock())
 	end
 	player:SetAttribute("SurvivalTimeSeconds", player:GetAttribute("SurvivalTimeSeconds") or 0)
-	player:SetAttribute("Warmth", player:GetAttribute("Warmth") or 100)
-	player:SetAttribute("Hunger", player:GetAttribute("Hunger") or 100)
+	player:SetAttribute("Warmth", 100)
+	player:SetAttribute("Hunger", 100)
 	player:SetAttribute("Stamina", 100)
 	player:SetAttribute("MaxSlots", player:GetAttribute("MaxSlots") or 5)
 	player:SetAttribute("WorkbenchLevel", player:GetAttribute("WorkbenchLevel") or 1)
@@ -229,64 +210,91 @@ local function onPlayerSpawn(player, character)
 	player:SetAttribute("Ammo_Slingshot", player:GetAttribute("Ammo_Slingshot") or 0)
 	player:SetAttribute("Ammo_Revolver", player:GetAttribute("Ammo_Revolver") or 0)
 
-	local humanoid = character:WaitForChild("Humanoid")
-	humanoid.MaxHealth = 100
-	humanoid.Health = 100
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	if humanoid then
+		humanoid.MaxHealth = 100
+		humanoid.Health = 100
+	end
 
-	humanoid.Died:Connect(function()
-		local hrp = character:FindFirstChild("HumanoidRootPart")
-		local deathPos = hrp and hrp.Position or Vector3.new(0, 4, 0)
-		player:SetAttribute("LastDeathPos", deathPos)
-		player:SetAttribute("IsDead", true)
+	local hrp = character:WaitForChild("HumanoidRootPart", 10)
+	if hrp then
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+		-- Гарантированный безопасный спавн на полу внутри дома (исключает спавн в воздухе / на крыше)
+		hrp.CFrame = CFrame.new(0, 3.5, 0)
 
-		-- Сохраняем слепок рюкзака и экипировки перед очисткой
-		local savedItems = {}
-		local backpack = player:FindFirstChildOfClass("Backpack")
+		task.spawn(function()
+			for _ = 1, 6 do
+				if character and character.Parent and hrp and hrp.Parent then
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.AssemblyAngularVelocity = Vector3.zero
+					hrp.CFrame = CFrame.new(0, 3.5, 0)
+				end
+				task.wait(0.05)
+			end
+		end)
+	end
 
-		local function saveToolsFrom(container)
-			if container then
-				for _, t in ipairs(container:GetChildren()) do
-					if t:IsA("Tool") and t:GetAttribute("ItemKey") then
-						table.insert(savedItems, {
-							Key = t:GetAttribute("ItemKey"),
-							Count = t:GetAttribute("Count") or 1,
-							TorchFuel = t:GetAttribute("TorchFuel")
-						})
+	if humanoid then
+		humanoid.Died:Connect(function()
+			local deathPos = hrp and hrp.Position or Vector3.new(0, 4, 0)
+			player:SetAttribute("LastDeathPos", deathPos)
+			player:SetAttribute("IsDead", true)
+
+			-- Сохраняем слепок рюкзака и экипировки перед очисткой
+			local savedItems = {}
+			local backpack = player:FindFirstChildOfClass("Backpack")
+
+			local function saveToolsFrom(container)
+				if container then
+					for _, t in ipairs(container:GetChildren()) do
+						if t:IsA("Tool") and t:GetAttribute("ItemKey") then
+							table.insert(savedItems, {
+								Key = t:GetAttribute("ItemKey"),
+								Count = t:GetAttribute("Count") or 1,
+								TorchFuel = t:GetAttribute("TorchFuel")
+							})
+						end
 					end
 				end
 			end
-		end
 
-		saveToolsFrom(backpack)
-		saveToolsFrom(character)
+			saveToolsFrom(backpack)
+			saveToolsFrom(character)
 
-		SavedInventoriesOnDeath[player.UserId] = {
-			Items = savedItems,
-			ClothingLevel = player:GetAttribute("ClothingLevel") or 0,
-			ClothingProtection = player:GetAttribute("ClothingProtection") or 0,
-			Ammo_Slingshot = player:GetAttribute("Ammo_Slingshot") or 0,
-			Ammo_Revolver = player:GetAttribute("Ammo_Revolver") or 0
-		}
+			SavedInventoriesOnDeath[player.UserId] = {
+				Items = savedItems,
+				ClothingLevel = player:GetAttribute("ClothingLevel") or 0,
+				ClothingProtection = player:GetAttribute("ClothingProtection") or 0,
+				Ammo_Slingshot = player:GetAttribute("Ammo_Slingshot") or 0,
+				Ammo_Revolver = player:GetAttribute("Ammo_Revolver") or 0
+			}
 
-		player:SetAttribute("CarriedRelics", 0)
+			player:SetAttribute("CarriedRelics", 0)
 
-		-- Создание маркера павшего союзника для воскрешения другими игроками
-		createDownedMarker(player, deathPos)
+			-- Создание маркера павшего союзника для воскрешения другими игроками
+			createDownedMarker(player, deathPos)
 
-		-- Открытие окна смерти на клиенте
-		ShowDeathScreenRemote:FireClient(player)
-		print(string.format("💀 %s погиб на позиции %s! Слепок рюкзака сохранен в ожидании выбора.", player.Name, tostring(deathPos)))
-	end)
+			-- Открытие окна смерти на клиенте
+			ShowDeathScreenRemote:FireClient(player)
+			print(string.format("💀 %s погиб на позиции %s! Слепок рюкзака сохранен в ожидании выбора.", player.Name, tostring(deathPos)))
+		end)
+	end
 end
 
-Players.PlayerAdded:Connect(function(player)
+local function onPlayerAdded(player)
 	player.CharacterAdded:Connect(function(char)
 		onPlayerSpawn(player, char)
 	end)
 	if player.Character then
 		onPlayerSpawn(player, player.Character)
 	end
-end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, player)
+end
+Players.PlayerAdded:Connect(onPlayerAdded)
 
 Players.PlayerRemoving:Connect(function(player)
 	removeDownedMarker(player)
@@ -311,12 +319,19 @@ RespawnInHouseRemote.OnServerEvent:Connect(function(player)
 
 	player:LoadCharacter()
 
-	task.wait(0.15)
-	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 3.5, 0)
-		local hum = player.Character:FindFirstChild("Humanoid")
-		if hum then hum.Health = 100 end
-	end
+	task.spawn(function()
+		for _ = 1, 6 do
+			if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+				local hrp = player.Character.HumanoidRootPart
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
+				hrp.CFrame = CFrame.new(0, 3.5, 0)
+				local hum = player.Character:FindFirstChild("Humanoid")
+				if hum then hum.Health = 100 end
+			end
+			task.wait(0.05)
+		end
+	end)
 
 	local bp = player:FindFirstChildOfClass("Backpack")
 	if bp then bp:ClearAllChildren() end
@@ -458,18 +473,19 @@ task.spawn(function()
 					local bearBuff = player:GetAttribute("BearWarmthBuff") or 0
 					heatSourcesGain = heatSourcesGain + bearBuff
 
-					-- Проверка нахождения внутри здания Магазина Продуктов (Тепло стоит на месте)
-					local dx = math.abs(pPos.X - (-380))
-					local dz = math.abs(pPos.Z - (-450))
-					local inFoodShop = (dx <= 16 and dz <= 13 and pPos.Y >= 2 and pPos.Y <= 16)
+					-- Проверка нахождения внутри жилого дома игрока (Тепло не тратится!)
+					local inPlayerHouse = (math.abs(pPos.X) <= 16 and math.abs(pPos.Z) <= 13 and pPos.Y <= 14)
 
-					if inFoodShop then
-						-- В магазине тепло не расходуется и стоит на месте (без костра)
-						if isHoldingTorch then
-							warmth = math.min(100, warmth + 4.0)
-						else
-							warmth = warmth -- не меняется
-						end
+					-- Проверка нахождения внутри здания Магазина Продуктов (Тепло стоит на месте)
+					local foodShopCfg = GameConfig.Locations.FoodShop
+					local dx = math.abs(pPos.X - foodShopCfg.Position.X)
+					local dz = math.abs(pPos.Z - foodShopCfg.Position.Z)
+					local bounds = foodShopCfg.Bounds or { SizeX = 32, SizeZ = 26, MinY = 2, MaxY = 18 }
+					local inFoodShop = (dx <= (bounds.SizeX / 2) and dz <= (bounds.SizeZ / 2) and pPos.Y >= bounds.MinY and pPos.Y <= bounds.MaxY)
+
+					if inPlayerHouse or inFoodShop then
+						-- Внутри дома и магазина тепло никогда не расходуется и игрок согревается
+						warmth = math.min(100, warmth + 2.0)
 					elseif nearBurningFire or isHoldingTorch then
 						-- Около огня или с горящим факелом в руках игрок всегда гарантированно согревается!
 						local netGain = math.max(1.5, heatSourcesGain - (isBlizzard and 1.5 or 0))
@@ -492,8 +508,8 @@ task.spawn(function()
 						if isBlizzard then
 							hungerDrain = hungerDrain * 1.25
 						end
-						if nearBurningFire or isHoldingTorch or inFoodShop then
-							hungerDrain = hungerDrain * 0.60
+						if nearBurningFire or isHoldingTorch or inFoodShop or inPlayerHouse then
+							hungerDrain = hungerDrain * 0.50
 						end
 						hunger = math.max(0, hunger - hungerDrain)
 						player:SetAttribute("Hunger", math.floor(hunger))

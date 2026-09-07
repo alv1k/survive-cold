@@ -117,11 +117,11 @@ function WolfGenerator.create(parent, targetCF, options)
 
 	-- 4 Острых белых клыка (Sharp White Canines)
 	-- Верхние клыки
-	makeWedge("Fang_UpperL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.11 * scale, 0.84 * scale, -1.45 * scale) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_UpperR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.11 * scale, 0.84 * scale, -1.45 * scale) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_UpperL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.11, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_UpperR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.11, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
 	-- Нижние клыки
-	makeWedge("Fang_LowerL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.09 * scale, 0.92 * scale, -1.41 * scale), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_LowerR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.09 * scale, 0.92 * scale, -1.41 * scale), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_LowerL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.09, 0.92, -1.41), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_LowerR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.09, 0.92, -1.41), Enum.Material.SmoothPlastic, c_fangs)
 
 	-- =========================================================================
 	-- 3. СВЕТЯЩИЕСЯ ГЛАЗА И УШИ (Eyes & Ears)

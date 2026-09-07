@@ -46,12 +46,16 @@ end)
 local function setModelCollisionGroup(model, groupName)
 	for _, desc in ipairs(model:GetDescendants()) do
 		if desc:IsA("BasePart") then
-			desc.CollisionGroup = groupName
+			pcall(function()
+				desc.CollisionGroup = groupName
+			end)
 		end
 	end
 	model.DescendantAdded:Connect(function(desc)
 		if desc:IsA("BasePart") then
-			desc.CollisionGroup = groupName
+			pcall(function()
+				desc.CollisionGroup = groupName
+			end)
 		end
 	end)
 end
@@ -117,63 +121,76 @@ local mobConfigs = {
 local SAFE_ZONE_BARRIER_X = 180 -- Западная граница: монстры не переходят X < 180!
 
 local function attachEnemyVisuals(mobModel, mobType, hrp)
-	local function addSubPart(name, size, cfOffset, material, color, isNeon)
-		local sub = Instance.new("Part")
-		sub.Name = name
-		sub.Size = size
-		sub.CFrame = hrp.CFrame * cfOffset
-		sub.Material = material or Enum.Material.Fabric
-		sub.BrickColor = color or BrickColor.new("Medium stone grey")
-		sub.CanCollide = false
-		sub.Massless = true
-		sub.Parent = mobModel
+	local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
+	local modScript = genMod and genMod:FindFirstChild(mobType)
+	local loaded = false
 
-		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = hrp
-		weld.Part1 = sub
-		weld.Parent = sub
-		return sub
-	end
+	if modScript then
+		local success, Generator = pcall(require, modScript)
+		if success and Generator and type(Generator.create) == "function" then
+			local offsetCF = CFrame.identity
+			if mobType == "Wolf" then
+				offsetCF = CFrame.new(0, -0.9, 0)
+			elseif mobType == "Yeti" then
+				offsetCF = CFrame.new(0, -1.8, 0)
+			elseif mobType == "Bigfoot" then
+				offsetCF = CFrame.new(0, -2.2, 0)
+			end
 
-	if mobType == "Wolf" then
-		-- 🐺 ПОЛЯРНЫЙ ВОЛК: Подключение высокоточной 3D-модели ~300 полигонов из GeneratedModels
-		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
-		local wolfScript = genMod and genMod:FindFirstChild("Wolf")
-		local loaded = false
+			local visualModel = Generator.create(nil, hrp.CFrame * offsetCF, {
+				isMob = true,
+				Scale = (mobType == "Wolf" and 1.35 or 1.0),
+				Anchored = false
+			})
 
-		if wolfScript then
-			local success, WolfGen = pcall(require, wolfScript)
-			if success and WolfGen and type(WolfGen.create) == "function" then
-				local wolfVisual = WolfGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.35, Anchored = false })
-				if wolfVisual then
-					local centerY = 1.27 -- Центр тяжести/корпуса полярного волка
-					for _, desc in ipairs(wolfVisual:GetChildren()) do
-						if desc:IsA("BasePart") then
-							local partPos = desc.Position
-							local partRot = desc.CFrame - desc.Position
-							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
-
-							desc.Anchored = false
-							desc.CanCollide = false
-							desc.Massless = true
-							desc.CFrame = hrp.CFrame * relOffset
-							desc.Parent = mobModel
-
-							local weld = Instance.new("WeldConstraint")
-							weld.Name = "Weld_" .. desc.Name
-							weld.Part0 = hrp
-							weld.Part1 = desc
-							weld.Parent = desc
-						end
+			if visualModel and visualModel.PrimaryPart then
+				local primary = visualModel.PrimaryPart
+				-- Переносим все части визуальной модели в mobModel
+				for _, desc in ipairs(visualModel:GetChildren()) do
+					if desc:IsA("BasePart") then
+						desc.Anchored = false
+						desc.CanCollide = false
+						desc.Massless = true
+						desc.Parent = mobModel
 					end
-					wolfVisual:Destroy()
-					loaded = true
 				end
+				visualModel:Destroy()
+
+				-- Привариваем PrimaryPart (Torso/Body) к hrp
+				local rootWeld = Instance.new("WeldConstraint")
+				rootWeld.Name = "Weld_Root_" .. mobType
+				rootWeld.Part0 = hrp
+				rootWeld.Part1 = primary
+				rootWeld.Parent = hrp
+
+				loaded = true
 			end
 		end
+	end
 
-		-- Резервный процедурный визуал, если модуль не найден
-		if not loaded then
+	if not loaded then
+		local function addSubPart(name, size, cfOffset, material, color)
+			local sub = Instance.new("Part")
+			sub.Name = name
+			sub.Size = size
+			sub.CFrame = hrp.CFrame * cfOffset
+			sub.Material = material or Enum.Material.Fabric
+			sub.BrickColor = color or BrickColor.new("Medium stone grey")
+			sub.CanCollide = false
+			sub.Massless = true
+			sub.Anchored = false
+			sub.Parent = mobModel
+
+			local weld = Instance.new("WeldConstraint")
+			weld.Name = "Weld_" .. name
+			weld.Part0 = hrp
+			weld.Part1 = sub
+			weld.Parent = sub
+			return sub
+		end
+
+		if mobType == "Wolf" then
+			addSubPart("Body", Vector3.new(1.4, 1.2, 2.2), CFrame.new(0, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Medium stone grey"))
 			addSubPart("Head", Vector3.new(1.4, 1.3, 1.6), CFrame.new(0, 0.4, -1.2), Enum.Material.SmoothPlastic, BrickColor.new("Medium stone grey"))
 			addSubPart("Snout", Vector3.new(0.8, 0.6, 1.1), CFrame.new(0, 0.2, -1.8), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("Nose", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 0.35, -2.25), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
@@ -186,47 +203,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 			addSubPart("LegBL", Vector3.new(0.45, 1.2, 0.45), CFrame.new(-0.5, -0.6, 0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("LegBR", Vector3.new(0.45, 1.2, 0.45), CFrame.new(0.5, -0.6, 0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("Tail", Vector3.new(0.4, 0.4, 1.4), CFrame.new(0, 0.2, 1.4) * CFrame.Angles(math.rad(-25), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Medium stone grey"))
-		end
-
-	elseif mobType == "Yeti" then
-		-- ❄️ СНЕЖНЫЙ ЙЕТИ: Высокоточная модель из GeneratedModels / Резервный визуал
-		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
-		local yetiScript = genMod and genMod:FindFirstChild("Yeti")
-		local loaded = false
-
-		if yetiScript then
-			local success, YetiGen = pcall(require, yetiScript)
-			if success and YetiGen and type(YetiGen.create) == "function" then
-				local yetiVisual = YetiGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.0, Anchored = false })
-				if yetiVisual then
-					local centerY = 2.4 -- Центр корпуса Йети
-					for _, desc in ipairs(yetiVisual:GetChildren()) do
-						if desc:IsA("BasePart") then
-							local partPos = desc.Position
-							local partRot = desc.CFrame - desc.Position
-							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
-
-							desc.Anchored = false
-							desc.CanCollide = false
-							desc.Massless = true
-							desc.CFrame = hrp.CFrame * relOffset
-							desc.Parent = mobModel
-
-							local weld = Instance.new("WeldConstraint")
-							weld.Name = "Weld_" .. desc.Name
-							weld.Part0 = hrp
-							weld.Part1 = desc
-							weld.Parent = desc
-						end
-					end
-					yetiVisual:Destroy()
-					loaded = true
-				end
-			end
-		end
-
-		if not loaded then
-			-- Резервный процедурный визуал с гарантированным видимым торсом
+		elseif mobType == "Yeti" then
 			addSubPart("Torso", Vector3.new(3.8, 3.2, 2.6), CFrame.new(0, 0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
 			addSubPart("LowerTorso", Vector3.new(3.2, 1.8, 2.4), CFrame.new(0, -1.2, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
 			addSubPart("FurCollar", Vector3.new(4.0, 1.2, 3.0), CFrame.new(0, 1.2, 0), Enum.Material.Fabric, BrickColor.new("White"))
@@ -240,47 +217,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 			addSubPart("ArmR", Vector3.new(1.4, 3.6, 1.4), CFrame.new(2.6, 0.2, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
 			addSubPart("LegL", Vector3.new(1.4, 2.4, 1.4), CFrame.new(-1.1, -2.0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
 			addSubPart("LegR", Vector3.new(1.4, 2.4, 1.4), CFrame.new(1.1, -2.0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
-		end
-
-	elseif mobType == "Bigfoot" then
-		-- 🦍 БИГФУТ: Высокоточная модель из GeneratedModels / Резервный визуал
-		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
-		local bigfootScript = genMod and genMod:FindFirstChild("Bigfoot")
-		local loaded = false
-
-		if bigfootScript then
-			local success, BigfootGen = pcall(require, bigfootScript)
-			if success and BigfootGen and type(BigfootGen.create) == "function" then
-				local bigfootVisual = BigfootGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.0, Anchored = false })
-				if bigfootVisual then
-					local centerY = 2.5 -- Центр корпуса Бигфута
-					for _, desc in ipairs(bigfootVisual:GetChildren()) do
-						if desc:IsA("BasePart") then
-							local partPos = desc.Position
-							local partRot = desc.CFrame - desc.Position
-							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
-
-							desc.Anchored = false
-							desc.CanCollide = false
-							desc.Massless = true
-							desc.CFrame = hrp.CFrame * relOffset
-							desc.Parent = mobModel
-
-							local weld = Instance.new("WeldConstraint")
-							weld.Name = "Weld_" .. desc.Name
-							weld.Part0 = hrp
-							weld.Part1 = desc
-							weld.Parent = desc
-						end
-					end
-					bigfootVisual:Destroy()
-					loaded = true
-				end
-			end
-		end
-
-		if not loaded then
-			-- Резервный процедурный визуал с гарантированным видимым торсом
+		elseif mobType == "Bigfoot" then
 			addSubPart("Torso", Vector3.new(4.0, 3.4, 2.8), CFrame.new(0, 0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
 			addSubPart("LowerTorso", Vector3.new(3.4, 1.8, 2.5), CFrame.new(0, -1.3, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
 			addSubPart("BackHunch", Vector3.new(3.8, 1.6, 2.2), CFrame.new(0, 1.1, 0.4), Enum.Material.Fabric, BrickColor.new("Dark orange"))
@@ -294,6 +231,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 			addSubPart("LegL", Vector3.new(1.5, 2.6, 1.5), CFrame.new(-1.2, -2.2, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
 			addSubPart("LegR", Vector3.new(1.5, 2.6, 1.5), CFrame.new(1.2, -2.2, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
 		end
+	end
 end
 
 local function spawnMob(mobType, spawnPos)
@@ -377,6 +315,7 @@ local function spawnMob(mobType, spawnPos)
 
 
 	mobModel.Parent = MobsFolder
+	print(string.format("🐺 [MobSpawner] Заспавнен %s (%s) на позиции (%.1f, %.1f, %.1f), частей модели: %d", cfg.Name, mobType, spawnPos.X, spawnPos.Y, spawnPos.Z, #mobModel:GetChildren()))
 end
 
 local function getGroundHeight(x, z)

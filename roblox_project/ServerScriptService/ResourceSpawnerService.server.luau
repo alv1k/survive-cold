@@ -8,6 +8,7 @@
     - 🚫 4 такта добычи, защита от спама, CanCollide = false, приподнятая посадка над снегом
 --]]
 
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,6 +23,8 @@ local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 local HarvestResourceRemote = Network.getEvent("HarvestResource")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
+
+local HARVEST_FADE_TIME = 1.2
 
 local function isInsideHouseZone(pos)
 	-- Строгий запрет спавна в черте дома и прилегающего двора
@@ -167,16 +170,33 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 	if hitsLeft <= 0 then
 		model:SetAttribute("IsHarvestable", false)
 
-		-- Скрываем все видимые детали 3D-модели
+		-- Плавно растворяем все видимые детали 3D-модели
+		local tweenInfoOut = TweenInfo.new(HARVEST_FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		if model:IsA("Model") then
 			for _, part in ipairs(model:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.Transparency = 1
+				if part:IsA("BasePart") and part.Name ~= "HitBox" then
+					local tw = TweenService:Create(part, tweenInfoOut, { Transparency = 1 })
+					tw:Play()
 				end
 			end
 		elseif model:IsA("BasePart") then
-			model.Transparency = 1
+			local tw = TweenService:Create(model, tweenInfoOut, { Transparency = 1 })
+			tw:Play()
 		end
+
+		task.delay(HARVEST_FADE_TIME, function()
+			if model and model.Parent then
+				if model:IsA("Model") then
+					for _, part in ipairs(model:GetDescendants()) do
+						if part:IsA("BasePart") and part.Name ~= "HitBox" then
+							part.Transparency = 1
+						end
+					end
+				elseif model:IsA("BasePart") then
+					model.Transparency = 1
+				end
+			end
+		end)
 
 		-- Выдача случайного количества ресурсов от 1 до 3 шт.
 		local gain = math.random(1, 3)
@@ -202,17 +222,34 @@ HarvestResourceRemote.OnServerEvent:Connect(function(player, target)
 		-- Респавн через 10 минут
 		task.delay(600, function()
 			if model and model.Parent then
+				local tweenInfoIn = TweenInfo.new(HARVEST_FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 				if model:IsA("Model") then
 					for _, part in ipairs(model:GetDescendants()) do
 						if part:IsA("BasePart") and part.Name ~= "HitBox" then
-							part.Transparency = 0
+							local tw = TweenService:Create(part, tweenInfoIn, { Transparency = 0 })
+							tw:Play()
 						end
 					end
 				elseif model:IsA("BasePart") then
-					model.Transparency = 0
+					local tw = TweenService:Create(model, tweenInfoIn, { Transparency = 0 })
+					tw:Play()
 				end
-				model:SetAttribute("HitsLeft", 4)
-				model:SetAttribute("IsHarvestable", true)
+
+				task.delay(HARVEST_FADE_TIME, function()
+					if model and model.Parent then
+						if model:IsA("Model") then
+							for _, part in ipairs(model:GetDescendants()) do
+								if part:IsA("BasePart") and part.Name ~= "HitBox" then
+									part.Transparency = 0
+								end
+							end
+						elseif model:IsA("BasePart") then
+							model.Transparency = 0
+						end
+						model:SetAttribute("HitsLeft", 4)
+						model:SetAttribute("IsHarvestable", true)
+					end
+				end)
 			end
 		end)
 	end

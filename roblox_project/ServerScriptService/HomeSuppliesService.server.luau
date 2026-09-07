@@ -9,6 +9,7 @@
     - Приподнятая посадка над снегом (Y-offset), мягкая подсветка и ProximityPrompt
 --]]
 
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +24,8 @@ local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local ModelHelper = require(ReplicatedStorage:WaitForChild("ModelHelper", 10))
 local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
+
+local FADE_TIME = 1.8 -- Длительность плавного растворения / появления
 
 local function getGroundHeight(x, z)
 	return SurfaceUtil.getGroundHeight(x, z)
@@ -103,29 +106,61 @@ local function createHomeResourceNode(resType, pos, index)
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false
 
+	local isBusy = false
+
 	prompt.Triggered:Connect(function(player)
+		if isBusy then return end
+		isBusy = true
+		prompt.Enabled = false
+
 		local count = (resType == "Spear") and 1 or 2
 		local given = InventoryService.giveItem(player, resType, count)
 		if not given then
 			InventoryService.dropItem(player, resType, count, exactPos + Vector3.new(0, 1.0, 0))
 		end
 
-		prompt.Enabled = false
+		-- Плавное исчезновение модели
+		local tweenInfoOut = TweenInfo.new(FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		for _, desc in ipairs(nodeModel:GetDescendants()) do
-			if desc:IsA("BasePart") then
-				desc.Transparency = 1
+			if desc:IsA("BasePart") and desc.Name ~= "HitBox" then
+				local tw = TweenService:Create(desc, tweenInfoOut, { Transparency = 1 })
+				tw:Play()
 			end
 		end
 
-		-- Быстрый респавн 45 секунд
-		task.delay(45, function()
+		-- Гарантированное скрытие после окончания твина
+		task.delay(FADE_TIME, function()
 			if nodeModel and nodeModel.Parent then
 				for _, desc in ipairs(nodeModel:GetDescendants()) do
 					if desc:IsA("BasePart") and desc.Name ~= "HitBox" then
-						desc.Transparency = 0
+						desc.Transparency = 1
 					end
 				end
-				prompt.Enabled = true
+			end
+		end)
+
+		-- Плавный респавн через 45 секунд
+		task.delay(45, function()
+			if nodeModel and nodeModel.Parent then
+				local tweenInfoIn = TweenInfo.new(FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+				for _, desc in ipairs(nodeModel:GetDescendants()) do
+					if desc:IsA("BasePart") and desc.Name ~= "HitBox" then
+						local tw = TweenService:Create(desc, tweenInfoIn, { Transparency = 0 })
+						tw:Play()
+					end
+				end
+
+				task.delay(FADE_TIME, function()
+					if nodeModel and nodeModel.Parent then
+						for _, desc in ipairs(nodeModel:GetDescendants()) do
+							if desc:IsA("BasePart") and desc.Name ~= "HitBox" then
+								desc.Transparency = 0
+							end
+						end
+						isBusy = false
+						prompt.Enabled = true
+					end
+				end)
 			end
 		end)
 	end)

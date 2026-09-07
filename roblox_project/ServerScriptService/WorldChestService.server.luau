@@ -252,9 +252,21 @@ local function fadeChestOut(chestModel, light, duration)
 	duration = duration or FADE_OUT_TIME
 	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-	-- Плавно растворяем все детали модели
+	-- Отключаем коллизию сразу при начале растворения
 	for _, part in ipairs(chestModel:GetDescendants()) do
 		if part:IsA("BasePart") then
+			part.CanCollide = false
+			if part.Material == Enum.Material.Neon then
+				local tween = TweenService:Create(part, tweenInfo, { 
+					Transparency = 1,
+					Color = Color3.fromRGB(0, 0, 0)
+				})
+				tween:Play()
+			else
+				local tween = TweenService:Create(part, tweenInfo, { Transparency = 1 })
+				tween:Play()
+			end
+		elseif part:IsA("Decal") or part:IsA("Texture") then
 			local tween = TweenService:Create(part, tweenInfo, { Transparency = 1 })
 			tween:Play()
 		end
@@ -266,16 +278,18 @@ local function fadeChestOut(chestModel, light, duration)
 		lightTween:Play()
 	end
 
-	-- Отключаем коллизию после исчезновения
+	-- Гарантируем 100% прозрачность и отключение света после окончания анимации
 	task.delay(duration, function()
 		if chestModel and chestModel.Parent then
 			for _, part in ipairs(chestModel:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.CanCollide = false
+					part.Transparency = 1
 				end
 			end
 			if light then
 				light.Enabled = false
+				light.Brightness = 0
 			end
 		end
 	end)
@@ -293,16 +307,43 @@ local function fadeChestIn(chestModel, light, defaultLightColor, duration)
 		lightTween:Play()
 	end
 
-	-- Включаем коллизию и плавно материализуем модель
+	-- Плавно материализуем все детали модели и восстанавливаем цвета
 	for _, part in ipairs(chestModel:GetDescendants()) do
 		if part:IsA("BasePart") then
-			if part.Name ~= "Gem" and not string.find(part.Name, "Circuit") and not string.find(part.Name, "Seam") then
-				part.CanCollide = true
+			local origR = part:GetAttribute("OrigColorR")
+			local origG = part:GetAttribute("OrigColorG")
+			local origB = part:GetAttribute("OrigColorB")
+			local origMat = part:GetAttribute("OrigMaterial")
+			if origMat then
+				part.Material = Enum.Material[origMat] or part.Material
 			end
+
+			local targetProps = { Transparency = 0 }
+			if origR and origG and origB then
+				targetProps.Color = Color3.new(origR, origG, origB)
+			end
+
+			local tween = TweenService:Create(part, tweenInfo, targetProps)
+			tween:Play()
+		elseif part:IsA("Decal") or part:IsA("Texture") then
 			local tween = TweenService:Create(part, tweenInfo, { Transparency = 0 })
 			tween:Play()
 		end
 	end
+
+	-- Включаем коллизию основных частей после завершения появления
+	task.delay(duration, function()
+		if chestModel and chestModel.Parent then
+			for _, part in ipairs(chestModel:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Transparency = 0
+					if part.Name ~= "Gem" and not string.find(part.Name, "Circuit") and not string.find(part.Name, "Seam") then
+						part.CanCollide = true
+					end
+				end
+			end
+		end
+	end)
 end
 
 -- Создание интерактивного сундука
@@ -334,14 +375,20 @@ local function createInteractiveChest(index, loc, isPartsChest)
 
 	chestModel.Name = isPartsChest and string.format("WorldPartChest_%d", index) or string.format("WorldChest_%d", index)
 
-	-- Закрепление деталей
+	-- Закрепление деталей и сохранение оригинальных свойств для плавного восстановления
 	for _, part in ipairs(chestModel:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Anchored = true
 			if part.Name ~= "Gem" and not string.find(part.Name, "Circuit") and not string.find(part.Name, "Seam") then
 				part.CanCollide = true
+			else
+				part.CanCollide = false
 			end
 			part.Transparency = 0
+			part:SetAttribute("OrigColorR", part.Color.R)
+			part:SetAttribute("OrigColorG", part.Color.G)
+			part:SetAttribute("OrigColorB", part.Color.B)
+			part:SetAttribute("OrigMaterial", part.Material.Name)
 		end
 	end
 
@@ -374,28 +421,34 @@ local function createInteractiveChest(index, loc, isPartsChest)
 		isOpening = true
 		prompt.Enabled = false
 
-		-- Генерация ровно 4 предметов
-		local items = isPartsChest and getPartsLoot(ITEMS_PER_CHEST) or getRandomSupplyLoot(ITEMS_PER_CHEST)
-
-		for i, dropData in ipairs(items) do
-			local angle = (i / #items) * (math.pi * 2) + math.rad((index * 23) % 45)
-			local radius = 3.2 + (i % 2) * 0.5
-			local dropOffset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-			local dropPos = Vector3.new(chestPos.X + dropOffset.X, groundY, chestPos.Z + dropOffset.Z)
-
-			InventoryService.dropItem(player, dropData.Item, dropData.Count, dropPos)
-		end
-
-		if isPartsChest then
-			ShowNotificationRemote:FireClient(player, "⚙️ Вы открыли сундук деталей! Запчасти высыпались на снег.")
-			print(string.format("⚙️ %s открыл WorldPartChest_%d! Выпало деталей: %d (плавное исчезновение)", player.Name, index, #items))
-		else
-			ShowNotificationRemote:FireClient(player, "📦 Вы открыли сундук! 4 ценных предмета высыпались на снег.")
-			print(string.format("🧰 %s открыл WorldChest_%d! Выпало предметов: %d (плавное исчезновение)", player.Name, index, #items))
-		end
-
-		-- Плавное исчезновение сундука
+		-- СРАЗУ запускаем медленное и плавное растворение сундука!
 		fadeChestOut(chestModel, light, FADE_OUT_TIME)
+
+		-- Генерация ровно 4 предметов и сброс на землю с защитой pcall
+		local dropSuccess, dropErr = pcall(function()
+			local items = isPartsChest and getPartsLoot(ITEMS_PER_CHEST) or getRandomSupplyLoot(ITEMS_PER_CHEST)
+
+			for i, dropData in ipairs(items) do
+				local angle = (i / #items) * (math.pi * 2) + math.rad((index * 23) % 45)
+				local radius = 3.2 + (i % 2) * 0.5
+				local dropOffset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+				local dropPos = Vector3.new(chestPos.X + dropOffset.X, groundY, chestPos.Z + dropOffset.Z)
+
+				InventoryService.dropItem(player, dropData.Item, dropData.Count, dropPos)
+			end
+
+			if isPartsChest then
+				ShowNotificationRemote:FireClient(player, "⚙️ Вы открыли сундук деталей! Запчасти высыпались на снег.")
+				print(string.format("⚙️ %s открыл WorldPartChest_%d! Выпало деталей: %d (плавное растворение)", player.Name, index, #items))
+			else
+				ShowNotificationRemote:FireClient(player, "📦 Вы открыли сундук! 4 ценных предмета высыпались на снег.")
+				print(string.format("🧰 %s открыл WorldChest_%d! Выпало предметов: %d (плавное растворение)", player.Name, index, #items))
+			end
+		end)
+
+		if not dropSuccess then
+			warn(string.format("⚠️ Ошибка при открытии %s: %s", chestModel.Name, tostring(dropErr)))
+		end
 
 		-- Авто-респавн через 120 секунд с плавной анимацией появления
 		task.delay(RESPAWN_TIME, function()

@@ -275,7 +275,7 @@ function SpearModel.create(parent, targetCF)
 	end
 
 	if targetCF then
-		container:PivotTo(targetCF)
+		container:PivotTo(targetCF * CFrame.new(0, 1.05, 0))
 	end
 
 	if parent then

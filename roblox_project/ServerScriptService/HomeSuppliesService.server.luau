@@ -85,13 +85,15 @@ local function createHomeResourceNode(resType, pos, index)
 		or (resType == "Stone" and "Взять камень (x2)")
 		or (resType == "Planks" and "Взять доски (x2)")
 		or (resType == "Parts" and "Взять детали (x2)")
-		or "Взять ресурс (x2)"
+		or (resType == "Spear" and "Взять охотничье копье")
+		or "Взять ресурс"
 
 	local promptName = (resType == "Branches" and "🌿 Ветки")
 		or (resType == "Fiber" and "🌱 Волокно")
 		or (resType == "Stone" and "⚪ Камень")
 		or (resType == "Planks" and "🌲 Доски")
 		or (resType == "Parts" and "⚙️ Детали")
+		or (resType == "Spear" and "🗡️ Охотничье копье")
 		or "📦 Ресурс"
 
 	local prompt = Instance.new("ProximityPrompt", hitBox)
@@ -102,9 +104,10 @@ local function createHomeResourceNode(resType, pos, index)
 	prompt.RequiresLineOfSight = false
 
 	prompt.Triggered:Connect(function(player)
-		local given = InventoryService.giveItem(player, resType, 2)
+		local count = (resType == "Spear") and 1 or 2
+		local given = InventoryService.giveItem(player, resType, count)
 		if not given then
-			InventoryService.dropItem(player, resType, 2, exactPos + Vector3.new(0, 1.0, 0))
+			InventoryService.dropItem(player, resType, count, exactPos + Vector3.new(0, 1.0, 0))
 		end
 
 		prompt.Enabled = false
@@ -179,4 +182,13 @@ for i = 1, 10 do
 	createHomeResourceNode("Parts", Vector3.new(x, 0, z), i)
 end
 
-print("🏡 [HomeSuppliesService] 50 околодомовых 3D-ресурсов (Ветки, Волокно, Камни, Доски, Детали) успешно расставлены вокруг дома!")
+-- 2 ОХОТНИЧЬИХ КОПЬЯ (На крыльце у входа и верстака)
+local spearPositions = {
+	Vector3.new(11.5, 0, 13.8), -- Около верстака на крыльце
+	Vector3.new(-11.5, 0, 13.8), -- У левой стойки крыльца
+}
+for i, pos in ipairs(spearPositions) do
+	createHomeResourceNode("Spear", pos, i)
+end
+
+print("🏡 [HomeSuppliesService] 52 околодомовых 3D-ресурса (Ветки, Волокно, Камни, Доски, Детали, Копья) успешно расставлены вокруг дома!")

@@ -266,13 +266,24 @@ local function buildPlayerHouse()
 
 	local petBed = Instance.new("Part")
 	petBed.Name = "PetBed"
-	petBed.Size = Vector3.new(6, 0.8, 4)
-	-- Точное приземление на пол (пол 1.2, половина лежанки 0.4 -> Y = 1.6)
 	petBed.Position = HOUSE_POS + Vector3.new(11, 1.6, 8)
 	petBed.Anchored = true
 	petBed.Material = Enum.Material.Fabric
 	petBed.BrickColor = BrickColor.new("Lilac")
 	petBed.Parent = houseModel
+
+	-- 3D Охотничье копьё у верстака
+	local genSpear = require(ReplicatedStorage.GeneratedModels.Spear)
+	if genSpear and type(genSpear.create) == "function" then
+		local spearModel = genSpear.create(houseModel, CFrame.new(HOUSE_POS + Vector3.new(-14.2, 0.6, 6)) * CFrame.Angles(0, 0, math.rad(-12)))
+		spearModel.Name = "HouseDecorSpear"
+		for _, desc in ipairs(spearModel:GetDescendants()) do
+			if desc:IsA("BasePart") then
+				desc.Anchored = true
+				desc.CanCollide = false
+			end
+		end
+	end
 
 	houseModel.Parent = WorldFolder
 end
@@ -410,6 +421,19 @@ local function buildHunterCabins()
 		local heatFolder = workspace:FindFirstChild("HeatSources") or Instance.new("Folder", workspace)
 		heatFolder.Name = "HeatSources"
 		stove.Parent = heatFolder
+
+		-- Охотничье копьё у стены заимки
+		local genSpear = require(ReplicatedStorage.GeneratedModels.Spear)
+		if genSpear and type(genSpear.create) == "function" then
+			local spearModel = genSpear.create(cabin, CFrame.new(basePos + Vector3.new(7.5, 0.6, 5)) * CFrame.Angles(0, 0, math.rad(-14)))
+			spearModel.Name = "CabinSpear_" .. i
+			for _, desc in ipairs(spearModel:GetDescendants()) do
+				if desc:IsA("BasePart") then
+					desc.Anchored = true
+					desc.CanCollide = false
+				end
+			end
+		end
 
 		cabin.PrimaryPart = base
 		cabin.Parent = cabinsFolder

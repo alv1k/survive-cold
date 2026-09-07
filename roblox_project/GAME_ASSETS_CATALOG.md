@@ -194,7 +194,9 @@
    - **Пучок камышей для дропа и инвентаря (Cattail Bundle):** 3 аккуратных стебля камыша с початками и сухими листьями, перевязанные посередине джутовой бечевкой (`TwineBand`) с узелком.
 4. **Штабель досок / Lumber Planks (`assets/models/nature/planks.fbx`, `planks.obj`, `planks.blend`, `Planks.luau`)**:
    - **Модульная структура:** Корневой Empty `Planks` + 6 дочерних `MeshPart` (`Plank_1` – `Plank_6`): 6 аккуратно сложенных друг на друга горизонтальных досок в одном направлении с различием углов 4–15° между слоями, каждая в своем натуральном оттенке коричневого дерева (`wood_walnut`, `wood_cedar`, `wood_honey_oak`, `wood_pine`, `leather_warm`) (72 tris, Flat Shading, `palette.png`).
-5. **Елочки / Fir Tree (`assets/models/nature/fir_tree.fbx`, `fir_tree.obj`, `fir_tree.blend`)**:
+5. **Механические детали (Шестерёнки) / Parts & Cogwheels (`assets/models/resources/parts.fbx`, `parts.obj`, `parts.blend`, `Parts.luau`)**:
+   - **Модульная структура:** Корневой Empty `Parts` + 4 дочерние части: `BigGear` (большая бронзовая 8-зубчатая шестерня со спицами `copper_bronze`), `MediumGear` (сцепленная стальная 6-зубчатая шестерня `steel_light`), `PinionGear` (накладная верхняя шестерня привода из вороненой стали `gunmetal`), `AxlePins` (стальные оси с шестигранными головками и медными шайбами) (636 tris, Flat Shading, `palette.png`).
+6. **Елочки / Fir Tree (`assets/models/nature/fir_tree.fbx`, `fir_tree.obj`, `fir_tree.blend`)**:
    - **Модульная структура:** Корневой Empty `FirTree` + 3 дочерние части: `Trunk` (ствол `wood_bark`), `Foliage` (3-ярусная конусная мультяшная крона `pine_dark` / `pine_green`), `SnowTrim` (снежные фестоны на ярусах `snow_pure`) (144 tris).
 
 ### 2.4. 🐺 Враги и Монстры (.FBX / .OBJ, Стилизованный Low-Poly)

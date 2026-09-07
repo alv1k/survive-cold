@@ -1741,6 +1741,138 @@ def create_planks():
         os.path.join(MODELS_DIR, "resources")
     ])
 
+def create_parts():
+    """
+    Creates stylized multi-cog mechanical gears cluster (Шестерёнки):
+    - Large 8-tooth Antique Bronze Cogwheel with 4 spokes and axle pin
+    - Medium 6-tooth Machined Steel Cogwheel interlocked with main gear
+    - Small 6-tooth Gunmetal Pinion Gear stacked on top with lock nut
+    """
+    clear_scene()
+    setup_roblox_scene()
+
+    def create_cogwheel(name, cx, cy, cz, radius, thickness, n_teeth, tooth_len, tooth_w, phase_deg, col_gear, col_spoke):
+        bm = bmesh.new()
+        rad_phase = math.radians(phase_deg)
+        
+        # 1. Central Hub & Rim
+        n_hub = max(12, n_teeth * 2)
+        r_inner = radius * 0.4
+        r_outer = radius * 0.85
+        z0 = cz - thickness / 2.0
+        z1 = cz + thickness / 2.0
+
+        v_in_b = [bm.verts.new((cx + r_inner * math.cos(i*2*math.pi/n_hub + rad_phase), cy + r_inner * math.sin(i*2*math.pi/n_hub + rad_phase), z0)) for i in range(n_hub)]
+        v_in_t = [bm.verts.new((cx + r_inner * math.cos(i*2*math.pi/n_hub + rad_phase), cy + r_inner * math.sin(i*2*math.pi/n_hub + rad_phase), z1)) for i in range(n_hub)]
+        v_out_b = [bm.verts.new((cx + r_outer * math.cos(i*2*math.pi/n_hub + rad_phase), cy + r_outer * math.sin(i*2*math.pi/n_hub + rad_phase), z0)) for i in range(n_hub)]
+        v_out_t = [bm.verts.new((cx + r_outer * math.cos(i*2*math.pi/n_hub + rad_phase), cy + r_outer * math.sin(i*2*math.pi/n_hub + rad_phase), z1)) for i in range(n_hub)]
+
+        f_rim = []
+        for i in range(n_hub):
+            i_next = (i + 1) % n_hub
+            f_rim.append(bm.faces.new((v_out_b[i], v_out_b[i_next], v_out_t[i_next], v_out_t[i])))
+            f_rim.append(bm.faces.new((v_in_b[i_next], v_in_b[i], v_in_t[i], v_in_t[i_next])))
+            f_rim.append(bm.faces.new((v_in_t[i], v_out_t[i], v_out_t[i_next], v_in_t[i_next])))
+            f_rim.append(bm.faces.new((v_in_b[i_next], v_out_b[i_next], v_out_b[i], v_in_b[i])))
+        set_bmesh_uv(bm, f_rim, col_gear)
+
+        # 2. Radial Cogs / Teeth
+        f_teeth = []
+        for t in range(n_teeth):
+            t_ang = (t / n_teeth) * (math.pi * 2) + rad_phase
+            cos_t, sin_t = math.cos(t_ang), math.sin(t_ang)
+            tx, ty = -sin_t * (tooth_w / 2.0), cos_t * (tooth_w / 2.0)
+            
+            bx1, by1 = cx + r_outer * cos_t + tx, cy + r_outer * sin_t + ty
+            bx2, by2 = cx + r_outer * cos_t - tx, cy + r_outer * sin_t - ty
+            r_tip = r_outer + tooth_len
+            tx_tip, ty_tip = -sin_t * (tooth_w * 0.7 / 2.0), cos_t * (tooth_w * 0.7 / 2.0)
+            tx1, ty1 = cx + r_tip * cos_t + tx_tip, cy + r_tip * sin_t + ty_tip
+            tx2, ty2 = cx + r_tip * cos_t - tx_tip, cy + r_tip * sin_t - ty_tip
+
+            vb1 = bm.verts.new((bx1, by1, z0))
+            vb2 = bm.verts.new((bx2, by2, z0))
+            vt1 = bm.verts.new((bx1, by1, z1))
+            vt2 = bm.verts.new((bx2, by2, z1))
+            
+            vb3 = bm.verts.new((tx1, ty1, z0))
+            vb4 = bm.verts.new((tx2, ty2, z0))
+            vt3 = bm.verts.new((tx1, ty1, z1))
+            vt4 = bm.verts.new((tx2, ty2, z1))
+
+            f_teeth.append(bm.faces.new((vb3, vb4, vt4, vt3)))
+            f_teeth.append(bm.faces.new((vb1, vb3, vt3, vt1)))
+            f_teeth.append(bm.faces.new((vb4, vb2, vt2, vt4)))
+            f_teeth.append(bm.faces.new((vt1, vt3, vt4, vt2)))
+            f_teeth.append(bm.faces.new((vb3, vb1, vb2, vb4)))
+        set_bmesh_uv(bm, f_teeth, col_gear)
+
+        # 3. Spokes
+        f_spokes = []
+        n_spokes = 4 if n_teeth >= 8 else 3
+        sp_w = radius * 0.16
+        for s in range(n_spokes):
+            s_ang = (s / n_spokes) * math.pi + rad_phase
+            cos_s, sin_s = math.cos(s_ang), math.sin(s_ang)
+            stx, sty = -sin_s * (sp_w / 2.0), cos_s * (sp_w / 2.0)
+            
+            p1_b = bm.verts.new((cx - r_outer * cos_s + stx, cy - r_outer * sin_s + sty, z0 + 0.01))
+            p2_b = bm.verts.new((cx - r_outer * cos_s - stx, cy - r_outer * sin_s - sty, z0 + 0.01))
+            p3_b = bm.verts.new((cx + r_outer * cos_s - stx, cy + r_outer * sin_s - sty, z0 + 0.01))
+            p4_b = bm.verts.new((cx + r_outer * cos_s + stx, cy + r_outer * sin_s + sty, z0 + 0.01))
+            
+            p1_t = bm.verts.new((cx - r_outer * cos_s + stx, cy - r_outer * sin_s + sty, z1 - 0.01))
+            p2_t = bm.verts.new((cx - r_outer * cos_s - stx, cy - r_outer * sin_s - sty, z1 - 0.01))
+            p3_t = bm.verts.new((cx + r_outer * cos_s - stx, cy + r_outer * sin_s - sty, z1 - 0.01))
+            p4_t = bm.verts.new((cx + r_outer * cos_s + stx, cy + r_outer * sin_s + sty, z1 - 0.01))
+
+            f_spokes.append(bm.faces.new((p1_t, p4_t, p3_t, p2_t)))
+            f_spokes.append(bm.faces.new((p1_b, p2_b, p3_b, p4_b)))
+            f_spokes.append(bm.faces.new((p1_b, p4_b, p4_t, p1_t)))
+            f_spokes.append(bm.faces.new((p2_b, p3_b, p3_t, p2_t)))
+        set_bmesh_uv(bm, f_spokes, col_spoke)
+
+        bm.normal_update()
+        mesh = bpy.data.meshes.new(f"{name}Mesh")
+        bm.to_mesh(mesh)
+        bm.free()
+
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.context.collection.objects.link(obj)
+        return obj
+
+    # 1. Big Bronze Gear (8 Teeth)
+    g1 = create_cogwheel("BigGear", -0.35, -0.20, 0.12, 0.95, 0.20, 8, 0.30, 0.28, 0, "copper_bronze", "leather_warm")
+
+    # 2. Medium Steel Gear (6 Teeth, Interlocking)
+    g2 = create_cogwheel("MediumGear", 1.05, 0.42, 0.10, 0.68, 0.18, 6, 0.24, 0.24, 28, "steel_light", "cast_iron")
+
+    # 3. Small Gunmetal Pinion Gear (6 Teeth, Stacked)
+    g3 = create_cogwheel("PinionGear", -0.60, -0.42, 0.28, 0.42, 0.15, 6, 0.18, 0.18, 15, "gunmetal", "slate_dark")
+
+    # 4. Central Axles & Pins
+    bm_pins = bmesh.new()
+    add_box_bm(bm_pins, -0.47, -0.23, -0.32, -0.08, 0.0, 0.38, "gunmetal")
+    add_box_bm(bm_pins, 0.95, 1.15, 0.32, 0.52, 0.0, 0.32, "gunmetal")
+    add_box_bm(bm_pins, -0.70, -0.50, -0.52, -0.32, 0.20, 0.46, "steel_light")
+    bm_pins.normal_update()
+    m_pins = bpy.data.meshes.new("AxlePinsMesh")
+    bm_pins.to_mesh(m_pins)
+    bm_pins.free()
+    pins_obj = bpy.data.objects.new("AxlePins", m_pins)
+    bpy.context.collection.objects.link(pins_obj)
+
+    parts = [g1, g2, g3, pins_obj]
+    root = bpy.data.objects.new("Parts", None)
+    root.location = (0, 0, 0)
+    bpy.context.collection.objects.link(root)
+
+    export_modular_model(root, parts, "parts", [
+        MODELS_DIR,
+        os.path.join(MODELS_DIR, "nature"),
+        os.path.join(MODELS_DIR, "resources")
+    ])
+
 def create_fir_tree():
     """Creates stylized low-poly cartoon cone-tiered fir tree with snow blankets."""
     clear_scene()
@@ -2113,11 +2245,12 @@ def generate_all():
     create_ice_crystal()
     create_rabbit_trap()
     create_spike_trap()
-    # 2.3. Nature Resources
+    # 2.3. Nature Resources & Parts
     create_branches()
     create_stone()
     create_fiber()
     create_planks()
+    create_parts()
     create_fir_tree()
     # 2.4. Monsters & Enemies
     create_wolf()

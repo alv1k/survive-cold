@@ -158,10 +158,17 @@ local function build3DDropObject(itemName, pos)
 		root.BrickColor = BrickColor.new("Sand yellow")
 
 	elseif itemName == "Parts" then
-		root.Size = Vector3.new(1.6, 0.45, 1.6)
+		root.Size = Vector3.new(1.8, 0.22, 1.8)
 		root.Material = Enum.Material.Metal
-		root.BrickColor = BrickColor.new("Dark stone grey")
-		addSubPart("Core", Vector3.new(0.7, 0.7, 0.7), CFrame.new(0, 0.3, 0), Enum.Material.SmoothPlastic, BrickColor.new("Cyan"))
+		root.Color = Color3.fromRGB(202, 138, 4)
+		local mesh = Instance.new("SpecialMesh", root)
+		mesh.MeshType = Enum.MeshType.Cylinder
+		for i = 0, 7 do
+			local a = (i / 8) * (math.pi * 2)
+			addSubPart("Cog_" .. i, Vector3.new(0.32, 0.22, 0.36), CFrame.Angles(0, a, 0) * CFrame.new(0, 0, 0.94), Enum.Material.Metal, BrickColor.new("Deep orange"))
+		end
+		addSubPart("SmallGear", Vector3.new(1.2, 0.20, 1.2), CFrame.new(1.2, 0, 0.5), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
+		addSubPart("Pin", Vector3.new(0.3, 0.4, 0.3), CFrame.new(0, 0.1, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
 
 	elseif itemName == "RabbitTrap" then
 		root.Size = Vector3.new(1.8, 0.2, 1.8)

@@ -9,6 +9,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PhysicsService = game:GetService("PhysicsService")
 
 local Network = require(ReplicatedStorage:WaitForChild("Network"))
 local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
@@ -18,6 +19,61 @@ local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
 local MobsFolder = workspace:FindFirstChild("Mobs") or Instance.new("Folder", workspace)
 MobsFolder.Name = "Mobs"
+
+-- =============================================================================
+-- НАСТРОЙКА ГРУПП КОЛЛИЗИЙ (PhysicsService: Враги проходят насквозь игрока)
+-- =============================================================================
+local function safeRegisterCollisionGroup(groupName)
+	pcall(function()
+		PhysicsService:RegisterCollisionGroup(groupName)
+	end)
+end
+
+safeRegisterCollisionGroup("Players")
+safeRegisterCollisionGroup("Mobs")
+safeRegisterCollisionGroup("Pets")
+
+-- Отключаем коллизию между Игроками и Монстрами (не взбираются друг на друга, проходят насквозь)
+pcall(function()
+	PhysicsService:CollisionGroupSetCollidable("Players", "Mobs", false)
+	PhysicsService:CollisionGroupSetCollidable("Players", "Pets", false)
+	PhysicsService:CollisionGroupSetCollidable("Players", "Players", false)
+	PhysicsService:CollisionGroupSetCollidable("Mobs", "Mobs", false)
+	PhysicsService:CollisionGroupSetCollidable("Mobs", "Pets", false)
+	PhysicsService:CollisionGroupSetCollidable("Pets", "Pets", false)
+end)
+
+local function setModelCollisionGroup(model, groupName)
+	for _, desc in ipairs(model:GetDescendants()) do
+		if desc:IsA("BasePart") then
+			desc.CollisionGroup = groupName
+		end
+	end
+	model.DescendantAdded:Connect(function(desc)
+		if desc:IsA("BasePart") then
+			desc.CollisionGroup = groupName
+		end
+	end)
+end
+
+-- Автоматическое назначение игроков в группу "Players"
+local function setupPlayerCharacter(char)
+	setModelCollisionGroup(char, "Players")
+end
+
+Players.PlayerAdded:Connect(function(player)
+	if player.Character then
+		setupPlayerCharacter(player.Character)
+	end
+	player.CharacterAdded:Connect(setupPlayerCharacter)
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	if player.Character then
+		setupPlayerCharacter(player.Character)
+	end
+	player.CharacterAdded:Connect(setupPlayerCharacter)
+end
 
 local mobConfigs = {
 	Wolf = {
@@ -202,6 +258,7 @@ local function spawnMob(mobType, spawnPos)
 	mobModel.PrimaryPart = hrp
 
 	attachEnemyVisuals(mobModel, mobType, hrp)
+	setModelCollisionGroup(mobModel, "Mobs")
 
 	local humanoid = Instance.new("Humanoid")
 	humanoid.MaxHealth = cfg.Hp
@@ -209,6 +266,9 @@ local function spawnMob(mobType, spawnPos)
 	humanoid.WalkSpeed = cfg.Speed
 	humanoid.HipHeight = cfg.HipHeight or 1.0
 	humanoid.AutomaticScalingEnabled = false
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false) -- Не карабкаться по игрокам и препятствиям
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+	humanoid.MaxSlopeAngle = 45
 	humanoid.Parent = mobModel
 
 

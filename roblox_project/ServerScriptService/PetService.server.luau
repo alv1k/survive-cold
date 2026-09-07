@@ -197,6 +197,13 @@ for petId, cfg in pairs(PET_CONFIG) do
 			end
 
 			attachPetVisuals()
+			petHum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+			petHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+			for _, desc in ipairs(petModel:GetDescendants()) do
+				if desc:IsA("BasePart") then
+					desc.CollisionGroup = "Pets"
+				end
+			end
 			petModel.Parent = PetsFolder
 
 			print(string.format("🎉 %s отогрел и спас питомца: %s!", player.Name, cfg.Name))

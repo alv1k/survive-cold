@@ -415,6 +415,8 @@ task.spawn(function()
 	hum.Health = 120
 	hum.HipHeight = 1.5
 	hum.AutomaticScalingEnabled = false
+	hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+	gBody.CollisionGroup = "Mobs"
 
 	local relicPrompt = Instance.new("ProximityPrompt", relic)
 	relicPrompt.ActionText = "Взять Зуб Ледяного Хищника"

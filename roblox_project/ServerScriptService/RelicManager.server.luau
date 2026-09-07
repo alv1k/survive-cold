@@ -413,6 +413,8 @@ task.spawn(function()
 	local hum = Instance.new("Humanoid", guard)
 	hum.MaxHealth = 120
 	hum.Health = 120
+	hum.HipHeight = 1.5
+	hum.AutomaticScalingEnabled = false
 
 	local relicPrompt = Instance.new("ProximityPrompt", relic)
 	relicPrompt.ActionText = "Взять Зуб Ледяного Хищника"

@@ -21,33 +21,39 @@ MobsFolder.Name = "Mobs"
 
 local mobConfigs = {
 	Wolf = {
-		Name = "🐺 Лесной Волк",
+		Name = "🐺 Полярный Волк",
 		Hp = 30,
 		Damage = 12,
-		Speed = 8.0,
+		Speed = 12.0,
 		ThreatLevel = 2,
 		AggroRadius = 45,
 		PatrolRadius = 120,
+		HipHeight = 0.95,
+		HrpSize = Vector3.new(1.2, 1.0, 2.2),
 		Loot = { Item = "WolfPelt", Chance = 0.85, Count = 1 }
 	},
 	Yeti = {
 		Name = "❄️ Снежный Йети",
 		Hp = 60,
 		Damage = 25,
-		Speed = 1.2,
+		Speed = 6.0,
 		ThreatLevel = 4,
 		AggroRadius = 40,
 		PatrolRadius = 90,
+		HipHeight = 1.8,
+		HrpSize = Vector3.new(2.4, 2.6, 2.0),
 		Loot = { Item = "YetiPelt", Chance = 0.90, Count = 1 }
 	},
 	Bigfoot = {
 		Name = "🦍 Бигфут",
 		Hp = 120,
 		Damage = 40,
-		Speed = 1.0,
+		Speed = 5.0,
 		ThreatLevel = 6,
 		AggroRadius = 50,
 		PatrolRadius = 150,
+		HipHeight = 2.2,
+		HrpSize = Vector3.new(2.6, 3.0, 2.2),
 		Loot = { Item = "YetiPelt", Chance = 1.00, Count = 2 }
 	}
 }
@@ -74,32 +80,57 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 	end
 
 	if mobType == "Wolf" then
-		-- 🐺 ВОЛК: Морда, уши, светящиеся красные глаза, 4 лапы и хвост
-		hrp.Size = Vector3.new(1.8, 1.8, 3.6)
-		hrp.Material = Enum.Material.Fabric
-		hrp.BrickColor = BrickColor.new("Medium stone grey")
+		-- 🐺 ПОЛЯРНЫЙ ВОЛК: Подключение высокоточной 3D-модели ~300 полигонов из GeneratedModels
+		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
+		local wolfScript = genMod and genMod:FindFirstChild("Wolf")
+		local loaded = false
 
-		-- Голова и мордочка
-		addSubPart("Head", Vector3.new(1.4, 1.3, 1.6), CFrame.new(0, 0.6, -2.2), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
-		addSubPart("Snout", Vector3.new(0.8, 0.6, 1.1), CFrame.new(0, 0.3, -3.0), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-		addSubPart("Nose", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 0.5, -3.55), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+		if wolfScript then
+			local success, WolfGen = pcall(require, wolfScript)
+			if success and WolfGen and type(WolfGen.create) == "function" then
+				local wolfVisual = WolfGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.35, Anchored = false })
+				if wolfVisual then
+					local centerY = 1.27 -- Центр тяжести/корпуса полярного волка
+					for _, desc in ipairs(wolfVisual:GetChildren()) do
+						if desc:IsA("BasePart") then
+							local partPos = desc.Position
+							local partRot = desc.CFrame - desc.Position
+							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
 
-		-- Острые стоячие уши
-		addSubPart("EarL", Vector3.new(0.3, 0.8, 0.4), CFrame.new(-0.5, 1.4, -2.0) * CFrame.Angles(0, 0, math.rad(-15)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-		addSubPart("EarR", Vector3.new(0.3, 0.8, 0.4), CFrame.new(0.5, 1.4, -2.0) * CFrame.Angles(0, 0, math.rad(15)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+							desc.Anchored = false
+							desc.CanCollide = false
+							desc.Massless = true
+							desc.CFrame = hrp.CFrame * relOffset
+							desc.Parent = mobModel
 
-		-- Светящиеся красные глаза хищника
-		local eyeL = addSubPart("EyeL", Vector3.new(0.25, 0.25, 0.25), CFrame.new(-0.35, 0.75, -2.8), Enum.Material.Neon, BrickColor.new("Bright red"))
-		local eyeR = addSubPart("EyeR", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0.35, 0.75, -2.8), Enum.Material.Neon, BrickColor.new("Bright red"))
+							local weld = Instance.new("WeldConstraint")
+							weld.Name = "Weld_" .. desc.Name
+							weld.Part0 = hrp
+							weld.Part1 = desc
+							weld.Parent = desc
+						end
+					end
+					wolfVisual:Destroy()
+					loaded = true
+				end
+			end
+		end
 
-		-- 4 Лапы
-		addSubPart("LegFL", Vector3.new(0.5, 1.6, 0.5), CFrame.new(-0.7, -1.0, -1.2), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-		addSubPart("LegFR", Vector3.new(0.5, 1.6, 0.5), CFrame.new(0.7, -1.0, -1.2), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-		addSubPart("LegBL", Vector3.new(0.55, 1.6, 0.55), CFrame.new(-0.7, -1.0, 1.2), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-		addSubPart("LegBR", Vector3.new(0.55, 1.6, 0.55), CFrame.new(0.7, -1.0, 1.2), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-
-		-- Пушистый хвост
-		addSubPart("Tail", Vector3.new(0.6, 0.6, 2.0), CFrame.new(0, 0.4, 2.4) * CFrame.Angles(math.rad(-25), 0, 0), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
+		-- Резервный процедурный визуал, если модуль не найден
+		if not loaded then
+			addSubPart("Head", Vector3.new(1.4, 1.3, 1.6), CFrame.new(0, 0.4, -1.2), Enum.Material.SmoothPlastic, BrickColor.new("Medium stone grey"))
+			addSubPart("Snout", Vector3.new(0.8, 0.6, 1.1), CFrame.new(0, 0.2, -1.8), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("Nose", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 0.35, -2.25), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+			addSubPart("EarL", Vector3.new(0.3, 0.8, 0.4), CFrame.new(-0.5, 1.0, -1.1) * CFrame.Angles(0, 0, math.rad(-15)), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("EarR", Vector3.new(0.3, 0.8, 0.4), CFrame.new(0.5, 1.0, -1.1) * CFrame.Angles(0, 0, math.rad(15)), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("EyeL", Vector3.new(0.25, 0.25, 0.25), CFrame.new(-0.35, 0.55, -1.6), Enum.Material.Neon, BrickColor.new("Bright red"))
+			addSubPart("EyeR", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0.35, 0.55, -1.6), Enum.Material.Neon, BrickColor.new("Bright red"))
+			addSubPart("LegFL", Vector3.new(0.4, 1.2, 0.4), CFrame.new(-0.5, -0.6, -0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("LegFR", Vector3.new(0.4, 1.2, 0.4), CFrame.new(0.5, -0.6, -0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("LegBL", Vector3.new(0.45, 1.2, 0.45), CFrame.new(-0.5, -0.6, 0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("LegBR", Vector3.new(0.45, 1.2, 0.45), CFrame.new(0.5, -0.6, 0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("Tail", Vector3.new(0.4, 0.4, 1.4), CFrame.new(0, 0.2, 1.4) * CFrame.Angles(math.rad(-25), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Medium stone grey"))
+		end
 
 	elseif mobType == "Yeti" then
 		-- ❄️ СНЕЖНЫЙ ЙЕТИ: Мощный ледяной торс, рога, ледяные лапы и бирюзовые глаза
@@ -162,7 +193,9 @@ local function spawnMob(mobType, spawnPos)
 
 	local hrp = Instance.new("Part")
 	hrp.Name = "HumanoidRootPart"
+	hrp.Size = cfg.HrpSize or Vector3.new(1.4, 1.2, 2.2)
 	hrp.Position = spawnPos
+	hrp.Transparency = 1
 	hrp.Anchored = false
 	hrp.CanCollide = true
 	hrp.Parent = mobModel
@@ -174,6 +207,8 @@ local function spawnMob(mobType, spawnPos)
 	humanoid.MaxHealth = cfg.Hp
 	humanoid.Health = cfg.Hp
 	humanoid.WalkSpeed = cfg.Speed
+	humanoid.HipHeight = cfg.HipHeight or 1.0
+	humanoid.AutomaticScalingEnabled = false
 	humanoid.Parent = mobModel
 
 

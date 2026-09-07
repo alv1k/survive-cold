@@ -93,6 +93,8 @@ for petId, cfg in pairs(PET_CONFIG) do
 			petHum.MaxHealth = 100
 			petHum.Health = 100
 			petHum.WalkSpeed = 16
+			petHum.HipHeight = 1.0
+			petHum.AutomaticScalingEnabled = false
 			petHum.Parent = petModel
 
 			local function addSubPart(name, size, cfOffset, material, color, isNeon)

@@ -11,7 +11,11 @@
 
 local WolfGenerator = {}
 
-function WolfGenerator.create(parent, targetCF)
+function WolfGenerator.create(parent, targetCF, options)
+	options = options or {}
+	local scale = options.Scale or 1.35
+	local isAnchored = (options.Anchored ~= false) and (options.isMob ~= true)
+	
 	targetCF = targetCF or CFrame.new(0, 1.2, 0)
 	local model = Instance.new("Model")
 	model.Name = "Wolf"
@@ -19,12 +23,15 @@ function WolfGenerator.create(parent, targetCF)
 	local function makePart(name, size, cfOffset, material, color, canCollide)
 		local p = Instance.new("Part")
 		p.Name = name
-		p.Size = size
-		p.CFrame = targetCF * cfOffset
+		p.Size = size * scale
+		local scaledPos = cfOffset.Position * scale
+		local scaledRot = cfOffset - cfOffset.Position
+		p.CFrame = targetCF * CFrame.new(scaledPos) * scaledRot
 		p.Material = material or Enum.Material.SmoothPlastic
 		p.Color = color or Color3.fromRGB(71, 85, 105)
-		p.Anchored = true
-		p.CanCollide = (canCollide == true)
+		p.Anchored = isAnchored
+		p.CanCollide = (canCollide == true and isAnchored)
+		p.Massless = not isAnchored
 		p.CastShadow = true
 		p.TopSurface = Enum.SurfaceType.Smooth
 		p.BottomSurface = Enum.SurfaceType.Smooth
@@ -35,12 +42,15 @@ function WolfGenerator.create(parent, targetCF)
 	local function makeWedge(name, size, cfOffset, material, color)
 		local p = Instance.new("WedgePart")
 		p.Name = name
-		p.Size = size
-		p.CFrame = targetCF * cfOffset
+		p.Size = size * scale
+		local scaledPos = cfOffset.Position * scale
+		local scaledRot = cfOffset - cfOffset.Position
+		p.CFrame = targetCF * CFrame.new(scaledPos) * scaledRot
 		p.Material = material or Enum.Material.SmoothPlastic
 		p.Color = color or Color3.fromRGB(71, 85, 105)
-		p.Anchored = true
+		p.Anchored = isAnchored
 		p.CanCollide = false
+		p.Massless = not isAnchored
 		p.CastShadow = true
 		p.TopSurface = Enum.SurfaceType.Smooth
 		p.BottomSurface = Enum.SurfaceType.Smooth
@@ -63,7 +73,7 @@ function WolfGenerator.create(parent, targetCF)
 	-- 1. КОРПУС, ЗАГРИВОК И ХРЕБЕТ (Body, Mane, Underbelly)
 	-- =========================================================================
 	-- Основная грудная клетка (Chest)
-	local body = makePart("Body", Vector3.new(0.72, 0.72, 0.65), CFrame.new(0, 0.94, 0.32), Enum.Material.SmoothPlastic, c_dark, true)
+	local body = makePart("Body", Vector3.new(0.72, 0.72, 0.65), CFrame.new(0, 0.94, 0.32), Enum.Material.SmoothPlastic, c_dark, false)
 	model.PrimaryPart = body
 
 	-- Загривок / воротник (Mane Ruff)
@@ -107,11 +117,11 @@ function WolfGenerator.create(parent, targetCF)
 
 	-- 4 Острых белых клыка (Sharp White Canines)
 	-- Верхние клыки
-	makeWedge("Fang_UpperL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.11, 0.84, 1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_UpperR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.11, 0.84, 1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_UpperL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.11 * scale, 0.84 * scale, 1.45 * scale) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_UpperR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.11 * scale, 0.84 * scale, 1.45 * scale) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
 	-- Нижние клыки
-	makeWedge("Fang_LowerL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.09, 0.92, 1.41), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_LowerR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.09, 0.92, 1.41), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_LowerL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.09 * scale, 0.92 * scale, 1.41 * scale), Enum.Material.SmoothPlastic, c_fangs)
+	makeWedge("Fang_LowerR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.09 * scale, 0.92 * scale, 1.41 * scale), Enum.Material.SmoothPlastic, c_fangs)
 
 	-- =========================================================================
 	-- 3. СВЕТЯЩИЕСЯ ГЛАЗА И УШИ (Eyes & Ears)
@@ -123,8 +133,8 @@ function WolfGenerator.create(parent, targetCF)
 	local eyeLight = Instance.new("PointLight")
 	eyeLight.Name = "WolfEyeGlow"
 	eyeLight.Color = c_eye
-	eyeLight.Range = 6
-	eyeLight.Brightness = 0.75
+	eyeLight.Range = 8 * scale
+	eyeLight.Brightness = 0.85
 	eyeLight.Parent = head
 
 	-- Острые стоячие уши

@@ -104,28 +104,42 @@ local function attachDetailed3DModel(tool, itemKey)
 		light.Brightness = 0.6
 
 	elseif itemKey == "Spear" then
-		-- Рукоять хвата (Handle) в точке (0,0,0) с кожаной обмоткой
-		handle.Size = Vector3.new(0.35, 1.2, 0.35)
-		handle.Material = Enum.Material.SmoothPlastic
-		handle.BrickColor = BrickColor.new("Dark orange") -- leather_tan
+		-- Основная рукоять хвата (Handle) в точке (0,0,0) с темной кожаной обмоткой
+		handle.Size = Vector3.new(0.32, 1.10, 0.38)
+		handle.Material = Enum.Material.Fabric
+		handle.Color = Color3.fromHex("#713F12") -- leather_dark
 
-		-- Кольца на рукояти
-		addSubPart("GripRingTop", Vector3.new(0.38, 0.1, 0.38), CFrame.new(0, 0.6, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
-		addSubPart("GripRingBot", Vector3.new(0.38, 0.1, 0.38), CFrame.new(0, -0.6, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+		-- Кожаные фиксирующие ремешки основного хвата
+		addSubPart("HandleBandBot", Vector3.new(0.36, 0.12, 0.42), CFrame.new(0, -0.50, 0), Enum.Material.Fabric, Color3.fromHex("#A16207"))
+		addSubPart("HandleBandTop", Vector3.new(0.36, 0.12, 0.42), CFrame.new(0, 0.50, 0), Enum.Material.Fabric, Color3.fromHex("#A16207"))
 
-		-- Деревянное древко (Shaft)
-		addSubPart("Shaft", Vector3.new(0.3, 3.4, 0.3), CFrame.new(0, 1.8, 0), Enum.Material.Wood, BrickColor.new("Reddish brown"))
+		-- Нижняя часть древка и резное навершие с кожаной обмоткой
+		addSubPart("LowerShaft", Vector3.new(0.24, 0.35, 0.28), CFrame.new(0, -0.68, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("PommelWrap", Vector3.new(0.28, 0.16, 0.32), CFrame.new(0, -0.88, 0), Enum.Material.Fabric, Color3.fromHex("#713F12"))
+		addSubPart("PommelCap", Vector3.new(0.24, 0.18, 0.28), CFrame.new(0, -1.00, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
 
-		-- Нижний упор (Pommel)
-		addSubPart("Pommel", Vector3.new(0.36, 0.35, 0.36), CFrame.new(0, -0.85, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+		-- Среднее деревянное древко
+		addSubPart("MidShaft", Vector3.new(0.24, 0.80, 0.28), CFrame.new(0, 0.95, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
 
-		-- Верхняя обмотка и обойма (NeckWrap & Collar)
-		addSubPart("NeckWrap", Vector3.new(0.36, 0.6, 0.36), CFrame.new(0, 2.7, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
-		addSubPart("Collar", Vector3.new(0.42, 0.25, 0.42), CFrame.new(0, 3.1, 0), Enum.Material.Metal, BrickColor.new("Dark stone grey"))
+		-- Верхняя кожаная накладка направляющего хвата
+		addSubPart("UpperGrip", Vector3.new(0.30, 0.60, 0.35), CFrame.new(0, 1.65, 0), Enum.Material.Fabric, Color3.fromHex("#713F12"))
+		addSubPart("UpperGripBandBot", Vector3.new(0.34, 0.08, 0.38), CFrame.new(0, 1.39, 0), Enum.Material.Fabric, Color3.fromHex("#A16207"))
+		addSubPart("UpperGripBandTop", Vector3.new(0.34, 0.08, 0.38), CFrame.new(0, 1.91, 0), Enum.Material.Fabric, Color3.fromHex("#A16207"))
 
-		-- Широкое и плотное острие (Blade spear-2)
-		addSubPart("Blade", Vector3.new(0.85, 1.35, 0.14), CFrame.new(0, 3.75, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
-		addSubPart("BladeEdge", Vector3.new(0.7, 0.8, 0.18), CFrame.new(0, 3.75, 0), Enum.Material.Metal, BrickColor.new("White"))
+		-- Верхнее деревянное древко и пазовый сокет
+		addSubPart("UpperShaft", Vector3.new(0.24, 1.50, 0.28), CFrame.new(0, 2.70, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("NeckSocket", Vector3.new(0.26, 0.35, 0.30), CFrame.new(0, 3.52, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+
+		-- Обмотка из жил / сухожилий и перекрещенные шнуры
+		addSubPart("SinewBinding", Vector3.new(0.30, 0.40, 0.36), CFrame.new(0, 3.58, 0), Enum.Material.Fabric, Color3.fromHex("#FEF08A"))
+		addSubPart("SinewCross1", Vector3.new(0.34, 0.08, 0.14), CFrame.new(0, 3.58, 0) * CFrame.Angles(0, 0, math.rad(45)), Enum.Material.Fabric, Color3.fromHex("#A16207"))
+		addSubPart("SinewCross2", Vector3.new(0.34, 0.08, 0.14), CFrame.new(0, 3.58, 0) * CFrame.Angles(0, 0, math.rad(-45)), Enum.Material.Fabric, Color3.fromHex("#A16207"))
+
+		-- Кремниевый наконечник (Flint spearhead)
+		addSubPart("FlintTang", Vector3.new(0.24, 0.35, 0.12), CFrame.new(0, 3.70, 0), Enum.Material.Slate, Color3.fromHex("#334155"))
+		addSubPart("FlintSpine", Vector3.new(0.14, 1.20, 0.20), CFrame.new(0, 4.40, 0), Enum.Material.Slate, Color3.fromHex("#1E293B"))
+		addSubPart("FlintBellyL", Vector3.new(0.38, 0.60, 0.12), CFrame.new(-0.22, 4.30, 0), Enum.Material.Slate, Color3.fromHex("#64748B"))
+		addSubPart("FlintBellyR", Vector3.new(0.38, 0.60, 0.12), CFrame.new(0.22, 4.30, 0), Enum.Material.Slate, Color3.fromHex("#475569"))
 
 	elseif itemKey == "Slingshot" then
 		handle.Size = Vector3.new(0.4, 1.8, 0.4)

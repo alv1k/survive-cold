@@ -1,6 +1,6 @@
 # Blender 5.0.1
 # www.blender.org
-mtllib spear-2.mtl
+mtllib spear-1.mtl
 o Handle
 v 0.142665 -0.550000 0.000000
 v 0.100880 -0.550000 -0.119465

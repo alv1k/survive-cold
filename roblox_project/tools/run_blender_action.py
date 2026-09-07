@@ -64,8 +64,8 @@ import blender_pipeline
 import importlib
 importlib.reload(blender_pipeline)
 
-blender_pipeline.create_planks()
-print("PLANK GENERATION AND EXPORT COMPLETED SUCCESSFULLY")
+blender_pipeline.create_spear()
+print("SPEAR GENERATION AND EXPORT COMPLETED SUCCESSFULLY")
 """
 
     print("Connecting to Blender on port 9876...")
@@ -79,7 +79,7 @@ print("PLANK GENERATION AND EXPORT COMPLETED SUCCESSFULLY")
         img_b64 = shot_res.get("result", {}).get("image", "")
         if img_b64:
             artifact_dir = r"C:\Users\pc1\.gemini\antigravity-ide\brain\9ac5d23e-aec2-497c-a2cd-138e3310c187"
-            out_img = os.path.join(artifact_dir, "planks_viewport.png")
+            out_img = os.path.join(artifact_dir, "spear_viewport.png")
             with open(out_img, "wb") as f:
                 f.write(base64.b64decode(img_b64))
             print(f"Viewport screenshot saved to: {out_img}")

@@ -90,10 +90,16 @@ local function build3DDropObject(itemName, pos)
 	end
 
 	if itemName == "Spear" then
-		root.Size = Vector3.new(0.3, 0.3, 4.8)
-		root.Material = Enum.Material.Wood
-		root.BrickColor = BrickColor.new("Reddish brown")
-		addSubPart("Blade", Vector3.new(0.5, 0.1, 1.2), CFrame.new(0, 0, 2.5), Enum.Material.Slate, BrickColor.new("Medium stone grey"))
+		root.Size = Vector3.new(0.32, 1.10, 0.38)
+		root.Material = Enum.Material.Fabric
+		root.Color = Color3.fromHex("#713F12")
+		addSubPart("LowerShaft", Vector3.new(0.24, 0.35, 0.28), CFrame.new(0, -0.68, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("PommelCap", Vector3.new(0.24, 0.18, 0.28), CFrame.new(0, -1.00, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("MidShaft", Vector3.new(0.24, 0.80, 0.28), CFrame.new(0, 0.95, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("UpperGrip", Vector3.new(0.30, 0.60, 0.35), CFrame.new(0, 1.65, 0), Enum.Material.Fabric, Color3.fromHex("#713F12"))
+		addSubPart("UpperShaft", Vector3.new(0.24, 1.50, 0.28), CFrame.new(0, 2.70, 0), Enum.Material.Wood, Color3.fromHex("#C68B59"))
+		addSubPart("SinewBinding", Vector3.new(0.30, 0.40, 0.36), CFrame.new(0, 3.58, 0), Enum.Material.Fabric, Color3.fromHex("#FEF08A"))
+		addSubPart("FlintBlade", Vector3.new(0.82, 1.57, 0.22), CFrame.new(0, 4.40, 0), Enum.Material.Slate, Color3.fromHex("#64748B"))
 
 	elseif itemName == "Slingshot" then
 		root.Size = Vector3.new(0.4, 1.6, 0.4)

@@ -311,277 +311,340 @@ def finalize_asset(obj, name, out_obj=True, out_fbx=True):
             mesh_smooth_type='FACE'
         )
 
-def export_modular_assembly(parts, base_name="spear-1"):
+def export_modular_assembly(root, parts, base_name="spear", target_dirs=None):
     """
-    Exports a modular assembly where all parts remain distinct, named MeshParts inside a SINGLE container file:
-    1. Single FBX file containing the hierarchy of separate parts (assets/models/{base_name}.fbx).
-    2. Single OBJ file containing all named sub-objects (assets/models/{base_name}.obj).
-    - No separate subfolder or component files created.
+    Exports a true modular assembly where all parts remain distinct, named MeshParts inside a SINGLE container file:
+    1. Root Empty container at (0, 0, 0).
+    2. All named separate mesh parts (Handle, Grip_Upper, Shaft, Pommel, Binding, Flint_Blade) preserved.
+    3. Multi-part FBX, OBJ, and .blend exported to all target directories.
     - All parts share the unified coordinate pivot at (0, 0, 0).
-    - All parts are mapped to the unified GamePalette texture.
+    - All parts are mapped to the unified GamePalette texture with flat shading.
     """
+    if target_dirs is None:
+        target_dirs = [MODELS_DIR]
+        
+    sources_dir = os.path.join(MODELS_DIR, "sources")
+    os.makedirs(sources_dir, exist_ok=True)
     mat = get_or_create_palette_mat()
     
     # 1. Prepare and apply transforms, materials, flat shading for each part
     for p in parts:
+        if root and p.parent != root:
+            p.parent = root
         p.data.materials.clear()
         p.data.materials.append(mat)
+        if p.data.uv_layers.active:
+            p.data.uv_layers.active.name = "UVMap"
         bpy.context.view_layer.objects.active = p
         p.select_set(True)
         bpy.ops.object.shade_flat()
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         p.select_set(False)
         
-    # 2. Export full multi-object assembly FBX and OBJ (all parts selected together)
+    # Save multi-part source project
+    source_blend = os.path.join(sources_dir, f"{base_name}_source.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=source_blend)
+    
+    # 2. Export full multi-object assembly FBX, OBJ, and .blend to all target directories
     bpy.ops.object.select_all(action='DESELECT')
+    if root:
+        root.select_set(True)
     for p in parts:
         p.select_set(True)
     bpy.context.view_layer.objects.active = parts[0]
     
-    assembly_fbx = os.path.join(MODELS_DIR, f"{base_name}.fbx")
-    bpy.ops.export_scene.fbx(
-        filepath=assembly_fbx,
-        use_selection=True,
-        axis_forward='-Z',
-        axis_up='Y',
-        apply_scale_options='FBX_SCALE_ALL',
-        bake_space_transform=True
-    )
-    
-    assembly_obj = os.path.join(MODELS_DIR, f"{base_name}.obj")
-    bpy.ops.wm.obj_export(
-        filepath=assembly_obj,
-        export_selected_objects=True,
-        forward_axis='NEGATIVE_Z',
-        up_axis='Y',
-        apply_modifiers=True
-    )
-    print(f"✅ Multi-Part Asset '{base_name}' exported into single container ({len(parts)} separate objects): {assembly_fbx}")
+    for d in target_dirs:
+        os.makedirs(d, exist_ok=True)
+        
+        # Save .blend
+        blend_path = os.path.join(d, f"{base_name}.blend")
+        bpy.ops.wm.save_as_mainfile(filepath=blend_path)
+        
+        # Export multi-part FBX
+        assembly_fbx = os.path.join(d, f"{base_name}.fbx")
+        bpy.ops.export_scene.fbx(
+            filepath=assembly_fbx,
+            use_selection=True,
+            axis_forward='-Z',
+            axis_up='Y',
+            apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=True,
+            use_triangles=True,
+            mesh_smooth_type='FACE'
+        )
+        
+        # Export multi-part OBJ
+        assembly_obj = os.path.join(d, f"{base_name}.obj")
+        bpy.ops.wm.obj_export(
+            filepath=assembly_obj,
+            export_selected_objects=True,
+            forward_axis='NEGATIVE_Z',
+            up_axis='Y',
+            apply_modifiers=True,
+            export_uv=True,
+            export_materials=True
+        )
+    print(f"✅ Multi-Part Modular Asset '{base_name}' exported with {len(parts)} distinct components: {[p.name for p in parts]}")
 
-def create_spear(name="spear-2"):
-    """Creates elegant, sculpted stylized low-poly hunting spear matching GAME_ASSETS_CATALOG.md."""
+def create_spear(name="spear"):
+    """
+    Creates stylized Low-Poly Hunting Spear (Casual Cartoon 3/10) with 6 DISTINCT MODULAR COMPONENTS:
+    - Handle (Primary Grip at (0,0,0) with leather wrap and retention bands)
+    - Pommel (Carved wood butt with lower leather wrap at Z=-1.05..-0.55)
+    - Shaft (Middle and upper honey oak wood shaft at Z=0.55..3.65)
+    - Grip_Upper (Upper guide leather grip at Z=1.35..1.95)
+    - Binding (Rawhide/sinew lashing cords at slotted neck at Z=3.38..3.78)
+    - Flint_Blade (Knapped chipped flint stone spearhead at Z=3.68..5.25)
+    """
     clear_scene()
     setup_roblox_scene()
 
-    bm = bmesh.new()
-    N = 6
+    SX = 2.7435665
+    SY = 3.2490150
+    N = 8
 
-    def make_ring(z, r, n=6, rot_offset=0):
+    def make_ring_bm(bm_target, z, r, n=8, rot_offset=0):
         verts = []
         for i in range(n):
             ang = (2 * math.pi * i / n) + rot_offset
-            x = r * math.cos(ang)
-            y = r * math.sin(ang)
-            verts.append(bm.verts.new((x, y, z)))
+            x = r * math.cos(ang) * SX
+            y = r * math.sin(ang) * SY
+            verts.append(bm_target.verts.new((x, y, z)))
         return verts
 
-    def bridge_rings(r1, r2):
+    def bridge_rings_bm(bm_target, r1, r2):
         faces = []
         n = len(r1)
         for i in range(n):
             i_next = (i + 1) % n
-            faces.append(bm.faces.new((r1[i], r1[i_next], r2[i_next], r2[i])))
+            faces.append(bm_target.faces.new((r1[i], r1[i_next], r2[i_next], r2[i])))
         return faces
 
-    def set_faces_uv(faces, color_name):
+    def set_bm_faces_uv(bm_target, faces, color_name):
         if color_name not in COLOR_UV_MAP:
             return
         u = COLOR_UV_MAP[color_name]["u"]
         v = COLOR_UV_MAP[color_name]["v"]
-        uv_layer = bm.loops.layers.uv.verify()
+        uv_layer = bm_target.loops.layers.uv.verify()
         for f in faces:
             for loop in f.loops:
                 loop[uv_layer].uv = (u, v)
 
-    # 1. BUTT-SPIKE & POMMEL (Z = -1.15 to -0.75)
-    v_butt_tip = bm.verts.new((0, 0, -1.15))
-    ring_butt_mid = make_ring(-0.96, 0.022, n=N)
-    ring_butt_top = make_ring(-0.85, 0.038, n=N)
-    
-    faces_butt = []
+    # -------------------------------------------------------------------------
+    # 1. HANDLE (Primary Grip at (0,0,0) - leather wrapped)
+    # -------------------------------------------------------------------------
+    bm_handle = bmesh.new()
+    hg1 = make_ring_bm(bm_handle, -0.55, 0.052, n=N)
+    hg2 = make_ring_bm(bm_handle, -0.48, 0.058, n=N)
+    hg3 = make_ring_bm(bm_handle, -0.20, 0.054, n=N, rot_offset=math.pi/8)
+    hg4 = make_ring_bm(bm_handle,  0.00, 0.052, n=N)
+    hg5 = make_ring_bm(bm_handle,  0.20, 0.054, n=N, rot_offset=math.pi/8)
+    hg6 = make_ring_bm(bm_handle,  0.48, 0.058, n=N)
+    hg7 = make_ring_bm(bm_handle,  0.55, 0.052, n=N)
+
+    f_h_bot_band = bridge_rings_bm(bm_handle, hg1, hg2)
+    f_h_mid1 = bridge_rings_bm(bm_handle, hg2, hg3)
+    f_h_mid2 = bridge_rings_bm(bm_handle, hg3, hg4)
+    f_h_mid3 = bridge_rings_bm(bm_handle, hg4, hg5)
+    f_h_mid4 = bridge_rings_bm(bm_handle, hg5, hg6)
+    f_h_top_band = bridge_rings_bm(bm_handle, hg6, hg7)
+
+    set_bm_faces_uv(bm_handle, f_h_bot_band, "leather_warm")
+    set_bm_faces_uv(bm_handle, f_h_mid1 + f_h_mid2 + f_h_mid3 + f_h_mid4, "leather_dark")
+    set_bm_faces_uv(bm_handle, f_h_top_band, "leather_warm")
+
+    bm_handle.normal_update()
+    m_handle = bpy.data.meshes.new("HandleMesh")
+    bm_handle.to_mesh(m_handle)
+    bm_handle.free()
+    obj_handle = bpy.data.objects.new("Handle", m_handle)
+    bpy.context.collection.objects.link(obj_handle)
+
+    # -------------------------------------------------------------------------
+    # 2. POMMEL (Lower Butt Cap & Leather Wrap at Z = -1.05 to -0.55)
+    # -------------------------------------------------------------------------
+    bm_pommel = bmesh.new()
+    v_pommel_tip = bm_pommel.verts.new((0, 0, -1.05))
+    s_p1 = make_ring_bm(bm_pommel, -0.98, 0.025, n=N)
+    s_p2 = make_ring_bm(bm_pommel, -0.90, 0.046, n=N)
+    s_p3 = make_ring_bm(bm_pommel, -0.80, 0.044, n=N)
+    s_p4 = make_ring_bm(bm_pommel, -0.55, 0.044, n=N)
+
+    faces_pommel_tip = []
     for i in range(N):
         i_next = (i + 1) % N
-        faces_butt.append(bm.faces.new((v_butt_tip, ring_butt_mid[i_next], ring_butt_mid[i])))
-    faces_butt.extend(bridge_rings(ring_butt_mid, ring_butt_top))
-    set_faces_uv(faces_butt, "slate_light")
-    
-    # Butt Collar Ring
-    ring_butt_collar = make_ring(-0.80, 0.050, n=N)
-    ring_butt_collar_top = make_ring(-0.75, 0.042, n=N)
-    faces_b_col = bridge_rings(ring_butt_top, ring_butt_collar)
-    faces_b_col.extend(bridge_rings(ring_butt_collar, ring_butt_collar_top))
-    set_faces_uv(faces_b_col, "iron_band")
-    
-    # 2. LOWER SHAFT SEGMENT (Z = -0.75 to -0.52)
-    ring_shaft_low = make_ring(-0.52, 0.042, n=N)
-    faces_low_shaft = bridge_rings(ring_butt_collar_top, ring_shaft_low)
-    set_faces_uv(faces_low_shaft, "wood_honey_oak")
-    
-    # 3. GRIP HANDLE (Z = -0.52 to +0.52, centered at (0,0,0))
-    # Lower Ferrule Ring
-    ring_g_b1 = make_ring(-0.48, 0.052, n=N)
-    ring_g_b2 = make_ring(-0.44, 0.046, n=N)
-    faces_g_b = bridge_rings(ring_shaft_low, ring_g_b1)
-    faces_g_b.extend(bridge_rings(ring_g_b1, ring_g_b2))
-    set_faces_uv(faces_g_b, "copper_bronze")
-    
-    # Leather Grip Wraps
-    ring_g_m1 = make_ring(-0.22, 0.049, n=N, rot_offset=math.pi/12)
-    ring_g_m2 = make_ring(0.00, 0.047, n=N)
-    ring_g_m3 = make_ring(0.22, 0.049, n=N, rot_offset=math.pi/12)
-    ring_g_m4 = make_ring(0.44, 0.046, n=N)
-    
-    faces_grip = bridge_rings(ring_g_b2, ring_g_m1)
-    faces_grip.extend(bridge_rings(ring_g_m1, ring_g_m2))
-    faces_grip.extend(bridge_rings(ring_g_m2, ring_g_m3))
-    faces_grip.extend(bridge_rings(ring_g_m3, ring_g_m4))
-    set_faces_uv(faces_grip, "leather_dark")
-    
-    # Upper Ferrule Ring
-    ring_g_t1 = make_ring(0.48, 0.052, n=N)
-    ring_g_t2 = make_ring(0.52, 0.042, n=N)
-    faces_g_t = bridge_rings(ring_g_m4, ring_g_t1)
-    faces_g_t.extend(bridge_rings(ring_g_t1, ring_g_t2))
-    set_faces_uv(faces_g_t, "copper_bronze")
-    
-    # 4. MAIN SHAFT (Z = 0.52 to 2.80)
-    ring_s_m1 = make_ring(1.40, 0.040, n=N)
-    ring_s_m2 = make_ring(2.20, 0.038, n=N)
-    ring_s_top = make_ring(2.80, 0.036, n=N)
-    
-    faces_shaft = bridge_rings(ring_g_t2, ring_s_m1)
-    faces_shaft.extend(bridge_rings(ring_s_m1, ring_s_m2))
-    faces_shaft.extend(bridge_rings(ring_s_m2, ring_s_top))
-    set_faces_uv(faces_shaft, "wood_honey_oak")
-    
-    # 5. NECK LEATHER/TWINE BINDING (Z = 2.80 to 3.15)
-    ring_w1 = make_ring(2.92, 0.047, n=N, rot_offset=math.pi/12)
-    ring_w2 = make_ring(3.04, 0.049, n=N)
-    ring_w3 = make_ring(3.15, 0.045, n=N, rot_offset=math.pi/12)
-    
-    faces_wrap = bridge_rings(ring_s_top, ring_w1)
-    faces_wrap.extend(bridge_rings(ring_w1, ring_w2))
-    faces_wrap.extend(bridge_rings(ring_w2, ring_w3))
-    set_faces_uv(faces_wrap, "twine_straw")
-    
-    # 6. STEEL SOCKET COLLAR & BRONZE WINGS (Z = 3.15 to 3.45)
-    ring_c_b = make_ring(3.22, 0.054, n=N)
-    ring_c_m = make_ring(3.34, 0.050, n=N)
-    ring_c_t = make_ring(3.45, 0.042, n=N)
-    
-    faces_col = bridge_rings(ring_w3, ring_c_b)
-    faces_col.extend(bridge_rings(ring_c_b, ring_c_m))
-    faces_col.extend(bridge_rings(ring_c_m, ring_c_t))
-    set_faces_uv(faces_col, "iron_band")
-    
-    # Wing Lugs
-    wl1 = bm.verts.new((-0.042, 0.010, 3.24))
-    wl2 = bm.verts.new((-0.13, 0.006, 3.30))
-    wl3 = bm.verts.new((-0.16, 0.0, 3.38))
-    wl4 = bm.verts.new((-0.07, 0.0, 3.42))
-    wl5 = bm.verts.new((-0.042, -0.010, 3.24))
-    wl6 = bm.verts.new((-0.13, -0.006, 3.30))
-    
-    wr1 = bm.verts.new((0.042, 0.010, 3.24))
-    wr2 = bm.verts.new((0.13, 0.006, 3.30))
-    wr3 = bm.verts.new((0.16, 0.0, 3.38))
-    wr4 = bm.verts.new((0.07, 0.0, 3.42))
-    wr5 = bm.verts.new((0.042, -0.010, 3.24))
-    wr6 = bm.verts.new((0.13, -0.006, 3.30))
-    
-    faces_lugs = [
-        bm.faces.new((wl1, wl2, wl3, wl4)),
-        bm.faces.new((wl4, wl3, wl6, wl5)),
-        bm.faces.new((wl1, wl5, wl6, wl2)),
-        bm.faces.new((wr4, wr3, wr2, wr1)),
-        bm.faces.new((wr5, wr6, wr3, wr4)),
-        bm.faces.new((wr2, wr6, wr5, wr1))
+        faces_pommel_tip.append(bm_pommel.faces.new((v_pommel_tip, s_p1[i_next], s_p1[i])))
+    f_p1 = bridge_rings_bm(bm_pommel, s_p1, s_p2)
+    f_p2 = bridge_rings_bm(bm_pommel, s_p2, s_p3)
+    f_p3 = bridge_rings_bm(bm_pommel, s_p3, s_p4)
+
+    set_bm_faces_uv(bm_pommel, faces_pommel_tip + f_p1, "wood_honey_oak")
+    set_bm_faces_uv(bm_pommel, f_p2, "leather_dark")
+    set_bm_faces_uv(bm_pommel, f_p3, "wood_honey_oak")
+
+    bm_pommel.normal_update()
+    m_pommel = bpy.data.meshes.new("PommelMesh")
+    bm_pommel.to_mesh(m_pommel)
+    bm_pommel.free()
+    obj_pommel = bpy.data.objects.new("Pommel", m_pommel)
+    bpy.context.collection.objects.link(obj_pommel)
+
+    # -------------------------------------------------------------------------
+    # 3. UPPER GRIP (Secondary Guide Hand Leather Pad at Z = 1.35 to 1.95)
+    # -------------------------------------------------------------------------
+    bm_ugrip = bmesh.new()
+    ug1 = make_ring_bm(bm_ugrip, 1.35, 0.048, n=N)
+    ug2 = make_ring_bm(bm_ugrip, 1.42, 0.054, n=N)
+    ug3 = make_ring_bm(bm_ugrip, 1.65, 0.051, n=N, rot_offset=math.pi/8)
+    ug4 = make_ring_bm(bm_ugrip, 1.88, 0.054, n=N)
+    ug5 = make_ring_bm(bm_ugrip, 1.95, 0.048, n=N)
+
+    f_ug_b = bridge_rings_bm(bm_ugrip, ug1, ug2)
+    f_ug_m1 = bridge_rings_bm(bm_ugrip, ug2, ug3)
+    f_ug_m2 = bridge_rings_bm(bm_ugrip, ug3, ug4)
+    f_ug_t = bridge_rings_bm(bm_ugrip, ug4, ug5)
+
+    set_bm_faces_uv(bm_ugrip, f_ug_b, "leather_warm")
+    set_bm_faces_uv(bm_ugrip, f_ug_m1 + f_ug_m2, "leather_dark")
+    set_bm_faces_uv(bm_ugrip, f_ug_t, "leather_warm")
+
+    bm_ugrip.normal_update()
+    m_ugrip = bpy.data.meshes.new("UpperGripMesh")
+    bm_ugrip.to_mesh(m_ugrip)
+    bm_ugrip.free()
+    obj_ugrip = bpy.data.objects.new("Grip_Upper", m_ugrip)
+    bpy.context.collection.objects.link(obj_ugrip)
+
+    # -------------------------------------------------------------------------
+    # 4. WOODEN SHAFT (Mid & Upper Honey Oak Staff at Z = 0.55 to 3.65)
+    # -------------------------------------------------------------------------
+    bm_shaft = bmesh.new()
+    # Mid shaft between Handle and Upper Grip (Z = 0.55 to 1.35)
+    s_m1 = make_ring_bm(bm_shaft, 0.55, 0.044, n=N)
+    s_m2 = make_ring_bm(bm_shaft, 0.95, 0.042, n=N)
+    s_m3 = make_ring_bm(bm_shaft, 1.35, 0.042, n=N)
+    f_mid_shaft = bridge_rings_bm(bm_shaft, s_m1, s_m2) + bridge_rings_bm(bm_shaft, s_m2, s_m3)
+    set_bm_faces_uv(bm_shaft, f_mid_shaft, "wood_honey_oak")
+
+    # Upper shaft above Upper Grip to Neck Socket (Z = 1.95 to 3.65)
+    s_u1 = make_ring_bm(bm_shaft, 1.95, 0.042, n=N)
+    s_u2 = make_ring_bm(bm_shaft, 2.70, 0.040, n=N)
+    s_u3 = make_ring_bm(bm_shaft, 3.40, 0.038, n=N)
+    s_u4 = make_ring_bm(bm_shaft, 3.65, 0.032, n=N)
+    f_up_shaft = bridge_rings_bm(bm_shaft, s_u1, s_u2) + bridge_rings_bm(bm_shaft, s_u2, s_u3) + bridge_rings_bm(bm_shaft, s_u3, s_u4)
+    set_bm_faces_uv(bm_shaft, f_up_shaft, "wood_honey_oak")
+
+    bm_shaft.normal_update()
+    m_shaft = bpy.data.meshes.new("ShaftMesh")
+    bm_shaft.to_mesh(m_shaft)
+    bm_shaft.free()
+    obj_shaft = bpy.data.objects.new("Shaft", m_shaft)
+    bpy.context.collection.objects.link(obj_shaft)
+
+    # -------------------------------------------------------------------------
+    # 5. SINEW / RAWHIDE BINDING (Lashings securing flint blade at Z = 3.38 to 3.78)
+    # -------------------------------------------------------------------------
+    bm_bind = bmesh.new()
+    b1 = make_ring_bm(bm_bind, 3.38, 0.046, n=N)
+    b2 = make_ring_bm(bm_bind, 3.50, 0.052, n=N, rot_offset=math.pi/8)
+    b3 = make_ring_bm(bm_bind, 3.65, 0.050, n=N)
+    b4 = make_ring_bm(bm_bind, 3.78, 0.044, n=N, rot_offset=math.pi/8)
+
+    f_b1 = bridge_rings_bm(bm_bind, b1, b2)
+    f_b2 = bridge_rings_bm(bm_bind, b2, b3)
+    f_b3 = bridge_rings_bm(bm_bind, b3, b4)
+
+    set_bm_faces_uv(bm_bind, f_b1 + f_b2 + f_b3, "twine_straw")
+
+    # Crossed diagonal sinew cords
+    add_box_bm(bm_bind, -0.055 * SX, 0.055 * SX, -0.015 * SY, 0.015 * SY, 3.44, 3.70, "leather_warm")
+    add_box_bm(bm_bind, -0.015 * SX, 0.015 * SX, -0.055 * SY, 0.055 * SY, 3.44, 3.70, "leather_warm")
+
+    bm_bind.normal_update()
+    m_bind = bpy.data.meshes.new("BindingMesh")
+    bm_bind.to_mesh(m_bind)
+    bm_bind.free()
+    obj_bind = bpy.data.objects.new("Binding", m_bind)
+    bpy.context.collection.objects.link(obj_bind)
+
+    # -------------------------------------------------------------------------
+    # 6. CHIPPED FLINT STONE SPEARHEAD (Flint Blade & Tip at Z = 3.68 to 5.25)
+    # -------------------------------------------------------------------------
+    bm_flint = bmesh.new()
+
+    t_cf = bm_flint.verts.new((0, 0.024 * SY, 3.68))
+    t_cb = bm_flint.verts.new((0, -0.024 * SY, 3.68))
+    t_el = bm_flint.verts.new((-0.035 * SX, 0, 3.68))
+    t_er = bm_flint.verts.new((0.035 * SX, 0, 3.68))
+
+    s_cf = bm_flint.verts.new((0, 0.034 * SY, 3.90))
+    s_cb = bm_flint.verts.new((0, -0.034 * SY, 3.90))
+    s_el = bm_flint.verts.new((-0.135 * SX, 0, 3.90))
+    s_er = bm_flint.verts.new((0.135 * SX, 0, 3.90))
+
+    m_cf = bm_flint.verts.new((0, 0.032 * SY, 4.30))
+    m_cb = bm_flint.verts.new((0, -0.032 * SY, 4.30))
+    m_el = bm_flint.verts.new((-0.150 * SX, 0, 4.30))
+    m_er = bm_flint.verts.new((0.150 * SX, 0, 4.30))
+
+    u_cf = bm_flint.verts.new((0, 0.022 * SY, 4.75))
+    u_cb = bm_flint.verts.new((0, -0.022 * SY, 4.75))
+    u_el = bm_flint.verts.new((-0.090 * SX, 0, 4.75))
+    u_er = bm_flint.verts.new((0.090 * SX, 0, 4.75))
+
+    tip = bm_flint.verts.new((0, 0, 5.25))
+
+    # Front Bevel Faces (Left & Right)
+    f_fl_0 = bm_flint.faces.new((t_cf, t_el, s_el, s_cf))
+    f_fr_0 = bm_flint.faces.new((t_cf, s_cf, s_er, t_er))
+    f_fl_1 = bm_flint.faces.new((s_cf, s_el, m_el, m_cf))
+    f_fr_1 = bm_flint.faces.new((s_cf, m_cf, m_er, s_er))
+    f_fl_2 = bm_flint.faces.new((m_cf, m_el, u_el, u_cf))
+    f_fr_2 = bm_flint.faces.new((m_cf, u_cf, u_er, m_er))
+    f_fl_3 = bm_flint.faces.new((u_cf, u_el, tip))
+    f_fr_3 = bm_flint.faces.new((u_cf, tip, u_er))
+
+    # Back Bevel Faces (Left & Right)
+    f_bl_0 = bm_flint.faces.new((t_cb, s_cb, s_el, t_el))
+    f_br_0 = bm_flint.faces.new((t_cb, t_er, s_er, s_cb))
+    f_bl_1 = bm_flint.faces.new((s_cb, m_cb, m_el, s_el))
+    f_br_1 = bm_flint.faces.new((s_cb, s_er, m_er, m_cb))
+    f_bl_2 = bm_flint.faces.new((m_cb, u_cb, u_el, m_el))
+    f_br_2 = bm_flint.faces.new((m_cb, m_er, u_er, u_cb))
+    f_bl_3 = bm_flint.faces.new((u_cb, tip, u_el))
+    f_br_3 = bm_flint.faces.new((u_cb, u_er, tip))
+
+    set_bm_faces_uv(bm_flint, [f_fl_0, f_fl_1, f_fl_2, f_fl_3], "stone_slate")
+    set_bm_faces_uv(bm_flint, [f_fr_0, f_fr_1, f_fr_2, f_fr_3], "stone_dark")
+    set_bm_faces_uv(bm_flint, [f_bl_0, f_bl_1, f_bl_2, f_bl_3], "stone_slate")
+    set_bm_faces_uv(bm_flint, [f_br_0, f_br_1, f_br_2, f_br_3], "cast_iron")
+
+    bm_flint.normal_update()
+    m_flint = bpy.data.meshes.new("FlintBladeMesh")
+    bm_flint.to_mesh(m_flint)
+    bm_flint.free()
+    obj_flint = bpy.data.objects.new("Flint_Blade", m_flint)
+    bpy.context.collection.objects.link(obj_flint)
+
+    # -------------------------------------------------------------------------
+    # 7. ROOT CONTAINER & MODULAR ASSEMBLY EXPORT
+    # -------------------------------------------------------------------------
+    root = bpy.data.objects.new("Spear", None)
+    root.location = (0, 0, 0)
+    bpy.context.collection.objects.link(root)
+
+    parts = [obj_handle, obj_pommel, obj_ugrip, obj_shaft, obj_bind, obj_flint]
+
+    target_dirs = [
+        MODELS_DIR,
+        os.path.join(MODELS_DIR, "nature"),
+        os.path.join(MODELS_DIR, "resources"),
+        os.path.join(MODELS_DIR, "weapons")
     ]
-    set_faces_uv(faces_lugs, "copper_bronze")
-    
-    # 7. HIGH-ELEGANCE SCULPTED LEAF BLADE (Z = 3.45 to 4.92)
-    v0_sf = bm.verts.new((0, 0.032, 3.45))
-    v0_sb = bm.verts.new((0, -0.032, 3.45))
-    v0_el = bm.verts.new((-0.038, 0, 3.45))
-    v0_er = bm.verts.new((0.038, 0, 3.45))
-    
-    v1_sf = bm.verts.new((0, 0.042, 3.65))
-    v1_sb = bm.verts.new((0, -0.042, 3.65))
-    v1_el = bm.verts.new((-0.10, 0, 3.65))
-    v1_er = bm.verts.new((0.10, 0, 3.65))
-    
-    v2_sf = bm.verts.new((0, 0.040, 3.88))
-    v2_sb = bm.verts.new((0, -0.040, 3.88))
-    v2_el = bm.verts.new((-0.088, 0, 3.88))
-    v2_er = bm.verts.new((0.088, 0, 3.88))
-    
-    v3_sf = bm.verts.new((0, 0.036, 4.22))
-    v3_sb = bm.verts.new((0, -0.036, 4.22))
-    v3_el = bm.verts.new((-0.165, 0, 4.22))
-    v3_er = bm.verts.new((0.165, 0, 4.22))
-    
-    v4_sf = bm.verts.new((0, 0.022, 4.60))
-    v4_sb = bm.verts.new((0, -0.022, 4.60))
-    v4_el = bm.verts.new((-0.075, 0, 4.60))
-    v4_er = bm.verts.new((0.075, 0, 4.60))
-    
-    v5_tip = bm.verts.new((0, 0, 4.92))
-    
-    # Front Blade Faces
-    f_fl0 = bm.faces.new((v0_sf, v0_el, v1_el, v1_sf))
-    f_fr0 = bm.faces.new((v0_sf, v1_sf, v1_er, v0_er))
-    f_fl1 = bm.faces.new((v1_sf, v1_el, v2_el, v2_sf))
-    f_fr1 = bm.faces.new((v1_sf, v2_sf, v2_er, v1_er))
-    f_fl2 = bm.faces.new((v2_sf, v2_el, v3_el, v3_sf))
-    f_fr2 = bm.faces.new((v2_sf, v3_sf, v3_er, v2_er))
-    f_fl3 = bm.faces.new((v3_sf, v3_el, v4_el, v4_sf))
-    f_fr3 = bm.faces.new((v3_sf, v4_sf, v4_er, v3_er))
-    f_fl4 = bm.faces.new((v4_sf, v4_el, v5_tip))
-    f_fr4 = bm.faces.new((v4_sf, v5_tip, v4_er))
-    
-    # Back Blade Faces
-    f_bl0 = bm.faces.new((v0_sb, v1_sb, v1_el, v0_el))
-    f_br0 = bm.faces.new((v0_sb, v0_er, v1_er, v1_sb))
-    f_bl1 = bm.faces.new((v1_sb, v2_sb, v2_el, v1_el))
-    f_br1 = bm.faces.new((v1_sb, v1_er, v2_er, v2_sb))
-    f_bl2 = bm.faces.new((v2_sb, v3_sb, v3_el, v2_el))
-    f_br2 = bm.faces.new((v2_sb, v2_er, v3_er, v3_sb))
-    f_bl3 = bm.faces.new((v3_sb, v4_sb, v4_el, v3_el))
-    f_br3 = bm.faces.new((v3_sb, v3_er, v4_er, v4_sb))
-    f_bl4 = bm.faces.new((v4_sb, v5_tip, v4_el))
-    f_br4 = bm.faces.new((v4_sb, v4_er, v5_tip))
-    
-    # Cap between collar top and blade base
-    cap_faces = []
-    base_verts = [v0_el, v0_sf, v0_er, v0_sb]
-    for i in range(N):
-        i_next = (i + 1) % N
-        bv1 = base_verts[i % 4]
-        bv2 = base_verts[(i + 1) % 4]
-        try:
-            f = bm.faces.new((ring_c_t[i], ring_c_t[i_next], bv2, bv1))
-            cap_faces.append(f)
-        except Exception:
-            pass
-    set_faces_uv(cap_faces, "iron_band")
-    
-    # Cutting bevel shading
-    set_faces_uv([f_fl0, f_fl1, f_fl2, f_fl3, f_fl4], "slate_light")
-    set_faces_uv([f_fr0, f_fr1, f_fr2, f_fr3, f_fr4], "steel_light")
-    set_faces_uv([f_bl0, f_bl1, f_bl2, f_bl3, f_bl4], "slate_light")
-    set_faces_uv([f_br0, f_br1, f_br2, f_br3, f_br4], "steel_light")
-
-    bm.normal_update()
-
-    mesh = bpy.data.meshes.new("SpearMesh")
-    bm.to_mesh(mesh)
-    bm.free()
-
-    spear_obj = bpy.data.objects.new("Spear", mesh)
-    bpy.context.collection.objects.link(spear_obj)
-    
-    finalize_asset(spear_obj, name)
-    finalize_asset(spear_obj, "spear-2")
+    export_modular_assembly(root, parts, "spear", target_dirs)
+    export_modular_assembly(root, parts, "spear-1", target_dirs)
+    export_modular_assembly(root, parts, "spear-2", target_dirs)
+    print(f"🏹 Spear with {len(parts)} separate composite parts exported successfully!")
 
 def create_torch():
     """Creates stylized survival wooden torch with faceted flame."""

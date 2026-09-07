@@ -78,7 +78,7 @@ local HAND_MODELS = {
 		Material = Enum.Material.Plastic
 	},
 	Spear = {
-		Size = Vector3.new(0.4, 5.2, 0.4),
+		Size = Vector3.new(0.32, 5.25, 0.38),
 		Color = BrickColor.new("Reddish brown"),
 		Material = Enum.Material.Wood
 	},

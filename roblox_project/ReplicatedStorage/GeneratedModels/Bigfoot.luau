@@ -1,146 +1,125 @@
 --[[
     ReplicatedStorage/GeneratedModels/Bigfoot.luau
-    Процедурный генератор 3D-модели Бигфута с янтарными глазами (Bigfoot).
-    Структура:
-    Bigfoot (Model)
-      ├── Torso (мощный темно-коричневый торс с широкими плечами)
-      ├── Head (голова гориллы с тяжелыми надбровными дугами)
-      ├── Arms (длинные мускулистые руки до земли)
-      ├── Legs (массивные устойчивые ноги)
-      └── Eyes (светящиеся янтарные неоновые глаза)
+    Высокоточный, стилизованный 3D-генератор Бигфута (Bigfoot / Снежный Человек / Sasquatch):
+    - Огромный мускулистый торс (Torso) цвета темного ореха с рельефными грудными плитами
+    - Массивная голова примата с тяжелым надбровным валиком и выступающей челюстью
+    - Светящиеся янтарные неоновые глаза (Neon Amber Eyes) с PointLight
+    - Длинные мощные руки-лапы с широкими кулаками
+    - Ноги-колонны с устойчивыми ступнями
+    - Направлен строго вперед (в сторону -Z в Roblox)
 --]]
 
 local BigfootGenerator = {}
 
-function BigfootGenerator.create(parent)
+function BigfootGenerator.create(parent, targetCF, options)
+	options = options or {}
+	local scale = options.Scale or 1.0
+	local isAnchored = (options.Anchored ~= false) and (options.isMob ~= true)
+
+	targetCF = targetCF or CFrame.new(0, 0, 0)
 	local model = Instance.new("Model")
 	model.Name = "Bigfoot"
 
-	-- 1. Торс (Torso)
-	local torso = Instance.new("Part")
-	torso.Name = "Torso"
-	torso.Size = Vector3.new(1.60, 1.35, 1.10)
-	torso.Position = Vector3.new(0, 1.50, 0)
-	torso.Material = Enum.Material.SmoothPlastic
-	torso.Color = Color3.fromRGB(92, 46, 11) -- wood_walnut
-	torso.Anchored = false
-	torso.CanCollide = false
-	torso.Parent = model
+	local function makePart(name, size, cfOffset, material, color, canCollide)
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Size = size * scale
+		local scaledPos = cfOffset.Position * scale
+		local scaledRot = cfOffset - cfOffset.Position
+		p.CFrame = targetCF * CFrame.new(scaledPos) * scaledRot
+		p.Material = material or Enum.Material.SmoothPlastic
+		p.Color = color or Color3.fromRGB(92, 46, 11)
+		p.Anchored = isAnchored
+		p.CanCollide = (canCollide == true and isAnchored)
+		p.Massless = not isAnchored
+		p.CastShadow = true
+		p.TopSurface = Enum.SurfaceType.Smooth
+		p.BottomSurface = Enum.SurfaceType.Smooth
+		p.Parent = model
+		return p
+	end
+
+	-- Цветовая палитра Бигфута
+	local c_fur = Color3.fromRGB(92, 46, 11)       -- wood_walnut (#5C2E0B) - темно-коричневая шерсть
+	local c_dark = Color3.fromRGB(62, 30, 8)       -- wood_bark (#3E1E08) - темные участки / рельеф
+	local c_burnt = Color3.fromRGB(41, 37, 36)     -- wood_burnt (#292524) - надбровье / загривок
+	local c_skin = Color3.fromRGB(120, 53, 15)     -- wood_mahogany (#78350F) - лицо и челюсть
+	local c_eye = Color3.fromRGB(255, 183, 3)      -- neon_amber_glow (#FFB703) - янтарные глаза
+
+	-- =========================================================================
+	-- 1. ТОРС, ГРУДЬ И ЗАГРИВОК (Torso, Pectorals, Flanks) - Центр на Y=2.5
+	-- =========================================================================
+	local torso = makePart("Torso", Vector3.new(2.6, 2.2, 1.9), CFrame.new(0, 2.5, 0), Enum.Material.SmoothPlastic, c_fur, false)
 	model.PrimaryPart = torso
 
-	-- Грудные плиты / Рельеф (Pectorals)
-	local pecs = Instance.new("Part")
-	pecs.Name = "Pectorals"
-	pecs.Size = Vector3.new(1.45, 0.70, 0.35)
-	pecs.Position = Vector3.new(0, 1.60, 0.48)
-	pecs.Material = Enum.Material.SmoothPlastic
-	pecs.Color = Color3.fromRGB(62, 30, 8) -- wood_bark
-	pecs.Anchored = false
-	pecs.CanCollide = false
-	pecs.Parent = model
+	-- Грудные пластины (Pectorals) - Спереди (-Z)
+	makePart("Pectorals", Vector3.new(2.3, 1.1, 0.5), CFrame.new(0, 2.7, -0.9), Enum.Material.SmoothPlastic, c_dark)
 
-	-- 2. Голова (Head)
-	local head = Instance.new("Part")
-	head.Name = "Head"
-	head.Size = Vector3.new(0.80, 0.70, 0.75)
-	head.Position = Vector3.new(0, 2.40, 0.05)
-	head.Material = Enum.Material.SmoothPlastic
-	head.Color = Color3.fromRGB(92, 46, 11)
-	head.Anchored = false
-	head.CanCollide = false
-	head.Parent = model
+	-- Нижняя часть живота
+	makePart("LowerTorso", Vector3.new(2.3, 1.5, 1.7), CFrame.new(0, 1.35, 0.05), Enum.Material.SmoothPlastic, c_fur)
 
-	-- Брови (Brow)
-	local brow = Instance.new("Part")
-	brow.Name = "BrowRidge"
-	brow.Size = Vector3.new(0.75, 0.22, 0.25)
-	brow.Position = Vector3.new(0, 2.50, 0.42)
-	brow.Material = Enum.Material.SmoothPlastic
-	brow.Color = Color3.fromRGB(41, 37, 36) -- wood_burnt
-	brow.Anchored = false
-	brow.CanCollide = false
-	brow.Parent = model
+	-- Мощный горб/загривок на спине
+	makePart("BackHunch", Vector3.new(2.5, 1.2, 1.4), CFrame.new(0, 3.2, 0.4), Enum.Material.SmoothPlastic, c_burnt)
 
-	-- Челюсть (Jaw)
-	local jaw = Instance.new("Part")
-	jaw.Name = "Jaw"
-	jaw.Size = Vector3.new(0.60, 0.32, 0.35)
-	jaw.Position = Vector3.new(0, 2.20, 0.40)
-	jaw.Material = Enum.Material.SmoothPlastic
-	jaw.Color = Color3.fromRGB(56, 34, 15) -- soil_dark
-	jaw.Anchored = false
-	jaw.CanCollide = false
-	jaw.Parent = model
+	-- =========================================================================
+	-- 2. ГОЛОВА, НАДБРОВЬЕ И ЧЕЛЮСТЬ (Head, Brow, Jaw) - Впереди (-Z)
+	-- =========================================================================
+	local head = makePart("Head", Vector3.new(1.7, 1.5, 1.6), CFrame.new(0, 3.9, -0.25), Enum.Material.SmoothPlastic, c_fur)
 
-	-- 3. Светящиеся янтарные глаза (Eyes)
-	local eyeL = Instance.new("Part")
-	eyeL.Name = "EyeLeft"
-	eyeL.Size = Vector3.new(0.14, 0.10, 0.08)
-	eyeL.Position = Vector3.new(-0.16, 2.46, 0.46)
-	eyeL.Material = Enum.Material.Neon
-	eyeL.Color = Color3.fromRGB(255, 183, 3) -- neon_amber_glow
-	eyeL.Anchored = false
-	eyeL.CanCollide = false
-	eyeL.Parent = model
+	-- Тяжелый надбровный валик (Brow Ridge)
+	makePart("BrowRidge", Vector3.new(1.5, 0.4, 0.6), CFrame.new(0, 4.15, -0.95), Enum.Material.SmoothPlastic, c_burnt)
 
-	local eyeR = Instance.new("Part")
-	eyeR.Name = "EyeRight"
-	eyeR.Size = Vector3.new(0.14, 0.10, 0.08)
-	eyeR.Position = Vector3.new(0.16, 2.46, 0.46)
-	eyeR.Material = Enum.Material.Neon
-	eyeR.Color = Color3.fromRGB(255, 183, 3) -- neon_amber_glow
-	eyeR.Anchored = false
-	eyeR.CanCollide = false
-	eyeR.Parent = model
+	-- Массивная нижняя челюсть (Ape Jaw)
+	makePart("Jaw", Vector3.new(1.3, 0.7, 0.8), CFrame.new(0, 3.55, -0.90), Enum.Material.SmoothPlastic, c_skin)
 
-	-- 4. Руки гориллы (Arms)
-	local armL = Instance.new("Part")
-	armL.Name = "ArmLeft"
-	armL.Size = Vector3.new(0.45, 1.75, 0.45)
-	armL.Position = Vector3.new(-1.05, 1.25, 0.08)
-	armL.Material = Enum.Material.SmoothPlastic
-	armL.Color = Color3.fromRGB(62, 30, 8) -- wood_bark
-	armL.Anchored = false
-	armL.CanCollide = false
-	armL.Parent = model
+	-- =========================================================================
+	-- 3. СВЕТЯЩИЕСЯ ЯНТАРНЫЕ ГЛАЗА (Glowing Amber Eyes)
+	-- =========================================================================
+	makePart("EyeL", Vector3.new(0.24, 0.18, 0.14), CFrame.new(-0.35, 4.05, -1.1), Enum.Material.Neon, c_eye)
+	makePart("EyeR", Vector3.new(0.24, 0.18, 0.14), CFrame.new(0.35, 4.05, -1.1), Enum.Material.Neon, c_eye)
 
-	local armR = Instance.new("Part")
-	armR.Name = "ArmRight"
-	armR.Size = Vector3.new(0.45, 1.75, 0.45)
-	armR.Position = Vector3.new(1.05, 1.25, 0.08)
-	armR.Material = Enum.Material.SmoothPlastic
-	armR.Color = Color3.fromRGB(62, 30, 8)
-	armR.Anchored = false
-	armR.CanCollide = false
-	armR.Parent = model
+	local eyeLight = Instance.new("PointLight")
+	eyeLight.Name = "BigfootEyeGlow"
+	eyeLight.Color = c_eye
+	eyeLight.Range = 12 * scale
+	eyeLight.Brightness = 1.0
+	eyeLight.Parent = head
 
-	-- 5. Ноги (Legs)
-	local legL = Instance.new("Part")
-	legL.Name = "LegLeft"
-	legL.Size = Vector3.new(0.48, 0.95, 0.65)
-	legL.Position = Vector3.new(-0.46, 0.48, 0)
-	legL.Material = Enum.Material.SmoothPlastic
-	legL.Color = Color3.fromRGB(92, 46, 11)
-	legL.Anchored = false
-	legL.CanCollide = false
-	legL.Parent = model
+	-- =========================================================================
+	-- 4. ДЛИННЫЕ РУКИ ГОРИЛЛЫ (Long Ape Arms & Heavy Fists)
+	-- =========================================================================
+	-- Левая рука
+	makePart("ShoulderL", Vector3.new(1.2, 1.4, 1.2), CFrame.new(-1.8, 2.8, -0.05), Enum.Material.SmoothPlastic, c_fur)
+	makePart("ArmL", Vector3.new(1.1, 1.9, 1.1), CFrame.new(-2.0, 1.6, -0.15), Enum.Material.SmoothPlastic, c_fur)
+	makePart("HandL", Vector3.new(1.2, 0.8, 1.3), CFrame.new(-2.0, 0.45, -0.25), Enum.Material.SmoothPlastic, c_dark)
 
-	local legR = Instance.new("Part")
-	legR.Name = "LegRight"
-	legR.Size = Vector3.new(0.48, 0.95, 0.65)
-	legR.Position = Vector3.new(0.46, 0.48, 0)
-	legR.Material = Enum.Material.SmoothPlastic
-	legR.Color = Color3.fromRGB(92, 46, 11)
-	legR.Anchored = false
-	legR.CanCollide = false
-	legR.Parent = model
+	-- Правая рука
+	makePart("ShoulderR", Vector3.new(1.2, 1.4, 1.2), CFrame.new(1.8, 2.8, -0.05), Enum.Material.SmoothPlastic, c_fur)
+	makePart("ArmR", Vector3.new(1.1, 1.9, 1.1), CFrame.new(2.0, 1.6, -0.15), Enum.Material.SmoothPlastic, c_fur)
+	makePart("HandR", Vector3.new(1.2, 0.8, 1.3), CFrame.new(2.0, 0.45, -0.25), Enum.Material.SmoothPlastic, c_dark)
 
-	-- Welds
-	for _, p in ipairs({pecs, head, brow, jaw, eyeL, eyeR, armL, armR, legL, legR}) do
-		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = torso
-		weld.Part1 = p
-		weld.Parent = p
+	-- =========================================================================
+	-- 5. МАССИВНЫЕ НОГИ-КОЛОННЫ (Sturdy Legs & Broad Feet)
+	-- =========================================================================
+	-- Левая нога
+	makePart("LegL", Vector3.new(1.1, 1.5, 1.2), CFrame.new(-0.8, 0.9, 0.05), Enum.Material.SmoothPlastic, c_fur)
+	makePart("FootL", Vector3.new(1.2, 0.6, 1.6), CFrame.new(-0.8, 0.25, -0.15), Enum.Material.SmoothPlastic, c_dark)
+
+	-- Правая нога
+	makePart("LegR", Vector3.new(1.1, 1.5, 1.2), CFrame.new(0.8, 0.9, 0.05), Enum.Material.SmoothPlastic, c_fur)
+	makePart("FootR", Vector3.new(1.2, 0.6, 1.6), CFrame.new(0.8, 0.25, -0.15), Enum.Material.SmoothPlastic, c_dark)
+
+	-- =========================================================================
+	-- 6. СВАРКА ВСЕХ ЧАСТЕЙ К ТОРСУ (WeldConstraint)
+	-- =========================================================================
+	for _, part in ipairs(model:GetDescendants()) do
+		if part:IsA("BasePart") and part ~= torso then
+			local weld = Instance.new("WeldConstraint")
+			weld.Name = "Weld_" .. part.Name
+			weld.Part0 = torso
+			weld.Part1 = part
+			weld.Parent = part
+		end
 	end
 
 	if parent then

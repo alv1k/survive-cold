@@ -189,52 +189,111 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 		end
 
 	elseif mobType == "Yeti" then
-		-- ❄️ СНЕЖНЫЙ ЙЕТИ: Мощный ледяной торс, рога, ледяные лапы и бирюзовые глаза
-		hrp.Size = Vector3.new(3.8, 4.5, 3.0)
-		hrp.Material = Enum.Material.Fabric
-		hrp.BrickColor = BrickColor.new("Pastel light blue")
+		-- ❄️ СНЕЖНЫЙ ЙЕТИ: Высокоточная модель из GeneratedModels / Резервный визуал
+		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
+		local yetiScript = genMod and genMod:FindFirstChild("Yeti")
+		local loaded = false
 
-		-- Голова
-		addSubPart("Head", Vector3.new(2.4, 2.2, 2.2), CFrame.new(0, 3.2, -0.4), Enum.Material.Fabric, BrickColor.new("White"))
-		
-		-- Ледяные рога
-		addSubPart("HornL", Vector3.new(0.6, 1.4, 0.6), CFrame.new(-1.3, 4.3, -0.4) * CFrame.Angles(0, 0, math.rad(-25)), Enum.Material.Ice, BrickColor.new("Pastel light blue"))
-		addSubPart("HornR", Vector3.new(0.6, 1.4, 0.6), CFrame.new(1.3, 4.3, -0.4) * CFrame.Angles(0, 0, math.rad(25)), Enum.Material.Ice, BrickColor.new("Pastel light blue"))
+		if yetiScript then
+			local success, YetiGen = pcall(require, yetiScript)
+			if success and YetiGen and type(YetiGen.create) == "function" then
+				local yetiVisual = YetiGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.0, Anchored = false })
+				if yetiVisual then
+					local centerY = 2.4 -- Центр корпуса Йети
+					for _, desc in ipairs(yetiVisual:GetChildren()) do
+						if desc:IsA("BasePart") then
+							local partPos = desc.Position
+							local partRot = desc.CFrame - desc.Position
+							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
 
-		-- Светящиеся ледяные глаза
-		addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.6, 3.4, -1.4), Enum.Material.Neon, BrickColor.new("Cyan"))
-		addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.6, 3.4, -1.4), Enum.Material.Neon, BrickColor.new("Cyan"))
+							desc.Anchored = false
+							desc.CanCollide = false
+							desc.Massless = true
+							desc.CFrame = hrp.CFrame * relOffset
+							desc.Parent = mobModel
 
-		-- Мощные руки с ледяными когтями
-		addSubPart("ArmL", Vector3.new(1.4, 4.4, 1.4), CFrame.new(-2.6, 0.4, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
-		addSubPart("ArmR", Vector3.new(1.4, 4.4, 1.4), CFrame.new(2.6, 0.4, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+							local weld = Instance.new("WeldConstraint")
+							weld.Name = "Weld_" .. desc.Name
+							weld.Part0 = hrp
+							weld.Part1 = desc
+							weld.Parent = desc
+						end
+					end
+					yetiVisual:Destroy()
+					loaded = true
+				end
+			end
+		end
 
-		-- 2 Массивные ноги
-		addSubPart("LegL", Vector3.new(1.6, 3.0, 1.6), CFrame.new(-1.2, -2.8, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
-		addSubPart("LegR", Vector3.new(1.6, 3.0, 1.6), CFrame.new(1.2, -2.8, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+		if not loaded then
+			-- Резервный процедурный визуал с гарантированным видимым торсом
+			addSubPart("Torso", Vector3.new(3.8, 3.2, 2.6), CFrame.new(0, 0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+			addSubPart("LowerTorso", Vector3.new(3.2, 1.8, 2.4), CFrame.new(0, -1.2, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+			addSubPart("FurCollar", Vector3.new(4.0, 1.2, 3.0), CFrame.new(0, 1.2, 0), Enum.Material.Fabric, BrickColor.new("White"))
+			addSubPart("Head", Vector3.new(2.4, 2.2, 2.2), CFrame.new(0, 2.4, -0.4), Enum.Material.Fabric, BrickColor.new("White"))
+			addSubPart("FaceMask", Vector3.new(1.8, 1.2, 0.6), CFrame.new(0, 2.2, -1.3), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
+			addSubPart("HornL", Vector3.new(0.6, 1.4, 0.6), CFrame.new(-1.3, 3.4, -0.4) * CFrame.Angles(0, 0, math.rad(-25)), Enum.Material.Ice, BrickColor.new("Pastel light blue"))
+			addSubPart("HornR", Vector3.new(0.6, 1.4, 0.6), CFrame.new(1.3, 3.4, -0.4) * CFrame.Angles(0, 0, math.rad(25)), Enum.Material.Ice, BrickColor.new("Pastel light blue"))
+			addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.55, 2.5, -1.5), Enum.Material.Neon, BrickColor.new("Cyan"))
+			addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.55, 2.5, -1.5), Enum.Material.Neon, BrickColor.new("Cyan"))
+			addSubPart("ArmL", Vector3.new(1.4, 3.6, 1.4), CFrame.new(-2.6, 0.2, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+			addSubPart("ArmR", Vector3.new(1.4, 3.6, 1.4), CFrame.new(2.6, 0.2, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+			addSubPart("LegL", Vector3.new(1.4, 2.4, 1.4), CFrame.new(-1.1, -2.0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+			addSubPart("LegR", Vector3.new(1.4, 2.4, 1.4), CFrame.new(1.1, -2.0, 0), Enum.Material.Fabric, BrickColor.new("Pastel light blue"))
+		end
 
 	elseif mobType == "Bigfoot" then
-		-- 🦍 БИГФУТ: Огромный темно-бурый торс, массивная челюсть и янтарные глаза
-		hrp.Size = Vector3.new(4.2, 5.0, 3.2)
-		hrp.Material = Enum.Material.Fabric
-		hrp.BrickColor = BrickColor.new("Reddish brown")
+		-- 🦍 БИГФУТ: Высокоточная модель из GeneratedModels / Резервный визуал
+		local genMod = ReplicatedStorage:FindFirstChild("GeneratedModels")
+		local bigfootScript = genMod and genMod:FindFirstChild("Bigfoot")
+		local loaded = false
 
-		-- Голова с тяжелым лбом
-		addSubPart("Head", Vector3.new(2.6, 2.4, 2.4), CFrame.new(0, 3.5, -0.5), Enum.Material.Fabric, BrickColor.new("Dark orange"))
-		addSubPart("Jaw", Vector3.new(1.8, 0.9, 1.2), CFrame.new(0, 2.7, -1.4), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+		if bigfootScript then
+			local success, BigfootGen = pcall(require, bigfootScript)
+			if success and BigfootGen and type(BigfootGen.create) == "function" then
+				local bigfootVisual = BigfootGen.create(nil, CFrame.identity, { isMob = true, Scale = 1.0, Anchored = false })
+				if bigfootVisual then
+					local centerY = 2.5 -- Центр корпуса Бигфута
+					for _, desc in ipairs(bigfootVisual:GetChildren()) do
+						if desc:IsA("BasePart") then
+							local partPos = desc.Position
+							local partRot = desc.CFrame - desc.Position
+							local relOffset = CFrame.new(partPos.X, partPos.Y - centerY, partPos.Z) * partRot
 
-		-- Светящиеся янтарные глаза
-		addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.65, 3.7, -1.6), Enum.Material.Neon, BrickColor.new("Deep orange"))
-		addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.65, 3.7, -1.6), Enum.Material.Neon, BrickColor.new("Deep orange"))
+							desc.Anchored = false
+							desc.CanCollide = false
+							desc.Massless = true
+							desc.CFrame = hrp.CFrame * relOffset
+							desc.Parent = mobModel
 
-		-- Длинные лапы-руки
-		addSubPart("ArmL", Vector3.new(1.6, 5.0, 1.6), CFrame.new(-2.9, 0.5, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
-		addSubPart("ArmR", Vector3.new(1.6, 5.0, 1.6), CFrame.new(2.9, 0.5, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+							local weld = Instance.new("WeldConstraint")
+							weld.Name = "Weld_" .. desc.Name
+							weld.Part0 = hrp
+							weld.Part1 = desc
+							weld.Parent = desc
+						end
+					end
+					bigfootVisual:Destroy()
+					loaded = true
+				end
+			end
+		end
 
-		-- 2 Ноги-колонны
-		addSubPart("LegL", Vector3.new(1.8, 3.2, 1.8), CFrame.new(-1.3, -3.0, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
-		addSubPart("LegR", Vector3.new(1.8, 3.2, 1.8), CFrame.new(1.3, -3.0, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
-	end
+		if not loaded then
+			-- Резервный процедурный визуал с гарантированным видимым торсом
+			addSubPart("Torso", Vector3.new(4.0, 3.4, 2.8), CFrame.new(0, 0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+			addSubPart("LowerTorso", Vector3.new(3.4, 1.8, 2.5), CFrame.new(0, -1.3, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+			addSubPart("BackHunch", Vector3.new(3.8, 1.6, 2.2), CFrame.new(0, 1.1, 0.4), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+			addSubPart("Head", Vector3.new(2.4, 2.2, 2.2), CFrame.new(0, 2.4, -0.4), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+			addSubPart("BrowRidge", Vector3.new(2.2, 0.6, 0.8), CFrame.new(0, 2.7, -1.3), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+			addSubPart("Jaw", Vector3.new(1.8, 0.9, 1.2), CFrame.new(0, 1.9, -1.2), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+			addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.55, 2.6, -1.5), Enum.Material.Neon, BrickColor.new("Deep orange"))
+			addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.55, 2.6, -1.5), Enum.Material.Neon, BrickColor.new("Deep orange"))
+			addSubPart("ArmL", Vector3.new(1.5, 4.2, 1.5), CFrame.new(-2.8, 0.0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+			addSubPart("ArmR", Vector3.new(1.5, 4.2, 1.5), CFrame.new(2.8, 0.0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
+			addSubPart("LegL", Vector3.new(1.5, 2.6, 1.5), CFrame.new(-1.2, -2.2, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+			addSubPart("LegR", Vector3.new(1.5, 2.6, 1.5), CFrame.new(1.2, -2.2, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
+		end
 end
 
 local function spawnMob(mobType, spawnPos)

@@ -432,9 +432,15 @@ local function createInteractiveChest(index, loc, isPartsChest)
 				local angle = (i / #items) * (math.pi * 2) + math.rad((index * 23) % 45)
 				local radius = 3.2 + (i % 2) * 0.5
 				local dropOffset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-				local dropPos = Vector3.new(chestPos.X + dropOffset.X, groundY, chestPos.Z + dropOffset.Z)
+				local dropX = chestPos.X + dropOffset.X
+				local dropZ = chestPos.Z + dropOffset.Z
+				local dropY = getGroundHeight(dropX, dropZ)
+				local dropPos = Vector3.new(dropX, dropY, dropZ)
 
-				InventoryService.dropItem(player, dropData.Item, dropData.Count, dropPos)
+				local droppedObj = InventoryService.dropItem(player, dropData.Item, dropData.Count, dropPos)
+				if droppedObj then
+					SurfaceUtil.placeOnSurface(droppedObj, dropPos, 0.05)
+				end
 			end
 
 			if isPartsChest then

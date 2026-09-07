@@ -289,7 +289,7 @@ function ModelHelper.assembleDropModel(itemName, pos)
 			return nil
 		end
 
-		local primary = clone:FindFirstChild("Handle") or clone.PrimaryPart or allParts[1]
+		local primary = clone:FindFirstChild("Handle") or clone:FindFirstChild("Center") or clone.PrimaryPart or allParts[1]
 		clone.PrimaryPart = primary
 		clone.Name = "Dropped_" .. itemName
 
@@ -301,7 +301,12 @@ function ModelHelper.assembleDropModel(itemName, pos)
 
 		for _, p in ipairs(allParts) do
 			p.Anchored = true
-			p.Transparency = 0
+			if p.Name == "Center" then
+				p.Transparency = 1
+				p.CanCollide = false
+			else
+				p.Transparency = 0
+			end
 			p.CastShadow = true
 			p.AssemblyLinearVelocity = Vector3.zero
 			p.AssemblyAngularVelocity = Vector3.zero

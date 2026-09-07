@@ -3,14 +3,14 @@
     Высокоточный, стилизованный 3D-генератор механических деталей (Шестерёнки / Cogwheels & Gears):
     
     1. ⚙️ Большая бронзовая шестерня (Large Bronze Gear):
-       - Центральная цилиндрическая ступица (Hub) с вырезом под вал
-       - 8 массивных радиальных зубьев (Cogs), расположенных под углами 0°, 45°, 90°, 135°...
-       - 4 внутренние крестообразные спицы (Spokes)
+       - Центральная цилиндрическая ступица (Hub)
+       - 8 массивных радиальных зубьев (Cogs)
+       - 4 внутренние спицы крестом (Spokes)
        - Благородный металлический оттенок античной бронзы (#CA8A04)
 
     2. ⚙️ Средняя стальная шестерня (Medium Steel Gear):
        - Сцеплена зубьями с большой шестерней (Interlocking Mesh)
-       - 6 массивных зубьев под углами 0°, 60°, 120°, 180°...
+       - 6 массивных зубьев
        - 3 внутренние спицы
        - Шлифованная оружейная сталь (#94A3B8)
 
@@ -26,9 +26,21 @@
 local PartsGenerator = {}
 
 function PartsGenerator.create(parent, targetCF)
-	targetCF = targetCF or CFrame.identity
+	targetCF = targetCF or CFrame.new(0, 2.0, 0)
 	local model = Instance.new("Model")
 	model.Name = "Parts"
+
+	-- Невидимый базовый опорный элемент (Center / Root)
+	local center = Instance.new("Part")
+	center.Name = "Center"
+	center.Size = Vector3.new(2.4, 0.4, 2.4)
+	center.CFrame = targetCF * CFrame.new(0, 0.18, 0)
+	center.Transparency = 1
+	center.CanCollide = false
+	center.Anchored = true
+	center.CastShadow = false
+	center.Parent = model
+	model.PrimaryPart = center
 
 	local function makePart(name, size, cfOffset, material, color)
 		local p = Instance.new("Part")
@@ -66,15 +78,14 @@ function PartsGenerator.create(parent, targetCF)
 	end
 
 	-- =========================================================================
-	-- 1. ⚙️ БОЛЬШАЯ БРОНЗОВАЯ ШЕСТЕРНЯ (Large Gear, 8 Зубьев, R = 1.05)
+	-- 1. ⚙️ БОЛЬШАЯ БРОНЗОВАЯ ШЕСТЕРНЯ (Large Gear, 8 Зубьев, R = 0.94)
 	-- =========================================================================
 	local g1_pos = Vector3.new(-0.35, 0.16, -0.20)
 	local g1_color = Color3.fromRGB(202, 138, 4) -- Antique Bronze / Brass
 	local g1_rim_color = Color3.fromRGB(180, 115, 6)
 
 	-- Центральная ступица (Hub) большой шестерни
-	local hub1 = makeCylinder("Gear1_Hub", 0.92, 0.22, CFrame.new(g1_pos), Enum.Material.Metal, g1_color)
-	model.PrimaryPart = hub1
+	makeCylinder("Gear1_Hub", 0.92, 0.22, CFrame.new(g1_pos), Enum.Material.Metal, g1_color)
 
 	-- Внутренний обод (Inner Rim)
 	makeCylinder("Gear1_InnerRim", 0.60, 0.24, CFrame.new(g1_pos), Enum.Material.Metal, g1_rim_color)
@@ -101,13 +112,12 @@ function PartsGenerator.create(parent, targetCF)
 	makePart("Gear1_Spoke2", Vector3.new(0.18, 0.18, 1.70), CFrame.new(g1_pos), Enum.Material.Metal, g1_rim_color)
 
 	-- Центральный стальной штифт / ось (Axle Pin 1)
-	local pin1 = makeCylinder("Gear1_AxlePin", 0.24, 0.38, CFrame.new(g1_pos + Vector3.new(0, 0.06, 0)), Enum.Material.Metal, Color3.fromRGB(71, 85, 105))
+	makeCylinder("Gear1_AxlePin", 0.24, 0.38, CFrame.new(g1_pos + Vector3.new(0, 0.06, 0)), Enum.Material.Metal, Color3.fromRGB(71, 85, 105))
 	makeCylinder("Gear1_CopperWasher", 0.36, 0.08, CFrame.new(g1_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Copper, Color3.fromRGB(217, 119, 6))
 
 	-- =========================================================================
-	-- 2. ⚙️ СРЕДНЯЯ СТАЛЬНАЯ ШЕСТЕРНЯ (Medium Gear, 6 Зубьев, R = 0.72)
+	-- 2. ⚙️ СРЕДНЯЯ СТАЛЬНАЯ ШЕСТЕРНЯ (Medium Gear, 6 Зубьев, R = 0.66)
 	-- =========================================================================
-	-- Сцеплена зубьями с большой шестерней (расстояние меж центрами = 1.05 + 0.72 - 0.20 = 1.57)
 	local g2_pos = Vector3.new(1.05, 0.14, 0.42)
 	local g2_color = Color3.fromRGB(148, 163, 184) -- Machined Steel
 	local g2_dark = Color3.fromRGB(100, 116, 139)
@@ -115,7 +125,7 @@ function PartsGenerator.create(parent, targetCF)
 	-- Ступица средней шестерни
 	makeCylinder("Gear2_Hub", 0.64, 0.20, CFrame.new(g2_pos), Enum.Material.Metal, g2_color)
 
-	-- 6 Зубьев средней шестерни (смещение по фазе на 30° для идеального зацепления)
+	-- 6 Зубьев средней шестерни (смещение по фазе на 28° для зацепления)
 	local nTeeth2 = 6
 	local radius2 = 0.66
 	local phase2 = math.rad(28)
@@ -150,9 +160,8 @@ function PartsGenerator.create(parent, targetCF)
 	makeCylinder("Gear2_CopperWasher", 0.28, 0.06, CFrame.new(g2_pos + Vector3.new(0, 0.11, 0)), Enum.Material.Copper, Color3.fromRGB(217, 119, 6))
 
 	-- =========================================================================
-	-- 3. ⚙️ МАЛАЯ ВЕРХНЯЯ ШЕСТЕРНЯ ПРИВОДА (Small Pinion Gear, 6 Зубьев, R = 0.44)
+	-- 3. ⚙️ МАЛАЯ ВЕРХНЯЯ ШЕСТЕРНЯ ПРИВОДА (Small Pinion Gear, 6 Зубьев, R = 0.40)
 	-- =========================================================================
-	-- Наложена сверху ступицы большой шестерни со смещением
 	local g3_pos = g1_pos + Vector3.new(-0.25, 0.18, -0.22)
 	local g3_color = Color3.fromRGB(71, 85, 105) -- Gunmetal / Cast Iron
 
@@ -179,13 +188,13 @@ function PartsGenerator.create(parent, targetCF)
 	makePart("Gear3_Nut", Vector3.new(0.24, 0.14, 0.24), CFrame.new(g3_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Metal, Color3.fromRGB(203, 213, 225))
 
 	-- =========================================================================
-	-- 4. СВАРКА ВСЕХ ДЕТАЛЕЙ К ОСНОВНОЙ СТУПИЦЕ (WeldConstraint)
+	-- 4. СВАРКА ВСЕХ ДЕТАЛЕЙ К ЦЕНТРАЛЬНОМУ ОПОРНОМУ ЭЛЕМЕНТУ (WeldConstraint)
 	-- =========================================================================
 	for _, p in ipairs(model:GetChildren()) do
-		if p:IsA("BasePart") and p ~= hub1 then
+		if p:IsA("BasePart") and p ~= center then
 			local weld = Instance.new("WeldConstraint")
 			weld.Name = "Weld_" .. p.Name
-			weld.Part0 = hub1
+			weld.Part0 = center
 			weld.Part1 = p
 			weld.Parent = p
 		end

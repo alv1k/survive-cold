@@ -258,13 +258,19 @@ function InventoryService.dropItem(player: Player, itemKey: string, count: numbe
 		SurfaceUtil.placeOnSurface(dropModel, spawnPos, 0.15)
 	else
 		dropModel.Parent = droppedFolder
+		SurfaceUtil.placeOnSurface(dropModel, spawnPos, 0.05)
 	end
 
 	-- Гарантируем закрепление всех частей модели на земле
 	for _, p in ipairs(dropModel:GetDescendants()) do
 		if p:IsA("BasePart") then
 			p.Anchored = true
-			p.CanCollide = false
+			if p.Name == "Center" then
+				p.Transparency = 1
+				p.CanCollide = false
+			else
+				p.CanCollide = false
+			end
 			p.AssemblyLinearVelocity = Vector3.zero
 		end
 	end

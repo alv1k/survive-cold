@@ -2,11 +2,11 @@
     ReplicatedStorage/GeneratedModels/Parts.luau
     Высокоточный, стилизованный 3D-генератор механических деталей (Шестерёнки / Cogwheels & Gears):
     
-    1. ⚙️ Большая бронзовая шестерня (Large Bronze Gear):
+    1. ⚙️ Большая шестерня благородного песочного цвета (Large Sand / Desert Gold Gear):
        - Центральная цилиндрическая ступица (Hub)
        - 8 массивных радиальных зубьев (Cogs)
        - 4 внутренние спицы крестом (Spokes)
-       - Благородный металлический оттенок античной бронзы (#CA8A04)
+       - Теплый песочный металлический оттенок (#E2C28B / #C3A069)
 
     2. ⚙️ Средняя стальная шестерня (Medium Steel Gear):
        - Сцеплена зубьями с большой шестерней (Interlocking Mesh)
@@ -78,11 +78,11 @@ function PartsGenerator.create(parent, targetCF)
 	end
 
 	-- =========================================================================
-	-- 1. ⚙️ БОЛЬШАЯ БРОНЗОВАЯ ШЕСТЕРНЯ (Large Gear, 8 Зубьев, R = 0.94)
+	-- 1. ⚙️ БОЛЬШАЯ ШЕСТЕРНЯ ПЕСОЧНОГО ЦВЕТА (Large Sand Gear, 8 Зубьев, R = 0.94)
 	-- =========================================================================
 	local g1_pos = Vector3.new(-0.35, 0.16, -0.20)
-	local g1_color = Color3.fromRGB(202, 138, 4) -- Antique Bronze / Brass
-	local g1_rim_color = Color3.fromRGB(180, 115, 6)
+	local g1_color = Color3.fromRGB(226, 194, 139) -- Warm Sand / Desert Gold (#E2C28B)
+	local g1_rim_color = Color3.fromRGB(195, 160, 105) -- Deep Sand Rim (#C3A069)
 
 	-- Центральная ступица (Hub) большой шестерни
 	makeCylinder("Gear1_Hub", 0.92, 0.22, CFrame.new(g1_pos), Enum.Material.Metal, g1_color)

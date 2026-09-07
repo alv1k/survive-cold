@@ -1,26 +1,10 @@
 --[[
     ReplicatedStorage/GeneratedModels/Parts.luau
-    Высокоточный, стилизованный 3D-генератор механических деталей (Шестерёнки / Cogwheels & Gears):
-    
-    1. ⚙️ Большая шестерня благородного песочного цвета (Large Sand / Desert Gold Gear):
-       - Центральная цилиндрическая ступица (Hub)
-       - 8 массивных радиальных зубьев (Cogs)
-       - 4 внутренние спицы крестом (Spokes)
-       - Теплый песочный металлический оттенок (#E2C28B / #C3A069)
-
-    2. ⚙️ Средняя стальная шестерня (Medium Steel Gear):
-       - Сцеплена зубьями с большой шестерней (Interlocking Mesh)
-       - 6 массивных зубьев
-       - 3 внутренние спицы
-       - Шлифованная оружейная сталь (#94A3B8)
-
-    3. ⚙️ Малая верхняя шестерня привода (Small Pinion Gear):
-       - Наложена сверху ступицы для объемной многослойной композиции
-       - 6 зубьев из вороненой стали (#475569)
-
-    4. 🔩 Центральные оси, втулки и медные шайбы (Axle Pins & Copper Bushings):
-       - Стальные штифты с шестигранными шляпками
-       - Медные уплотнительные кольца (#D97706)
+    Высокоточный, стилизованный 3D-генератор механической шестерёнки (Drive Pinion Gear):
+    - Одиночная компактная приводная шестерня песочного цвета (Warm Sand / Desert Gold)
+    - Центральная ступица со спицами и медной шайбой
+    - 6 массивных радиальных зубьев
+    - Стальная центральная ось и верхняя фиксирующая шестигранная гайка
 --]]
 
 local PartsGenerator = {}
@@ -33,8 +17,8 @@ function PartsGenerator.create(parent, targetCF)
 	-- Невидимый базовый опорный элемент (Center / Root)
 	local center = Instance.new("Part")
 	center.Name = "Center"
-	center.Size = Vector3.new(2.4, 0.4, 2.4)
-	center.CFrame = targetCF * CFrame.new(0, 0.18, 0)
+	center.Size = Vector3.new(1.8, 0.4, 1.8)
+	center.CFrame = targetCF * CFrame.new(0, 0.14, 0)
 	center.Transparency = 1
 	center.CanCollide = false
 	center.Anchored = true
@@ -78,117 +62,59 @@ function PartsGenerator.create(parent, targetCF)
 	end
 
 	-- =========================================================================
-	-- 1. ⚙️ БОЛЬШАЯ ШЕСТЕРНЯ ПЕСОЧНОГО ЦВЕТА (Large Sand Gear, 8 Зубьев, R = 0.94)
+	-- ⚙️ ПРИВОДНАЯ ШЕСТЕРНЯ ПЕСОЧНОГО ЦВЕТА (Drive Pinion Gear, R = 0.72)
 	-- =========================================================================
-	local g1_pos = Vector3.new(-0.35, 0.16, -0.20)
-	local g1_color = Color3.fromRGB(226, 194, 139) -- Warm Sand / Desert Gold (#E2C28B)
-	local g1_rim_color = Color3.fromRGB(195, 160, 105) -- Deep Sand Rim (#C3A069)
+	local g_pos = Vector3.new(0, 0.14, 0)
+	local sand_color = Color3.fromRGB(226, 194, 139)      -- Теплый песочный (#E2C28B)
+	local sand_dark = Color3.fromRGB(195, 160, 105)       -- Глубокий песочный обод (#C3A069)
+	local steel_dark = Color3.fromRGB(71, 85, 105)        -- Вороненый металл оси (#475569)
+	local steel_light = Color3.fromRGB(203, 213, 225)     -- Шлифованная стальная гайка (#CBD5E1)
+	local copper_color = Color3.fromRGB(217, 119, 6)      -- Медная шайба (#D97706)
 
-	-- Центральная ступица (Hub) большой шестерни
-	makeCylinder("Gear1_Hub", 0.92, 0.22, CFrame.new(g1_pos), Enum.Material.Metal, g1_color)
+	-- 1. Центральная ступица (Hub) и внутреннее кольцо
+	makeCylinder("Gear_Hub", 0.65, 0.22, CFrame.new(g_pos), Enum.Material.Metal, sand_color)
+	makeCylinder("Gear_InnerRim", 0.45, 0.24, CFrame.new(g_pos), Enum.Material.Metal, sand_dark)
 
-	-- Внутренний обод (Inner Rim)
-	makeCylinder("Gear1_InnerRim", 0.60, 0.24, CFrame.new(g1_pos), Enum.Material.Metal, g1_rim_color)
-
-	-- 8 Зубьев большой шестерни (Cogs)
-	local nTeeth1 = 8
-	local radius1 = 0.94
-	for i = 0, nTeeth1 - 1 do
-		local angle = (i / nTeeth1) * (math.pi * 2)
-		local toothCF = CFrame.new(g1_pos) 
+	-- 2. 6 Массивных радиальных зубьев (Cogs, 60° шаг)
+	local nTeeth = 6
+	local radius = 0.72
+	for i = 0, nTeeth - 1 do
+		local angle = (i / nTeeth) * (math.pi * 2)
+		local toothCF = CFrame.new(g_pos) 
 			* CFrame.Angles(0, angle, 0) 
-			* CFrame.new(0, 0, radius1)
+			* CFrame.new(0, 0, radius)
 		makePart(
-			"Gear1_Tooth_" .. i,
-			Vector3.new(0.32, 0.22, 0.36),
+			"Gear_Tooth_" .. i,
+			Vector3.new(0.26, 0.22, 0.32),
 			toothCF,
 			Enum.Material.Metal,
-			g1_color
+			sand_color
 		)
 	end
 
-	-- 4 Спицы большой шестерни (Spokes)
-	makePart("Gear1_Spoke1", Vector3.new(1.70, 0.18, 0.18), CFrame.new(g1_pos), Enum.Material.Metal, g1_rim_color)
-	makePart("Gear1_Spoke2", Vector3.new(0.18, 0.18, 1.70), CFrame.new(g1_pos), Enum.Material.Metal, g1_rim_color)
-
-	-- Центральный стальной штифт / ось (Axle Pin 1)
-	makeCylinder("Gear1_AxlePin", 0.24, 0.38, CFrame.new(g1_pos + Vector3.new(0, 0.06, 0)), Enum.Material.Metal, Color3.fromRGB(71, 85, 105))
-	makeCylinder("Gear1_CopperWasher", 0.36, 0.08, CFrame.new(g1_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Metal, Color3.fromRGB(217, 119, 6))
-
-	-- =========================================================================
-	-- 2. ⚙️ СРЕДНЯЯ СТАЛЬНАЯ ШЕСТЕРНЯ (Medium Gear, 6 Зубьев, R = 0.66)
-	-- =========================================================================
-	local g2_pos = Vector3.new(1.05, 0.14, 0.42)
-	local g2_color = Color3.fromRGB(148, 163, 184) -- Machined Steel
-	local g2_dark = Color3.fromRGB(100, 116, 139)
-
-	-- Ступица средней шестерни
-	makeCylinder("Gear2_Hub", 0.64, 0.20, CFrame.new(g2_pos), Enum.Material.Metal, g2_color)
-
-	-- 6 Зубьев средней шестерни (смещение по фазе на 28° для зацепления)
-	local nTeeth2 = 6
-	local radius2 = 0.66
-	local phase2 = math.rad(28)
-	for i = 0, nTeeth2 - 1 do
-		local angle = (i / nTeeth2) * (math.pi * 2) + phase2
-		local toothCF = CFrame.new(g2_pos) 
-			* CFrame.Angles(0, angle, 0) 
-			* CFrame.new(0, 0, radius2)
-		makePart(
-			"Gear2_Tooth_" .. i,
-			Vector3.new(0.26, 0.20, 0.30),
-			toothCF,
-			Enum.Material.Metal,
-			g2_color
-		)
-	end
-
-	-- 3 Спицы средней шестерни
+	-- 3. 3 Внутренние спицы (Spokes)
 	for i = 0, 2 do
 		local spAngle = (i / 3) * math.pi
 		makePart(
-			"Gear2_Spoke_" .. i,
-			Vector3.new(1.20, 0.16, 0.14),
-			CFrame.new(g2_pos) * CFrame.Angles(0, spAngle, 0),
+			"Gear_Spoke_" .. i,
+			Vector3.new(1.10, 0.18, 0.16),
+			CFrame.new(g_pos) * CFrame.Angles(0, spAngle, 0),
 			Enum.Material.Metal,
-			g2_dark
+			sand_dark
 		)
 	end
 
-	-- Центральная ось средней шестерни (Axle Pin 2)
-	makeCylinder("Gear2_AxlePin", 0.20, 0.34, CFrame.new(g2_pos + Vector3.new(0, 0.05, 0)), Enum.Material.Metal, Color3.fromRGB(51, 65, 85))
-	makeCylinder("Gear2_CopperWasher", 0.28, 0.06, CFrame.new(g2_pos + Vector3.new(0, 0.11, 0)), Enum.Material.Metal, Color3.fromRGB(217, 119, 6))
+	-- 4. Центральный стальной штифт / ось (Axle Pin)
+	makeCylinder("Gear_AxlePin", 0.24, 0.34, CFrame.new(g_pos + Vector3.new(0, 0.04, 0)), Enum.Material.Metal, steel_dark)
+
+	-- 5. Медная упорная шайба (Copper Washer)
+	makeCylinder("Gear_CopperWasher", 0.34, 0.08, CFrame.new(g_pos + Vector3.new(0, 0.10, 0)), Enum.Material.Metal, copper_color)
+
+	-- 6. Верхняя фиксирующая гайка (Lock Nut)
+	makePart("Gear_Nut", Vector3.new(0.28, 0.14, 0.28), CFrame.new(g_pos + Vector3.new(0, 0.16, 0)), Enum.Material.Metal, steel_light)
 
 	-- =========================================================================
-	-- 3. ⚙️ МАЛАЯ ВЕРХНЯЯ ШЕСТЕРНЯ ПРИВОДА (Small Pinion Gear, 6 Зубьев, R = 0.40)
-	-- =========================================================================
-	local g3_pos = g1_pos + Vector3.new(-0.25, 0.18, -0.22)
-	local g3_color = Color3.fromRGB(71, 85, 105) -- Gunmetal / Cast Iron
-
-	makeCylinder("Gear3_Hub", 0.38, 0.16, CFrame.new(g3_pos), Enum.Material.Metal, g3_color)
-
-	local nTeeth3 = 6
-	local radius3 = 0.40
-	local phase3 = math.rad(15)
-	for i = 0, nTeeth3 - 1 do
-		local angle = (i / nTeeth3) * (math.pi * 2) + phase3
-		local toothCF = CFrame.new(g3_pos) 
-			* CFrame.Angles(0, angle, 0) 
-			* CFrame.new(0, 0, radius3)
-		makePart(
-			"Gear3_Tooth_" .. i,
-			Vector3.new(0.18, 0.16, 0.20),
-			toothCF,
-			Enum.Material.Metal,
-			g3_color
-		)
-	end
-
-	-- Верхняя фиксирующая гайка (Lock Nut)
-	makePart("Gear3_Nut", Vector3.new(0.24, 0.14, 0.24), CFrame.new(g3_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Metal, Color3.fromRGB(203, 213, 225))
-
-	-- =========================================================================
-	-- 4. СВАРКА ВСЕХ ДЕТАЛЕЙ К ЦЕНТРАЛЬНОМУ ОПОРНОМУ ЭЛЕМЕНТУ (WeldConstraint)
+	-- 7. СВАРКА ВСЕХ ДЕТАЛЕЙ К ЦЕНТРАЛЬНОМУ ОПОРНОМУ ЭЛЕМЕНТУ (WeldConstraint)
 	-- =========================================================================
 	for _, p in ipairs(model:GetChildren()) do
 		if p:IsA("BasePart") and p ~= center then

@@ -16,9 +16,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Папки в Workspace для структурирования сундуков
 local WorldChestsFolder = workspace:FindFirstChild("WorldChests") or Instance.new("Folder", workspace)
 WorldChestsFolder.Name = "WorldChests"
+WorldChestsFolder:ClearAllChildren()
 
 local WorldPartChestsFolder = workspace:FindFirstChild("WorldPartChests") or Instance.new("Folder", workspace)
 WorldPartChestsFolder.Name = "WorldPartChests"
+WorldPartChestsFolder:ClearAllChildren()
 
 local Network = require(ReplicatedStorage:WaitForChild("Network"))
 local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
@@ -406,7 +408,7 @@ local function createInteractiveChest(index, loc, isPartsChest)
 	local prompt = Instance.new("ProximityPrompt", base)
 	prompt.ActionText = isPartsChest and "Открыть сундук деталей" or "Открыть сундук"
 	prompt.ObjectText = isPartsChest and string.format("⚙️ Сундук деталей #%d", index) or string.format("🧰 Древний сундук #%d", index)
-	prompt.HoldDuration = 0.3
+	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 14
 	prompt.RequiresLineOfSight = false
 

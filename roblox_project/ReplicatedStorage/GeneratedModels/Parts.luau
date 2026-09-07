@@ -113,7 +113,7 @@ function PartsGenerator.create(parent, targetCF)
 
 	-- Центральный стальной штифт / ось (Axle Pin 1)
 	makeCylinder("Gear1_AxlePin", 0.24, 0.38, CFrame.new(g1_pos + Vector3.new(0, 0.06, 0)), Enum.Material.Metal, Color3.fromRGB(71, 85, 105))
-	makeCylinder("Gear1_CopperWasher", 0.36, 0.08, CFrame.new(g1_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Copper, Color3.fromRGB(217, 119, 6))
+	makeCylinder("Gear1_CopperWasher", 0.36, 0.08, CFrame.new(g1_pos + Vector3.new(0, 0.12, 0)), Enum.Material.Metal, Color3.fromRGB(217, 119, 6))
 
 	-- =========================================================================
 	-- 2. ⚙️ СРЕДНЯЯ СТАЛЬНАЯ ШЕСТЕРНЯ (Medium Gear, 6 Зубьев, R = 0.66)
@@ -157,7 +157,7 @@ function PartsGenerator.create(parent, targetCF)
 
 	-- Центральная ось средней шестерни (Axle Pin 2)
 	makeCylinder("Gear2_AxlePin", 0.20, 0.34, CFrame.new(g2_pos + Vector3.new(0, 0.05, 0)), Enum.Material.Metal, Color3.fromRGB(51, 65, 85))
-	makeCylinder("Gear2_CopperWasher", 0.28, 0.06, CFrame.new(g2_pos + Vector3.new(0, 0.11, 0)), Enum.Material.Copper, Color3.fromRGB(217, 119, 6))
+	makeCylinder("Gear2_CopperWasher", 0.28, 0.06, CFrame.new(g2_pos + Vector3.new(0, 0.11, 0)), Enum.Material.Metal, Color3.fromRGB(217, 119, 6))
 
 	-- =========================================================================
 	-- 3. ⚙️ МАЛАЯ ВЕРХНЯЯ ШЕСТЕРНЯ ПРИВОДА (Small Pinion Gear, 6 Зубьев, R = 0.40)

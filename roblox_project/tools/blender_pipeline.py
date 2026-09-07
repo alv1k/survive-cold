@@ -158,6 +158,53 @@ def add_box_bm(bm, x0, x1, y0, y1, z0, z1, col_name=None):
         set_bmesh_uv(bm, f, col_name)
     return f
 
+def add_prism_bm(bm, p1, p2, p3, p4, p5, p6, col_name=None):
+    """Creates a triangular prism in bmesh."""
+    v = [
+        bm.verts.new(p1), bm.verts.new(p2), bm.verts.new(p3),
+        bm.verts.new(p4), bm.verts.new(p5), bm.verts.new(p6)
+    ]
+    f = [
+        bm.faces.new((v[0], v[1], v[2])),
+        bm.faces.new((v[3], v[5], v[4])),
+        bm.faces.new((v[0], v[3], v[4], v[1])),
+        bm.faces.new((v[1], v[4], v[5], v[2])),
+        bm.faces.new((v[2], v[5], v[3], v[0]))
+    ]
+    if col_name:
+        set_bmesh_uv(bm, f, col_name)
+    return f
+
+def add_pyramid_bm(bm, b1, b2, b3, b4, apex, col_name=None):
+    """Creates a 4-sided base pyramid in bmesh."""
+    v = [
+        bm.verts.new(b1), bm.verts.new(b2), bm.verts.new(b3), bm.verts.new(b4),
+        bm.verts.new(apex)
+    ]
+    f = [
+        bm.faces.new((v[0], v[1], v[2], v[3])),
+        bm.faces.new((v[0], v[4], v[1])),
+        bm.faces.new((v[1], v[4], v[2])),
+        bm.faces.new((v[2], v[4], v[3])),
+        bm.faces.new((v[3], v[4], v[0]))
+    ]
+    if col_name:
+        set_bmesh_uv(bm, f, col_name)
+    return f
+
+def add_tetra_bm(bm, p1, p2, p3, apex, col_name=None):
+    """Creates a tetrahedron in bmesh."""
+    v = [bm.verts.new(p1), bm.verts.new(p2), bm.verts.new(p3), bm.verts.new(apex)]
+    f = [
+        bm.faces.new((v[0], v[2], v[1])),
+        bm.faces.new((v[0], v[1], v[3])),
+        bm.faces.new((v[1], v[2], v[3])),
+        bm.faces.new((v[2], v[0], v[3]))
+    ]
+    if col_name:
+        set_bmesh_uv(bm, f, col_name)
+    return f
+
 def export_modular_model(root, parts, model_name, target_dirs=None):
     """
     Standard baked single-mesh exporter with multi-part source preservation:
@@ -1954,14 +2001,28 @@ def create_fir_tree():
 # ==============================================================================
 
 def create_wolf():
-    """Creates stylized low-poly forest wolf with glowing red eyes."""
+    """Creates gold-standard ~300-polygon stylized low-poly predator wolf with fanged jaw and glowing eyes."""
     clear_scene()
     setup_roblox_scene()
 
+    # 1. BODY & MANE RUFF (72 tris)
     bm_body = bmesh.new()
-    add_box_bm(bm_body, -0.34, 0.34, -0.10, 0.65, 0.55, 1.25, "stone_dark")
-    add_box_bm(bm_body, -0.26, 0.26, 0.15, 0.68, 0.48, 0.85, "slate_light")
-    add_box_bm(bm_body, -0.28, 0.28, -0.72, -0.10, 0.58, 1.15, "stone_dark")
+    # Main muscular chest
+    add_box_bm(bm_body, -0.36, 0.36, 0.0, 0.65, 0.58, 1.30, "stone_dark")
+    # Neck fur mane ruff
+    add_box_bm(bm_body, -0.30, 0.30, 0.25, 0.72, 0.95, 1.45, "stone_dark")
+    # Left & Right ruff tufts
+    add_prism_bm(bm_body, (-0.36, 0.15, 0.85), (-0.48, 0.25, 0.80), (-0.36, 0.45, 1.20),
+                         (-0.36, -0.05, 0.65), (-0.44, 0.05, 0.60), (-0.36, 0.25, 1.00), "slate_light")
+    add_prism_bm(bm_body, (0.36, 0.15, 0.85), (0.36, 0.45, 1.20), (0.48, 0.25, 0.80),
+                         (0.36, -0.05, 0.65), (0.36, 0.25, 1.00), (0.44, 0.05, 0.60), "slate_light")
+    # Underbelly bib
+    add_box_bm(bm_body, -0.24, 0.24, 0.10, 0.60, 0.46, 0.80, "snow_pure")
+    # Hindquarters / Pelvis
+    add_box_bm(bm_body, -0.28, 0.28, -0.75, 0.0, 0.55, 1.18, "stone_dark")
+    # Dorsal spine crest
+    add_prism_bm(bm_body, (-0.08, -0.65, 1.18), (0.08, -0.65, 1.18), (0.0, -0.65, 1.32),
+                         (-0.08, 0.45, 1.30), (0.08, 0.45, 1.30), (0.0, 0.45, 1.42), "cast_iron")
     bm_body.normal_update()
     m_body = bpy.data.meshes.new("WolfBodyMesh")
     bm_body.to_mesh(m_body)
@@ -1969,13 +2030,32 @@ def create_wolf():
     obj_body = bpy.data.objects.new("Body", m_body)
     bpy.context.collection.objects.link(obj_body)
 
+    # 2. HEAD & JAW & FANGS (96 tris)
     bm_head = bmesh.new()
-    add_box_bm(bm_head, -0.25, 0.25, 0.58, 1.05, 0.85, 1.38, "stone_dark")
-    add_box_bm(bm_head, -0.34, -0.25, 0.62, 0.95, 0.82, 1.15, "slate_light")
-    add_box_bm(bm_head, 0.25, 0.34, 0.62, 0.95, 0.82, 1.15, "slate_light")
-    add_box_bm(bm_head, -0.15, 0.15, 1.05, 1.52, 0.82, 1.08, "stone_dark")
-    add_box_bm(bm_head, -0.06, 0.06, 1.50, 1.58, 0.98, 1.08, "pitch_black")
-    add_box_bm(bm_head, -0.12, 0.12, 1.02, 1.45, 0.70, 0.82, "slate_light")
+    # Cranium
+    add_box_bm(bm_head, -0.25, 0.25, 0.65, 1.10, 0.88, 1.40, "stone_dark")
+    # Cheek ruffs
+    add_prism_bm(bm_head, (-0.25, 0.68, 1.15), (-0.36, 0.80, 0.95), (-0.25, 1.02, 0.85),
+                         (-0.25, 0.68, 1.35), (-0.32, 0.80, 1.25), (-0.25, 1.02, 1.15), "slate_light")
+    add_prism_bm(bm_head, (0.25, 0.68, 1.15), (0.25, 1.02, 0.85), (0.36, 0.80, 0.95),
+                         (0.25, 0.68, 1.35), (0.25, 1.02, 1.15), (0.32, 0.80, 1.25), "slate_light")
+    # Upper Snout
+    add_box_bm(bm_head, -0.15, 0.15, 1.08, 1.55, 0.90, 1.12, "stone_dark")
+    # Nose
+    add_prism_bm(bm_head, (-0.06, 1.55, 0.98), (0.06, 1.55, 0.98), (0.0, 1.55, 1.12),
+                         (-0.06, 1.62, 0.98), (0.06, 1.62, 0.98), (0.0, 1.62, 1.10), "pitch_black")
+    # Lower Jaw
+    add_box_bm(bm_head, -0.13, 0.13, 1.05, 1.48, 0.70, 0.85, "slate_light")
+    # Open Mouth Cavity
+    add_box_bm(bm_head, -0.11, 0.11, 1.10, 1.45, 0.85, 0.90, "crimson_dark")
+    # 4 Sharp Fangs (Tetrahedrons)
+    add_tetra_bm(bm_head, (-0.14, 1.40, 0.90), (-0.10, 1.40, 0.90), (-0.12, 1.48, 0.90), (-0.12, 1.44, 0.74), "bone_ivory")
+    add_tetra_bm(bm_head, (0.10, 1.40, 0.90), (0.14, 1.40, 0.90), (0.12, 1.48, 0.90), (0.12, 1.44, 0.74), "bone_ivory")
+    add_tetra_bm(bm_head, (-0.12, 1.36, 0.85), (-0.08, 1.36, 0.85), (-0.10, 1.44, 0.85), (-0.10, 1.40, 0.98), "bone_ivory")
+    add_tetra_bm(bm_head, (0.08, 1.36, 0.85), (0.12, 1.36, 0.85), (0.10, 1.44, 0.85), (0.10, 1.40, 0.98), "bone_ivory")
+    # Snout bridge top plate
+    add_prism_bm(bm_head, (-0.08, 1.08, 1.12), (0.08, 1.08, 1.12), (0.0, 1.08, 1.18),
+                         (-0.05, 1.54, 1.12), (0.05, 1.54, 1.12), (0.0, 1.54, 1.15), "cast_iron")
     bm_head.normal_update()
     m_head = bpy.data.meshes.new("WolfHeadMesh")
     bm_head.to_mesh(m_head)
@@ -1983,35 +2063,12 @@ def create_wolf():
     obj_head = bpy.data.objects.new("Head", m_head)
     bpy.context.collection.objects.link(obj_head)
 
+    # 3. EARS (20 tris)
     bm_ears = bmesh.new()
-    v_el = [
-        bm_ears.verts.new((-0.24, 0.70, 1.38)), bm_ears.verts.new((-0.08, 0.70, 1.38)),
-        bm_ears.verts.new((-0.08, 0.92, 1.38)), bm_ears.verts.new((-0.24, 0.92, 1.38)),
-        bm_ears.verts.new((-0.16, 0.78, 1.72))
-    ]
-    f_el = [
-        bm_ears.faces.new((v_el[0], v_el[1], v_el[4])),
-        bm_ears.faces.new((v_el[1], v_el[2], v_el[4])),
-        bm_ears.faces.new((v_el[2], v_el[3], v_el[4])),
-        bm_ears.faces.new((v_el[3], v_el[0], v_el[4])),
-    ]
-    set_bmesh_uv(bm_ears, [f_el[0]], "pink_soft")
-    set_bmesh_uv(bm_ears, f_el[1:], "stone_dark")
-
-    v_er = [
-        bm_ears.verts.new((0.08, 0.70, 1.38)), bm_ears.verts.new((0.24, 0.70, 1.38)),
-        bm_ears.verts.new((0.24, 0.92, 1.38)), bm_ears.verts.new((0.08, 0.92, 1.38)),
-        bm_ears.verts.new((0.16, 0.78, 1.72))
-    ]
-    f_er = [
-        bm_ears.faces.new((v_er[0], v_er[1], v_er[4])),
-        bm_ears.faces.new((v_er[1], v_er[2], v_er[4])),
-        bm_ears.faces.new((v_er[2], v_er[3], v_er[4])),
-        bm_ears.faces.new((v_er[3], v_er[0], v_er[4])),
-    ]
-    set_bmesh_uv(bm_ears, [f_er[0]], "pink_soft")
-    set_bmesh_uv(bm_ears, f_er[1:], "stone_dark")
-
+    add_pyramid_bm(bm_ears, (-0.24, 0.72, 1.40), (-0.08, 0.72, 1.40), (-0.08, 0.95, 1.40), (-0.24, 0.95, 1.40), (-0.16, 0.82, 1.76), "stone_dark")
+    add_tetra_bm(bm_ears, (-0.20, 0.88, 1.41), (-0.12, 0.88, 1.41), (-0.16, 0.80, 1.62), (-0.16, 0.90, 1.45), "pink_soft")
+    add_pyramid_bm(bm_ears, (0.08, 0.72, 1.40), (0.24, 0.72, 1.40), (0.24, 0.95, 1.40), (0.08, 0.95, 1.40), (0.16, 0.82, 1.76), "stone_dark")
+    add_tetra_bm(bm_ears, (0.12, 0.88, 1.41), (0.20, 0.88, 1.41), (0.16, 0.80, 1.62), (0.16, 0.90, 1.45), "pink_soft")
     bm_ears.normal_update()
     m_ears = bpy.data.meshes.new("WolfEarsMesh")
     bm_ears.to_mesh(m_ears)
@@ -2019,15 +2076,37 @@ def create_wolf():
     obj_ears = bpy.data.objects.new("Ears", m_ears)
     bpy.context.collection.objects.link(obj_ears)
 
+    # 4. GLOWING EYES (16 tris)
+    bm_eyes = bmesh.new()
+    add_prism_bm(bm_eyes, (-0.22, 1.02, 1.22), (-0.12, 1.02, 1.15), (-0.16, 1.14, 1.18),
+                         (-0.20, 1.02, 1.20), (-0.10, 1.02, 1.13), (-0.14, 1.14, 1.16), "neon_red_glow")
+    add_prism_bm(bm_eyes, (0.12, 1.02, 1.15), (0.22, 1.02, 1.22), (0.16, 1.14, 1.18),
+                         (0.10, 1.02, 1.13), (0.20, 1.02, 1.20), (0.14, 1.14, 1.16), "neon_red_glow")
+    bm_eyes.normal_update()
+    m_eyes = bpy.data.meshes.new("WolfEyesMesh")
+    bm_eyes.to_mesh(m_eyes)
+    bm_eyes.free()
+    obj_eyes = bpy.data.objects.new("Eyes", m_eyes)
+    bpy.context.collection.objects.link(obj_eyes)
+
+    # 5. LEGS & PAWS (80 tris)
     bm_legs = bmesh.new()
-    add_box_bm(bm_legs, -0.32, -0.16, 0.35, 0.55, 0.0, 0.65, "stone_dark")
-    add_box_bm(bm_legs, -0.34, -0.14, 0.42, 0.62, 0.0, 0.12, "cast_iron")
-    add_box_bm(bm_legs, 0.16, 0.32, 0.35, 0.55, 0.0, 0.65, "stone_dark")
-    add_box_bm(bm_legs, 0.14, 0.34, 0.42, 0.62, 0.0, 0.12, "cast_iron")
-    add_box_bm(bm_legs, -0.30, -0.14, -0.68, -0.45, 0.0, 0.68, "stone_dark")
-    add_box_bm(bm_legs, -0.32, -0.12, -0.62, -0.38, 0.0, 0.12, "cast_iron")
-    add_box_bm(bm_legs, 0.14, 0.30, -0.68, -0.45, 0.0, 0.68, "stone_dark")
-    add_box_bm(bm_legs, 0.12, 0.32, -0.62, -0.38, 0.0, 0.12, "cast_iron")
+    # Front Left
+    add_box_bm(bm_legs, -0.34, -0.18, 0.28, 0.52, 0.10, 0.65, "stone_dark")
+    add_prism_bm(bm_legs, (-0.34, 0.28, 0.0), (-0.18, 0.28, 0.0), (-0.26, 0.28, 0.12),
+                          (-0.34, 0.58, 0.0), (-0.18, 0.58, 0.0), (-0.26, 0.58, 0.10), "cast_iron")
+    # Front Right
+    add_box_bm(bm_legs, 0.18, 0.34, 0.28, 0.52, 0.10, 0.65, "stone_dark")
+    add_prism_bm(bm_legs, (0.18, 0.28, 0.0), (0.34, 0.28, 0.0), (0.26, 0.28, 0.12),
+                          (0.18, 0.58, 0.0), (0.34, 0.58, 0.0), (0.26, 0.58, 0.10), "cast_iron")
+    # Back Left
+    add_box_bm(bm_legs, -0.32, -0.16, -0.72, -0.42, 0.10, 0.70, "stone_dark")
+    add_prism_bm(bm_legs, (-0.32, -0.68, 0.0), (-0.16, -0.68, 0.0), (-0.24, -0.68, 0.12),
+                          (-0.32, -0.38, 0.0), (-0.16, -0.38, 0.0), (-0.24, -0.38, 0.10), "cast_iron")
+    # Back Right
+    add_box_bm(bm_legs, 0.16, 0.32, -0.72, -0.42, 0.10, 0.70, "stone_dark")
+    add_prism_bm(bm_legs, (0.16, -0.68, 0.0), (0.32, -0.68, 0.0), (0.24, -0.68, 0.12),
+                          (0.16, -0.38, 0.0), (0.32, -0.38, 0.0), (0.24, -0.38, 0.10), "cast_iron")
     bm_legs.normal_update()
     m_legs = bpy.data.meshes.new("WolfLegsMesh")
     bm_legs.to_mesh(m_legs)
@@ -2035,25 +2114,18 @@ def create_wolf():
     obj_legs = bpy.data.objects.new("Legs", m_legs)
     bpy.context.collection.objects.link(obj_legs)
 
+    # 6. TAIL (26 tris)
     bm_tail = bmesh.new()
-    add_box_bm(bm_tail, -0.12, 0.12, -1.05, -0.68, 0.75, 1.05, "stone_dark")
-    add_box_bm(bm_tail, -0.10, 0.10, -1.35, -1.05, 0.85, 1.15, "slate_light")
+    add_box_bm(bm_tail, -0.12, 0.12, -0.98, -0.72, 0.75, 1.02, "stone_dark")
+    add_prism_bm(bm_tail, (-0.14, -0.98, 0.70), (0.14, -0.98, 0.70), (0.0, -0.98, 1.05),
+                          (-0.10, -1.30, 0.55), (0.10, -1.30, 0.55), (0.0, -1.30, 0.88), "slate_light")
+    add_pyramid_bm(bm_tail, (-0.10, -1.30, 0.55), (0.10, -1.30, 0.55), (0.10, -1.30, 0.88), (-0.10, -1.30, 0.88), (0.0, -1.55, 0.68), "snow_pure")
     bm_tail.normal_update()
     m_tail = bpy.data.meshes.new("WolfTailMesh")
     bm_tail.to_mesh(m_tail)
     bm_tail.free()
     obj_tail = bpy.data.objects.new("Tail", m_tail)
     bpy.context.collection.objects.link(obj_tail)
-
-    bm_eyes = bmesh.new()
-    add_box_bm(bm_eyes, -0.22, -0.12, 0.96, 1.08, 1.12, 1.22, "neon_red_glow")
-    add_box_bm(bm_eyes, 0.12, 0.22, 0.96, 1.08, 1.12, 1.22, "neon_red_glow")
-    bm_eyes.normal_update()
-    m_eyes = bpy.data.meshes.new("WolfEyesMesh")
-    bm_eyes.to_mesh(m_eyes)
-    bm_eyes.free()
-    obj_eyes = bpy.data.objects.new("Eyes", m_eyes)
-    bpy.context.collection.objects.link(obj_eyes)
 
     root = bpy.data.objects.new("Wolf", None)
     root.location = (0, 0, 0)

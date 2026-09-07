@@ -203,8 +203,8 @@
 > **Папка размещения:** `assets/models/monsters/` (также синхронизировано в `assets/models/mobs/` и `assets/models/`)
 > **Стандарт сборки:** Корневой Empty в `(0,0,0)`, модульные именованные `MeshPart`, `Shade Flat`, светящиеся неоновые глаза (`Neon / Flat Shading`).
 
-1. **🐺 Лесной Волк / Forest Wolf (`assets/models/monsters/wolf.fbx`, `wolf.obj`, `wolf.blend`)**:
-   - **Модульная структура:** Корневой Empty `Wolf` + 6 дочерних частей: `Body` (торс и светлое брюхо `stone_dark` / `slate_light`), `Head` (голова, морда и черный нос `pitch_black`), `Ears` (треугольные ушки с розовой серединкой `pink_soft`), `Legs` (4 лапы с когтями `cast_iron`), `Tail` (пушистый хвост со светлым кончиком), `Eyes` (**светящиеся красные глаза** `neon_red_glow`) (288 tris).
+1. **🐺 Полярный / Лесной Волк / Polar Wolf (`assets/models/monsters/wolf.fbx`, `wolf.obj`, `wolf.blend`, `Wolf.luau`)**:
+   - **Модульная структура:** Корневой Empty `Wolf` + 6 дочерних частей: `Body` (мускулистый торс, загривок, светлое подбрюшье и темный хребет), `Head` (голова, клыкастая открытая алая пасть с 4 острыми клыками, щечные очесы и черный нос), `Ears` (остроконечные уши с розовой серединкой), `Legs` (4 лапы с когтями и суставами), `Tail` (пушистый хвост с белоснежным кончиком), `Eyes` (**светящиеся красные неоновые глаза** `neon_red_glow` / `#FF0055`) (310 tris, Flat Shading, `palette.png`).
 2. **❄️ Снежный Йети / Snow Yeti (`assets/models/monsters/yeti.fbx`, `yeti.obj`, `yeti.blend`)**:
    - **Модульная структура:** Корневой Empty `Yeti` + 6 дочерних частей: `Torso` (большой белый пушистый шар-торс `snow_pure`), `Head` (голова с темной маской `stone_dark` и клыками), `Horns` (изогнутые ледяные голубые рожки `ice_glacier` / `ice_light`), `Arms` (толстые лапы с ледяными когтями `ice_deep`), `Legs` (короткие устойчивые ноги), `Eyes` (**светящиеся бирюзовые глаза** `neon_cyan_glow`) (412 tris).
 3. **🦍 Бигфут / Bigfoot (`assets/models/monsters/bigfoot.fbx`, `bigfoot.obj`, `bigfoot.blend`)**:

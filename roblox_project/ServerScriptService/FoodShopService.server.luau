@@ -16,6 +16,8 @@ local GameConfig = require(ReplicatedStorage:WaitForChild("GameConfig"))
 local Network = require(ReplicatedStorage:WaitForChild("Network"))
 local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
+local FoodGenerator = require(ReplicatedStorage:WaitForChild("GeneratedModels"):WaitForChild("Food"))
+
 local BuyFoodRemote = Network.getFunction("BuyFood")
 local ShowNotificationRemote = Network.getEvent("ShowNotification")
 
@@ -26,13 +28,13 @@ FoodShopFolder.Name = "FoodShop"
 
 -- ВСЯ ЕДА БЕСПЛАТНАЯ (+60 Сытости, +50% Тепла, +25 Здоровья)
 local FOOD_CATALOG = {
-	Bar = { Key = "Bar", Name = "🍫 Энергетический батончик", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Bread = { Key = "Bread", Name = "🍞 Питательный хлеб", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Chips = { Key = "Chips", Name = "🥔 Хрустящие чипсы", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Soup = { Key = "Soup", Name = "🥫 Горячий мясной суп", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Pepper = { Key = "Pepper", Name = "🌶️ Огненный перец", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Coffee = { Key = "Coffee", Name = "☕ Горячий кофе", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 },
-	Steak = { Key = "Steak", Name = "🥩 Сочный стейк на гриле", Cost = {}, Desc = "🎉 БЕСПЛАТНО", Warmth = 50, Hunger = 60, Health = 25 }
+	Bar = { Key = "Bar", Name = "🍫 Батончик", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Bread = { Key = "Bread", Name = "🍞 Хлеб", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Chips = { Key = "Chips", Name = "🥔 Чипсы", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Soup = { Key = "Soup", Name = "🥫 Суп", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Pepper = { Key = "Pepper", Name = "🌶️ Перец", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Coffee = { Key = "Coffee", Name = "☕ Кофе", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 },
+	Steak = { Key = "Steak", Name = "🥩 Стейк", Cost = {}, Desc = "Бесплатно", Warmth = 50, Hunger = 60, Health = 25 }
 }
 
 -- Данные о наличии товаров на полках
@@ -45,17 +47,17 @@ local function updateShelfStatus(foodKey)
 	if not cfg then return end
 
 	local count = 0
-	for _, itemPart in pairs(shelfData.Items) do
-		if itemPart and itemPart.Parent then
+	for _, itemObj in pairs(shelfData.Items) do
+		if itemObj and itemObj.Parent then
 			count = count + 1
 		end
 	end
 
 	if count > 0 then
-		shelfData.Label.Text = string.format("%s\nВ наличии: %d/4\n🍗 +60 | 🔥 +50%%\n🎉 БЕСПЛАТНО", cfg.Name, count)
+		shelfData.Label.Text = string.format("%s (%d/4)\n🍗+60 🔥+50%%", cfg.Name, count)
 		shelfData.Stroke.Color = Color3.fromRGB(74, 222, 128)
 	else
-		shelfData.Label.Text = string.format("🔒 %s\nНЕТ В НАЛИЧИИ (Поставка...)\n🎉 БЕСПЛАТНО", cfg.Name)
+		shelfData.Label.Text = string.format("🔒 %s (0/4)", cfg.Name)
 		shelfData.Stroke.Color = Color3.fromRGB(239, 68, 68)
 	end
 end
@@ -69,51 +71,18 @@ local function spawnShelfItem(foodKey, slotIndex)
 	local itemCF = shelfData.SlotCFrames[slotIndex]
 	if not itemCF then return end
 
-	-- Создание 3D-модели товара
-	local itemPart = Instance.new("Part")
-	itemPart.Name = string.format("Display_%s_%d", foodKey, slotIndex)
-	itemPart.Anchored = true
-	itemPart.CanCollide = false
+	-- Создание детализированной 3D-модели товара через FoodGenerator
+	local foodModel = FoodGenerator.createFood(foodKey, FoodShopFolder, itemCF)
+	if not foodModel then return end
 
-	if foodKey == "Bar" then
-		itemPart.Size = Vector3.new(0.6, 0.25, 1.2)
-		itemPart.Material = Enum.Material.SmoothPlastic
-		itemPart.BrickColor = BrickColor.new("Dark orange")
-	elseif foodKey == "Bread" then
-		itemPart.Size = Vector3.new(0.9, 0.6, 1.4)
-		itemPart.Material = Enum.Material.WoodPlanks
-		itemPart.BrickColor = BrickColor.new("Nougat")
-	elseif foodKey == "Chips" then
-		itemPart.Size = Vector3.new(0.7, 0.9, 0.4)
-		itemPart.Material = Enum.Material.Fabric
-		itemPart.BrickColor = BrickColor.new("Bright yellow")
-	elseif foodKey == "Soup" then
-		itemPart.Size = Vector3.new(0.8, 0.9, 0.8)
-		itemPart.Shape = Enum.PartType.Cylinder
-		itemPart.Material = Enum.Material.Metal
-		itemPart.BrickColor = BrickColor.new("Bright red")
-	elseif foodKey == "Pepper" then
-		itemPart.Size = Vector3.new(0.4, 0.4, 1.1)
-		itemPart.Material = Enum.Material.SmoothPlastic
-		itemPart.BrickColor = BrickColor.new("Really red")
-	elseif foodKey == "Coffee" then
-		itemPart.Size = Vector3.new(0.7, 0.8, 0.7)
-		itemPart.Shape = Enum.PartType.Cylinder
-		itemPart.Material = Enum.Material.Plastic
-		itemPart.BrickColor = BrickColor.new("White")
-	elseif foodKey == "Steak" then
-		itemPart.Size = Vector3.new(1.1, 0.35, 1.3)
-		itemPart.Material = Enum.Material.Slate
-		itemPart.BrickColor = BrickColor.new("Maroon")
-	end
-
-	itemPart.CFrame = itemCF
-	itemPart.Parent = FoodShopFolder
+	foodModel.Name = string.format("Display_%s_%d", foodKey, slotIndex)
+	local targetPart = foodModel.PrimaryPart or foodModel:FindFirstChildWhichIsA("BasePart")
+	if not targetPart then return end
 
 	-- Интерактивный ProximityPrompt на каждом конкретном товаре
-	local prompt = Instance.new("ProximityPrompt", itemPart)
-	prompt.ObjectText = string.format("%s [🍗 +60 | 🔥 +50%%]", cfg.Name)
-	prompt.ActionText = "Взять с полки (Бесплатно)"
+	local prompt = Instance.new("ProximityPrompt", targetPart)
+	prompt.ObjectText = cfg.Name
+	prompt.ActionText = "Взять"
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 9
 	prompt.RequiresLineOfSight = false
@@ -127,9 +96,9 @@ local function spawnShelfItem(foodKey, slotIndex)
 
 		if given then
 			shelfData.Items[slotIndex] = nil
-			itemPart:Destroy()
+			foodModel:Destroy()
 			updateShelfStatus(foodKey)
-			ShowNotificationRemote:FireClient(player, string.format("🛒 Вы взяли с полки: %s (+60 Сытости, +50%% Тепла)!", cfg.Name))
+			ShowNotificationRemote:FireClient(player, string.format("🛒 Взято: %s", cfg.Name))
 			print(string.format("🛒 %s взял с полки %s (слот %d)!", player.Name, cfg.Name, slotIndex))
 
 			-- Респавн товара через 180 секунд (3 минуты)
@@ -144,7 +113,7 @@ local function spawnShelfItem(foodKey, slotIndex)
 		end
 	end)
 
-	shelfData.Items[slotIndex] = itemPart
+	shelfData.Items[slotIndex] = foodModel
 	updateShelfStatus(foodKey)
 end
 
@@ -222,23 +191,24 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 
 	-- Информационный ценник над полкой
 	local bb = Instance.new("BillboardGui", shelfPart)
-	bb.Size = UDim2.new(0, 205, 0, 48)
-	bb.StudsOffset = Vector3.new(0, 1.5, 0)
+	bb.Size = UDim2.new(0, 160, 0, 36)
+	bb.StudsOffset = Vector3.new(0, 1.4, 0)
 	bb.AlwaysOnTop = false
-	bb.MaxDistance = 28
+	bb.MaxDistance = 24
 
 	local lbl = Instance.new("TextLabel", bb)
 	lbl.Size = UDim2.new(1, 0, 1, 0)
 	lbl.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-	lbl.BackgroundTransparency = 0.2
+	lbl.BackgroundTransparency = 0.5
 	lbl.Font = Enum.Font.MontserratBold
-	lbl.TextSize = 13
+	lbl.TextSize = 11.5
 	lbl.TextColor3 = Color3.fromRGB(241, 245, 249)
-	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 8)
+	Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
 
 	local stroke = Instance.new("UIStroke", lbl)
 	stroke.Color = Color3.fromRGB(74, 222, 128)
-	stroke.Thickness = 1.5
+	stroke.Thickness = 1.0
+	stroke.Transparency = 0.5
 
 	local shelfData = {
 		SectionPart = shelfPart,

@@ -57,21 +57,22 @@ local function createWaypoint(key, cfg)
 	bb.MaxDistance = cfg.MaxDist or 3000
 	bb.Parent = anchor
 
-	-- Круглая плашка иконки (Минимализм)
+	-- Круглая плашка иконки (Полупрозрачная 0.7)
 	local iconContainer = Instance.new("Frame")
 	iconContainer.Name = "IconContainer"
 	iconContainer.Size = UDim2.new(0, 48, 0, 48)
 	iconContainer.Position = UDim2.new(0.5, 0, 0, 0)
 	iconContainer.AnchorPoint = Vector2.new(0.5, 0)
 	iconContainer.BackgroundColor3 = cfg.BgColor or Color3.fromRGB(15, 23, 42)
-	iconContainer.BackgroundTransparency = 0.1
+	iconContainer.BackgroundTransparency = 0.70
 	iconContainer.BorderSizePixel = 0
 	iconContainer.Parent = bb
 	Instance.new("UICorner", iconContainer).CornerRadius = UDim.new(1, 0)
 
 	local stroke = Instance.new("UIStroke", iconContainer)
 	stroke.Color = cfg.Color or Color3.fromRGB(56, 189, 248)
-	stroke.Thickness = 2.0
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.65
 
 	-- Аватарка игрока (для дома) или графическая иконка
 	if cfg.IsPlayerHouse then
@@ -82,6 +83,7 @@ local function createWaypoint(key, cfg)
 		avatarImg.AnchorPoint = Vector2.new(0.5, 0.5)
 		avatarImg.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
 		avatarImg.BackgroundTransparency = 1
+		avatarImg.ImageTransparency = 0.35
 		avatarImg.BorderSizePixel = 0
 		avatarImg.Parent = iconContainer
 		Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
@@ -95,31 +97,39 @@ local function createWaypoint(key, cfg)
 	elseif cfg.IconKey then
 		local _, img = IconConfig.CreateIconBadge(iconContainer, cfg.IconKey, UDim2.new(1, 0, 1, 0), 1)
 		img.Size = UDim2.new(1, -12, 1, -12)
+		img.ImageTransparency = 0.35
 	else
 		local iconLbl = Instance.new("TextLabel")
 		iconLbl.Name = "Icon"
 		iconLbl.Size = UDim2.new(1, 0, 1, 0)
 		iconLbl.BackgroundTransparency = 1
+		iconLbl.TextTransparency = 0.35
 		iconLbl.Font = Enum.Font.MontserratBlack
 		iconLbl.TextSize = 22
 		iconLbl.Text = cfg.Icon or "📍"
 		iconLbl.Parent = iconContainer
 	end
 
-	-- Минималистичная метка дистанции снизу
+	-- Минималистичная полупрозрачная метка дистанции снизу
 	local distLbl = Instance.new("TextLabel")
 	distLbl.Name = "Distance"
 	distLbl.Size = UDim2.new(1, 40, 0, 18)
 	distLbl.Position = UDim2.new(0.5, 0, 0, 52)
 	distLbl.AnchorPoint = Vector2.new(0.5, 0)
 	distLbl.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-	distLbl.BackgroundTransparency = 0.35
+	distLbl.BackgroundTransparency = 0.70
+	distLbl.TextTransparency = 0.30
 	distLbl.Font = Enum.Font.MontserratBold
 	distLbl.TextSize = 11.5
 	distLbl.TextColor3 = cfg.Color or Color3.fromRGB(241, 245, 249)
 	distLbl.Text = "0m"
 	distLbl.Parent = bb
 	Instance.new("UICorner", distLbl).CornerRadius = UDim.new(0, 6)
+
+	local distStroke = Instance.new("UIStroke", distLbl)
+	distStroke.Color = cfg.Color or Color3.fromRGB(56, 189, 248)
+	distStroke.Thickness = 1.0
+	distStroke.Transparency = 0.70
 
 	table.insert(activeWaypoints, {
 		Pos = cfg.Pos,

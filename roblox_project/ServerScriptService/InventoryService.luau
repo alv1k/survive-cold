@@ -98,10 +98,9 @@ function InventoryService.createItemTool(itemKey: string, count: number): Tool?
 		handle.Parent = tool
 	end
 
-	if itemKey == "Spear" then
-		tool.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-35), 0, 0)
-	elseif itemKey == "Branches" or itemKey == "Fiber" then
-		tool.Grip = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-30), 0, 0)
+	local gripCF = ModelHelper.ITEM_GRIPS and ModelHelper.ITEM_GRIPS[itemKey]
+	if gripCF then
+		tool.Grip = gripCF
 	end
 
 	tool.Equipped:Connect(function()

@@ -186,9 +186,9 @@
 1. **Ветки / Хворост (`assets/models/nature/branches.fbx`, `branches.obj`, `branches.blend`, `Branches.luau`)**:
    - **Куст для сбора в мире (World Node):** Зимний сухой кустик из **8 голых веток** без листьев и хвои (~1.1–2.4 студа), расходящихся веером из снега.
    - **Пучок для дропа и инвентаря (Kindling Bundle):** Аккуратная связка из **4 голых сухих веточек**, перевязанных посередине джутовой бечевкой (`TwineBand`).
-2. **Камень / Stone (`assets/models/nature/stone.fbx`, `stone.obj`, `stone.blend`, `assets/models/nature/stone_boulder.fbx`, `Stone.luau`)**:
-   - **Валун для сбора в мире (World Node / Boulder):** Овальной формы граненый сланцевый валун (`Boulder`) с боковым осколком (`SideRock`) из сланца (`stone_slate` / `stone_dark`), без снежной шапки.
-   - **Камень для дропа и инвентаря в руках (Pebble / Hand Item):** Аккуратная овальная сфера — круглый гладкий сланцевый камешек (`Handle` ~0.75 x 0.55 x 0.65 студа), удобно лежащий в ладони игрока.
+2. **Камень / Stone (`assets/models/nature/stone.fbx`, `stone.obj`, `stone.blend`, `Stone.luau`)**:
+   - **Валун для сбора в мире (World Node / Blocky Boulder):** Стилизованный рубленый кубический монолит со ступенчатыми сланцевыми плитами, угловыми фасками, верхним гребнем и осколками (`stone_slate`, `slate_light`, `steel_light`, `stone_dark`, `iron_band`) (52 tris, Flat Shading, `palette.png`, 100% без сфер).
+   - **Камень для дропа и инвентаря в руках (Pebble / Hand Item):** Аккуратный граненый мини-брусок с полигональными фасками (~0.70 x 0.55 x 0.65 студа), удобно лежащий в ладони игрока.
 3. **Волокно / Камыш (`assets/models/nature/fiber.fbx`, `fiber.obj`, `fiber.blend`, `assets/models/nature/fiber_bush.fbx`, `Fiber.luau`)**:
    - **Кустик камыша для сбора в мире (World Node):** 5 стеблей камыша (рогоза) с бархатистыми цилиндрическими коричневыми початками (`wood_walnut` / `soil_rich`) и 8 раскидистых изогнутых золотисто-зеленых листьев (`fiber_gold`, `twine_straw`, `plant_sprout`).
    - **Пучок камышей для дропа и инвентаря (Cattail Bundle):** 3 аккуратных стебля камыша с початками и сухими листьями, перевязанные посередине джутовой бечевкой (`TwineBand`) с узелком.

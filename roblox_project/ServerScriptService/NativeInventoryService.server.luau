@@ -190,52 +190,82 @@ local function attachDetailed3DModel(tool, itemKey)
 		addSubPart("Ember", Vector3.new(0.6, 0.2, 0.6), CFrame.new(0, 0.2, 0), Enum.Material.Neon, BrickColor.new("Deep orange"))
 
 	elseif itemKey == "Steak" then
-		handle.Size = Vector3.new(1.4, 0.4, 1.1)
+		handle.Size = Vector3.new(1.10, 0.30, 1.35)
 		handle.Material = Enum.Material.SmoothPlastic
-		handle.BrickColor = BrickColor.new("Dark red")
+		handle.Color = Color3.fromRGB(153, 27, 27)
 
-		addSubPart("Bone", Vector3.new(0.3, 0.35, 0.8), CFrame.new(0.8, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("White"))
-		addSubPart("GrillMarks", Vector3.new(1.0, 0.05, 0.8), CFrame.new(0, 0.21, 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
+		addSubPart("FatEdge", Vector3.new(0.20, 0.28, 1.25), CFrame.new(-0.50, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Pastel yellow"))
+		addSubPart("Grill1", Vector3.new(0.08, 0.32, 1.10), CFrame.new(-0.15, 0, 0) * CFrame.Angles(0, math.rad(25), 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
+		addSubPart("Grill2", Vector3.new(0.08, 0.32, 1.00), CFrame.new(0.22, 0, 0) * CFrame.Angles(0, math.rad(25), 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
+		addSubPart("Bone", Vector3.new(0.18, 0.32, 0.30), CFrame.new(0.48, 0, -0.40), Enum.Material.SmoothPlastic, BrickColor.new("White"))
 
 	elseif itemKey == "Bread" then
-		handle.Size = Vector3.new(1.3, 0.8, 1.6)
-		handle.Material = Enum.Material.SmoothPlastic
-		handle.BrickColor = BrickColor.new("Brick yellow")
+		handle.Size = Vector3.new(0.85, 0.52, 1.35)
+		handle.Material = Enum.Material.WoodPlanks
+		handle.Color = Color3.fromRGB(180, 115, 60)
 
-		addSubPart("Crust", Vector3.new(1.2, 0.2, 1.4), CFrame.new(0, 0.45, 0), Enum.Material.SmoothPlastic, BrickColor.new("Dark orange"))
+		addSubPart("BottomCrust", Vector3.new(0.80, 0.10, 1.30), CFrame.new(0, -0.21, 0), Enum.Material.WoodPlanks, BrickColor.new("Brown"))
+		addSubPart("Score1", Vector3.new(0.60, 0.06, 0.12), CFrame.new(0, 0.26, -0.32) * CFrame.Angles(0, math.rad(18), 0), Enum.Material.SmoothPlastic, BrickColor.new("Pastel yellow"))
+		addSubPart("Score2", Vector3.new(0.60, 0.06, 0.12), CFrame.new(0, 0.26, 0.32) * CFrame.Angles(0, math.rad(-18), 0), Enum.Material.SmoothPlastic, BrickColor.new("Pastel yellow"))
 
 	elseif itemKey == "Soup" then
-		handle.Size = Vector3.new(1.0, 1.2, 1.0)
+		handle.Size = Vector3.new(0.86, 0.78, 0.78)
 		handle.Material = Enum.Material.Metal
-		handle.BrickColor = BrickColor.new("Bright red")
+		handle.Color = Color3.fromRGB(148, 163, 184)
+		local mesh = Instance.new("SpecialMesh", handle)
+		mesh.MeshType = Enum.MeshType.Cylinder
 
-		addSubPart("Lid", Vector3.new(0.95, 0.05, 0.95), CFrame.new(0, 0.61, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
+		local label = addSubPart("Label", Vector3.new(0.64, 0.80, 0.80), CFrame.new(0, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
+		local lmesh = Instance.new("SpecialMesh", label)
+		lmesh.MeshType = Enum.MeshType.Cylinder
+
+		local lid = addSubPart("Lid", Vector3.new(0.04, 0.72, 0.72), CFrame.new(0.42, 0, 0), Enum.Material.Metal, BrickColor.new("White"))
+		local lidMesh = Instance.new("SpecialMesh", lid)
+		lidMesh.MeshType = Enum.MeshType.Cylinder
+
+		addSubPart("PullTab", Vector3.new(0.18, 0.04, 0.22), CFrame.new(0.45, 0.12, 0), Enum.Material.Metal, BrickColor.new("Medium stone grey"))
 
 	elseif itemKey == "Bar" then
-		handle.Size = Vector3.new(0.6, 0.3, 1.5)
+		handle.Size = Vector3.new(0.62, 0.22, 1.22)
 		handle.Material = Enum.Material.SmoothPlastic
-		handle.BrickColor = BrickColor.new("Brown")
+		handle.Color = Color3.fromRGB(185, 28, 28)
 
-		addSubPart("Wrapper", Vector3.new(0.64, 0.32, 1.0), CFrame.new(0, 0, -0.2), Enum.Material.SmoothPlastic, BrickColor.new("Bright yellow"))
+		addSubPart("FoilSeal", Vector3.new(0.64, 0.08, 0.22), CFrame.new(0, 0, 0.58), Enum.Material.SmoothPlastic, BrickColor.new("White"))
+		addSubPart("Chocolate", Vector3.new(0.52, 0.18, 0.42), CFrame.new(0, 0, -0.46), Enum.Material.SmoothPlastic, BrickColor.new("Dark orange"))
+		addSubPart("Ridge", Vector3.new(0.44, 0.06, 0.08), CFrame.new(0, 0.09, -0.46), Enum.Material.SmoothPlastic, BrickColor.new("Brown"))
 
 	elseif itemKey == "Chips" then
-		handle.Size = Vector3.new(0.8, 1.1, 0.4)
-		handle.Material = Enum.Material.Fabric
-		handle.BrickColor = BrickColor.new("Bright yellow")
-		addSubPart("Strip", Vector3.new(0.82, 0.25, 0.42), CFrame.new(0, 0.1, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
+		handle.Size = Vector3.new(0.72, 0.95, 0.36)
+		handle.Material = Enum.Material.SmoothPlastic
+		handle.Color = Color3.fromRGB(245, 158, 11)
+
+		addSubPart("TopSeal", Vector3.new(0.76, 0.08, 0.10), CFrame.new(0, 0.46, 0), Enum.Material.SmoothPlastic, BrickColor.new("Dark orange"))
+		addSubPart("BotSeal", Vector3.new(0.76, 0.08, 0.10), CFrame.new(0, -0.44, 0), Enum.Material.SmoothPlastic, BrickColor.new("Dark orange"))
+		addSubPart("Badge", Vector3.new(0.56, 0.32, 0.38), CFrame.new(0, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
 
 	elseif itemKey == "Pepper" then
-		handle.Size = Vector3.new(0.5, 0.5, 1.3)
+		handle.Size = Vector3.new(0.38, 0.38, 1.15)
 		handle.Material = Enum.Material.SmoothPlastic
-		handle.BrickColor = BrickColor.new("Really red")
-		addSubPart("Stem", Vector3.new(0.2, 0.3, 0.2), CFrame.new(0, 0.2, 0.6) * CFrame.Angles(math.rad(20), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright green"))
+		handle.Color = Color3.fromRGB(220, 38, 38)
+
+		addSubPart("Tip", Vector3.new(0.26, 0.26, 0.40), CFrame.new(0, -0.04, -0.65) * CFrame.Angles(math.rad(15), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
+		addSubPart("Calyx", Vector3.new(0.30, 0.30, 0.18), CFrame.new(0, 0, 0.60), Enum.Material.SmoothPlastic, BrickColor.new("Dark green"))
+		addSubPart("Stem", Vector3.new(0.10, 0.24, 0.10), CFrame.new(0, 0.10, 0.70) * CFrame.Angles(math.rad(-25), 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Bright green"))
 
 	elseif itemKey == "Coffee" then
-		handle.Size = Vector3.new(0.8, 1.5, 0.8)
-		handle.Material = Enum.Material.Metal
-		handle.BrickColor = BrickColor.new("Dark stone grey")
+		handle.Size = Vector3.new(0.82, 0.70, 0.70)
+		handle.Material = Enum.Material.SmoothPlastic
+		handle.Color = Color3.fromRGB(248, 250, 252)
+		local mesh = Instance.new("SpecialMesh", handle)
+		mesh.MeshType = Enum.MeshType.Cylinder
 
-		addSubPart("Cap", Vector3.new(0.7, 0.3, 0.7), CFrame.new(0, 0.8, 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
+		local sleeve = addSubPart("Sleeve", Vector3.new(0.40, 0.73, 0.73), CFrame.new(0, 0, 0), Enum.Material.WoodPlanks, BrickColor.new("Dark orange"))
+		local smesh = Instance.new("SpecialMesh", sleeve)
+		smesh.MeshType = Enum.MeshType.Cylinder
+
+		local lid = addSubPart("Lid", Vector3.new(0.08, 0.74, 0.74), CFrame.new(0.40, 0, 0), Enum.Material.SmoothPlastic, BrickColor.new("Black"))
+		local lmesh = Instance.new("SpecialMesh", lid)
+		lmesh.MeshType = Enum.MeshType.Cylinder
 
 	elseif itemKey == "Parts" then
 		handle.Size = Vector3.new(0.45, 0.45, 0.45)
@@ -387,12 +417,9 @@ local function createItemTool(itemKey, count)
 
 	attachDetailed3DModel(tool, itemKey)
 
-	if itemKey == "Spear" then
-		-- Наклон копья вперед в руке под естественным боевым углом 35 градусов
-		tool.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-35), 0, 0)
-	elseif itemKey == "Branches" or itemKey == "Fiber" then
-		-- Естественный наклон пучка в руке
-		tool.Grip = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-30), 0, 0)
+	local gripCF = ModelHelper.ITEM_GRIPS and ModelHelper.ITEM_GRIPS[itemKey]
+	if gripCF then
+		tool.Grip = gripCF
 	end
 
 	-- Обработка клика ЛКМ (Еда исключена от случайных нажатий по экрану)

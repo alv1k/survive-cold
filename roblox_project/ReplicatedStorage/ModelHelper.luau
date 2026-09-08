@@ -15,6 +15,31 @@ local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
 local ModelHelper = {}
 ModelHelper.SurfaceUtil = SurfaceUtil
 
+local ITEM_GRIPS = {
+	Spear = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-35), 0, 0),
+	Torch = CFrame.new(0, -0.6, 0),
+	Branches = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-30), 0, 0),
+	Fiber = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-30), 0, 0),
+	Stone = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-15), 0, 0),
+	Planks = CFrame.new(0, -0.15, 0) * CFrame.Angles(math.rad(-15), 0, 0),
+	Parts = CFrame.new(0, -0.1, 0),
+	RabbitTrap = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-20), 0, 0),
+	SpikeTrap = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-20), 0, 0),
+	CampfireKit = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-20), 0, 0),
+	Slingshot = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-10), 0, 0),
+	Revolver = CFrame.new(0, -0.15, 0.2) * CFrame.Angles(math.rad(-10), 0, 0),
+
+	-- 🍱 Еда: реалистичные хваты в руке
+	Bar = CFrame.new(0, 0, 0.25) * CFrame.Angles(math.rad(-20), 0, 0),
+	Bread = CFrame.new(0, -0.2, 0) * CFrame.Angles(math.rad(-15), 0, 0),
+	Chips = CFrame.new(0, -0.3, 0) * CFrame.Angles(math.rad(-10), 0, 0),
+	Soup = CFrame.new(0, -0.25, 0) * CFrame.Angles(0, 0, math.rad(-90)),
+	Pepper = CFrame.new(0, -0.1, 0.2) * CFrame.Angles(math.rad(-25), 0, 0),
+	Coffee = CFrame.new(0, -0.25, 0) * CFrame.Angles(0, 0, math.rad(-90)),
+	Steak = CFrame.new(0, -0.12, 0) * CFrame.Angles(math.rad(-20), 0, 0),
+}
+ModelHelper.ITEM_GRIPS = ITEM_GRIPS
+
 local function isValid3DModel(inst)
 	if not inst then return false end
 	if inst:IsA("MeshPart") then
@@ -38,6 +63,22 @@ end
 -- Поиск мастер-модели предмета
 function ModelHelper.findTemplate(itemKey)
 	local lowerKey = string.lower(itemKey)
+
+	-- 0. Прямая проверка генератора еды ReplicatedStorage.GeneratedModels.Food
+	local isFoodKey = (lowerKey == "bar" or lowerKey == "bread" or lowerKey == "chips" or lowerKey == "soup" or lowerKey == "pepper" or lowerKey == "coffee" or lowerKey == "steak" or string.find(lowerKey, "батончик") or string.find(lowerKey, "хлеб") or string.find(lowerKey, "чипс") or string.find(lowerKey, "суп") or string.find(lowerKey, "перец") or string.find(lowerKey, "кофе") or string.find(lowerKey, "стейк"))
+	if isFoodKey then
+		local genFolder = ReplicatedStorage:FindFirstChild("GeneratedModels")
+		local foodMod = genFolder and genFolder:FindFirstChild("Food")
+		if foodMod and foodMod:IsA("ModuleScript") then
+			local success, foodGen = pcall(require, foodMod)
+			if success and foodGen and type(foodGen.createFood) == "function" then
+				local generated = foodGen.createFood(itemKey, nil)
+				if generated and isValid3DModel(generated) then
+					return generated
+				end
+			end
+		end
+	end
 
 	local function isMatch(name)
 		local l = string.lower(name)
@@ -185,6 +226,22 @@ function ModelHelper.assembleTool(itemKey, parentTool)
 	local clone = (template.Parent == nil) and template or template:Clone()
 	local handle = nil
 
+	local function applyGrip()
+		local gripCF = ITEM_GRIPS[itemKey]
+		if not gripCF then
+			local lk = string.lower(itemKey)
+			for k, g in pairs(ITEM_GRIPS) do
+				if string.lower(k) == lk then
+					gripCF = g
+					break
+				end
+			end
+		end
+		if gripCF then
+			parentTool.Grip = gripCF
+		end
+	end
+
 	if clone:IsA("BasePart") then
 		handle = clone
 		handle.Name = "Handle"
@@ -192,6 +249,7 @@ function ModelHelper.assembleTool(itemKey, parentTool)
 		handle.CanCollide = false
 		handle.Massless = true
 		handle.Parent = parentTool
+		applyGrip()
 		return handle
 	elseif clone:IsA("Model") or clone:IsA("Folder") then
 		local allParts = {}
@@ -247,6 +305,7 @@ function ModelHelper.assembleTool(itemKey, parentTool)
 		end
 
 		clone:Destroy()
+		applyGrip()
 		return handle
 	end
 

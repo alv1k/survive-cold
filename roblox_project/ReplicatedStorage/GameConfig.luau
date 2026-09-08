@@ -19,7 +19,7 @@ GameConfig.Locations = {
 	},
 	FoodShop = {
 		Name = "Продуктовая Лавка",
-		Position = Vector3.new(-50, 4.0, 0),
+		Position = Vector3.new(-50, 0.6, 0),
 		WaypointHeight = 12,
 		Color = Color3.fromRGB(250, 204, 21),
 		BgColor = Color3.fromRGB(15, 23, 42),
@@ -29,8 +29,8 @@ GameConfig.Locations = {
 		Bounds = {
 			SizeX = 32,
 			SizeZ = 26,
-			MinY = 2,
-			MaxY = 18
+			MinY = 0,
+			MaxY = 14
 		}
 	},
 	ClothingShop = {

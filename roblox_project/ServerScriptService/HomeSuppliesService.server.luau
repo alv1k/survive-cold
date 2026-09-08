@@ -1,11 +1,8 @@
 --[[
     HomeSuppliesService.server.luau
     Сервис околодомовых природных ресурсов:
-    - 10 Крупных 3D-моделей Веток (Branches)
-    - 10 Крупных 3D-моделей Волокон (Fiber)
-    - 10 Крупных 3D-моделей Камней (Stone)
-    - 10 Крупных 3D-моделей Досок (Planks)
-    - 10 Крупных 3D-моделей Деталей (Parts)
+    - 12 Крупных рубленых кубических 3D-моделей Камней (Stone) в естественных россыпях
+    - 2 Охотничьих копья на крыльце у верстака
     - Приподнятая посадка над снегом (Y-offset), мягкая подсветка и ProximityPrompt
 --]]
 
@@ -168,53 +165,29 @@ local function createHomeResourceNode(resType, pos, index)
 	nodeModel.Parent = HomeSuppliesFolder
 end
 
--- 10 ВЕТОК (Левый передний двор: X = -22 .. -34, Z = 5 .. 25)
-for i = 1, 10 do
-	local angle = (i / 10) * (math.pi * 1.5)
-	local x = -26 + math.cos(angle) * 7
-	local z = 15 + math.sin(angle) * 8
-	createHomeResourceNode("Branches", Vector3.new(x, 0, z), i)
-end
-
--- 10 ВОЛОКОН (Правый передний двор: X = 22 .. 34, Z = 5 .. 25)
-for i = 1, 10 do
-	local angle = (i / 10) * (math.pi * 1.5)
-	local x = 26 + math.cos(angle) * 7
-	local z = 15 + math.sin(angle) * 8
-	createHomeResourceNode("Fiber", Vector3.new(x, 0, z), i)
-end
-
--- 10 КАМНЕЙ (Задний левый двор: X = -18 .. -32, Z = -18 .. -32)
-for i = 1, 10 do
-	local angle = (i / 10) * (math.pi * 1.5)
-	local x = -24 + math.cos(angle) * 7
-	local z = -24 + math.sin(angle) * 7
-	createHomeResourceNode("Stone", Vector3.new(x, 0, z), i)
-end
-
--- 10 ДОСОК (4 на переднем крыльце у входа: X = 12..18, Z = 15..20; 6 на заднем дворе: X = 20..30, Z = -20..-30)
-local plankPositions = {
-	Vector3.new(14, 0, 16),  -- Прямо справа от входа
-	Vector3.new(17, 0, 19),  -- Справа на полянке перед домом
-	Vector3.new(-14, 0, 16), -- Прямо слева от входа
-	Vector3.new(-17, 0, 19), -- Слева на полянке перед домом
-	Vector3.new(22, 0, -18), -- Задний правый угол
-	Vector3.new(26, 0, -22), -- Задний правый двор
-	Vector3.new(28, 0, -26), -- Задний правый двор
-	Vector3.new(24, 0, -28), -- Задний правый двор
-	Vector3.new(20, 0, -24), -- Задний правый угол
-	Vector3.new(25, 0, -31), -- Задний правый двор
+-- --------------------------------------------------------------------------------
+-- ⚪ КАМЕННЫЕ ВАЛУНЫ ВОКРУГ ДОМА (Придомовые кубические камни)
+-- --------------------------------------------------------------------------------
+local stonePositions = {
+	-- Задний левый двор (скальная гряда)
+	Vector3.new(-24, 0, -22),
+	Vector3.new(-28, 0, -26),
+	Vector3.new(-20, 0, -28),
+	Vector3.new(-31, 0, -20),
+	Vector3.new(-25, 0, -32),
+	-- Задний правый двор (каменная россыпь)
+	Vector3.new(22, 0, -20),
+	Vector3.new(27, 0, -24),
+	Vector3.new(24, 0, -30),
+	Vector3.new(30, 0, -18),
+	-- Левый и правый боковые фланги
+	Vector3.new(-28, 0, 8),
+	Vector3.new(-32, 0, -6),
+	Vector3.new(29, 0, 10),
 }
-for i, pos in ipairs(plankPositions) do
-	createHomeResourceNode("Planks", pos, i)
-end
 
--- 10 ДЕТАЛЕЙ (Правый фасад: X = 15 .. 28, Z = 5 .. 20)
-for i = 1, 10 do
-	local angle = (i / 10) * (math.pi * 1.5)
-	local x = 22 + math.cos(angle) * 6
-	local z = 10 + math.sin(angle) * 6
-	createHomeResourceNode("Parts", Vector3.new(x, 0, z), i)
+for i, pos in ipairs(stonePositions) do
+	createHomeResourceNode("Stone", pos, i)
 end
 
 -- 2 ОХОТНИЧЬИХ КОПЬЯ (На крыльце у входа и верстака)
@@ -226,4 +199,5 @@ for i, pos in ipairs(spearPositions) do
 	createHomeResourceNode("Spear", pos, i)
 end
 
-print("🏡 [HomeSuppliesService] 52 околодомовых 3D-ресурса (Ветки, Волокно, Камни, Доски, Детали, Копья) успешно расставлены вокруг дома!")
+print(string.format("🏡 [HomeSuppliesService] %d околодомовых кубических камней (Stone) и охотничьи копья успешно расставлены вокруг дома!", #stonePositions))
+

@@ -88,8 +88,8 @@ local mobConfigs = {
 		ThreatLevel = 2,
 		AggroRadius = 45,
 		PatrolRadius = 120,
-		HipHeight = 0.95,
-		HrpSize = Vector3.new(1.2, 1.0, 2.2),
+		HipHeight = 1.90,
+		HrpSize = Vector3.new(2.4, 2.0, 4.4),
 		Loot = { Item = "WolfPelt", Chance = 0.85, Count = 1 }
 	},
 	Yeti = {
@@ -130,7 +130,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 		if success and Generator and type(Generator.create) == "function" then
 			local offsetCF = CFrame.identity
 			if mobType == "Wolf" then
-				offsetCF = CFrame.new(0, -0.9, 0)
+				offsetCF = CFrame.new(0, -1.8, 0)
 			elseif mobType == "Yeti" then
 				offsetCF = CFrame.new(0, -1.8, 0)
 			elseif mobType == "Bigfoot" then
@@ -139,7 +139,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 
 			local visualModel = Generator.create(mobModel, hrp.CFrame * offsetCF, {
 				isMob = true,
-				Scale = (mobType == "Wolf" and 1.35 or 1.0),
+				Scale = (mobType == "Wolf" and 2.70 or 1.0),
 				Anchored = false,
 				isAnimated = true
 			})

@@ -94,14 +94,20 @@ def set_bmesh_uv(bm, faces, color_name):
         for loop in f.loops:
             loop[uv_layer].uv = (u, v)
 
+MODEL_SCALE = 2.0
+
+def scale_pt(p):
+    return (p[0] * MODEL_SCALE, p[1] * MODEL_SCALE, p[2] * MODEL_SCALE)
+
 def make_box_part(name, x0, x1, y0, y1, z0, z1, col_name, mat):
+    s = MODEL_SCALE
     mesh = bpy.data.meshes.new(name + "_Mesh")
     bm = bmesh.new()
     v = [
-        bm.verts.new((x0, y0, z0)), bm.verts.new((x1, y0, z0)),
-        bm.verts.new((x1, y1, z0)), bm.verts.new((x0, y1, z0)),
-        bm.verts.new((x0, y0, z1)), bm.verts.new((x1, y0, z1)),
-        bm.verts.new((x1, y1, z1)), bm.verts.new((x0, y1, z1)),
+        bm.verts.new((x0*s, y0*s, z0*s)), bm.verts.new((x1*s, y0*s, z0*s)),
+        bm.verts.new((x1*s, y1*s, z0*s)), bm.verts.new((x0*s, y1*s, z0*s)),
+        bm.verts.new((x0*s, y0*s, z1*s)), bm.verts.new((x1*s, y0*s, z1*s)),
+        bm.verts.new((x1*s, y1*s, z1*s)), bm.verts.new((x0*s, y1*s, z1*s)),
     ]
     f = [
         bm.faces.new((v[0], v[1], v[2], v[3])),
@@ -129,8 +135,8 @@ def make_prism_part(name, p1, p2, p3, p4, p5, p6, col_name, mat):
     mesh = bpy.data.meshes.new(name + "_Mesh")
     bm = bmesh.new()
     v = [
-        bm.verts.new(p1), bm.verts.new(p2), bm.verts.new(p3),
-        bm.verts.new(p4), bm.verts.new(p5), bm.verts.new(p6)
+        bm.verts.new(scale_pt(p1)), bm.verts.new(scale_pt(p2)), bm.verts.new(scale_pt(p3)),
+        bm.verts.new(scale_pt(p4)), bm.verts.new(scale_pt(p5)), bm.verts.new(scale_pt(p6))
     ]
     f = [
         bm.faces.new((v[0], v[1], v[2])),
@@ -157,8 +163,8 @@ def make_pyramid_part(name, b1, b2, b3, b4, apex, col_name, mat):
     mesh = bpy.data.meshes.new(name + "_Mesh")
     bm = bmesh.new()
     v = [
-        bm.verts.new(b1), bm.verts.new(b2), bm.verts.new(b3), bm.verts.new(b4),
-        bm.verts.new(apex)
+        bm.verts.new(scale_pt(b1)), bm.verts.new(scale_pt(b2)), bm.verts.new(scale_pt(b3)), bm.verts.new(scale_pt(b4)),
+        bm.verts.new(scale_pt(apex))
     ]
     f = [
         bm.faces.new((v[0], v[1], v[2], v[3])),
@@ -184,7 +190,7 @@ def make_pyramid_part(name, b1, b2, b3, b4, apex, col_name, mat):
 def make_tetra_part(name, p1, p2, p3, apex, col_name, mat):
     mesh = bpy.data.meshes.new(name + "_Mesh")
     bm = bmesh.new()
-    v = [bm.verts.new(p1), bm.verts.new(p2), bm.verts.new(p3), bm.verts.new(apex)]
+    v = [bm.verts.new(scale_pt(p1)), bm.verts.new(scale_pt(p2)), bm.verts.new(scale_pt(p3)), bm.verts.new(scale_pt(apex))]
     f = [
         bm.faces.new((v[0], v[2], v[1])),
         bm.faces.new((v[0], v[1], v[3])),

@@ -42,22 +42,22 @@ if not sun:
     sun.rotation_euler = (math.radians(52), math.radians(12), math.radians(-38))
 
 # 1. Isometric View
-cam.location = (-3.2, -4.2, 2.8)
+cam.location = (-5.8, -7.2, 4.8)
 cam.rotation_euler = (math.radians(66), 0, math.radians(-38))
 scene.render.filepath = iso_img
 bpy.ops.render.render(write_still=True)
 print("Rendered ISO:", iso_img)
 
 # 2. Front View
-cam.location = (0.0, -3.8, 1.3)
-cam.rotation_euler = (math.radians(80), 0, 0)
+cam.location = (0.0, -7.0, 2.4)
+cam.rotation_euler = (math.radians(82), 0, 0)
 scene.render.filepath = front_img
 bpy.ops.render.render(write_still=True)
 print("Rendered Front:", front_img)
 
 # 3. Side View
-cam.location = (-4.2, 0.0, 1.2)
-cam.rotation_euler = (math.radians(82), 0, math.radians(-90))
+cam.location = (-7.5, 0.0, 2.2)
+cam.rotation_euler = (math.radians(84), 0, math.radians(-90))
 scene.render.filepath = side_img
 bpy.ops.render.render(write_still=True)
 print("Rendered Side:", side_img)

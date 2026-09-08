@@ -14,11 +14,11 @@ function WolfGenerator.create(parent, targetCF, options)
 	options = options or {}
 	local isPet = (options.isPet == true)
 	local isMob = (options.isMob == true) or (options.isAnimated == true)
-	local scale = options.Scale or (isPet and 0.95 or 1.35)
+	local scale = options.Scale or (isPet and 1.90 or 2.70)
 	local isAnchored = (options.Anchored ~= false) and (not isMob) and (not isPet)
 	local isAnimated = (options.isAnimated ~= false) and (isMob or isPet)
 	
-	targetCF = targetCF or CFrame.new(0, 1.2, 0)
+	targetCF = targetCF or CFrame.new(0, 2.4, 0)
 	local model = Instance.new("Model")
 	model.Name = isPet and "IceWolf" or "Wolf"
 

@@ -130,6 +130,102 @@ local function animateWolf(model, hrp, humanoid, dt)
 	end
 end
 
+local function animateYeti(model, hrp, humanoid, dt)
+	local state = getAnimState(model)
+	cacheMotors(model, state)
+
+	local speed = hrp.AssemblyLinearVelocity.Magnitude
+	local isMoving = (speed > 0.5) or (humanoid and humanoid.MoveDirection.Magnitude > 0.1)
+	local isRunning = isMoving and (speed > 5.5 or (humanoid and humanoid.WalkSpeed > 6.0))
+	local targetMode = isRunning and "Run" or (isMoving and "Walk" or "Idle")
+	local timeNow = os.clock()
+
+	if isMoving then
+		local stepRate = isRunning and math.clamp(speed * 0.85, 5.0, 11.0) or math.clamp(speed * 1.05, 2.5, 6.5)
+		state.walkPhase = (state.walkPhase + dt * stepRate) % (math.pi * 2)
+	end
+
+	local walkT = state.walkPhase
+	local breathe = math.sin(timeNow * 1.4) * 0.035
+
+	for _, motor in ipairs(state.motors) do
+		if not motor or not motor.Parent then continue end
+		local mName = motor.Name
+
+		if targetMode == "Run" then
+			-- =========================================================
+			-- АНИМАЦИЯ ЯРОСТНОГО БЕГА / ПОГОНИ (Yeti_Run)
+			-- =========================================================
+			if mName == "Joint_LegL" then
+				local rotX = math.sin(walkT) * 0.72
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "Joint_LegR" then
+				local rotX = -math.sin(walkT) * 0.72
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "Joint_ArmL" then
+				local rotX = -math.sin(walkT) * 0.95 + math.rad(28)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(-14)), 0.35)
+			elseif mName == "Joint_ArmR" then
+				local rotX = math.sin(walkT) * 0.95 + math.rad(28)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(14)), 0.35)
+			elseif mName == "WaistJoint" then
+				local swayY = math.sin(walkT) * 0.18
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(22), swayY, 0), 0.3)
+			elseif mName == "NeckJoint" then
+				local headBob = math.sin(walkT * 2) * 0.08 - math.rad(15)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(headBob, 0, 0), 0.3)
+			elseif mName == "RootJoint" then
+				local bounceY = -math.abs(math.sin(walkT)) * 0.28
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, bounceY, 0), 0.3)
+			end
+
+		elseif targetMode == "Walk" then
+			-- =========================================================
+			-- АНИМАЦИЯ ПАТРУЛЬНОЙ ХОДЬБЫ ГИГАНТА (Yeti_Walk)
+			-- =========================================================
+			if mName == "Joint_LegL" then
+				local rotX = math.sin(walkT) * 0.45
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.3)
+			elseif mName == "Joint_LegR" then
+				local rotX = -math.sin(walkT) * 0.45
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.3)
+			elseif mName == "Joint_ArmL" then
+				local rotX = -math.sin(walkT) * 0.55
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(-8)), 0.3)
+			elseif mName == "Joint_ArmR" then
+				local rotX = math.sin(walkT) * 0.55
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(8)), 0.3)
+			elseif mName == "WaistJoint" then
+				local swayY = math.sin(walkT) * 0.12
+				local tiltZ = -math.sin(walkT) * 0.08
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(6), swayY, tiltZ), 0.25)
+			elseif mName == "NeckJoint" then
+				local bobX = math.abs(math.sin(walkT)) * 0.08 - 0.04
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(bobX, 0, 0), 0.25)
+			elseif mName == "RootJoint" then
+				local bounceY = -math.abs(math.sin(walkT)) * 0.14
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, bounceY, 0), 0.25)
+			end
+
+		else
+			-- =========================================================
+			-- АНИМАЦИЯ ПОКОЯ ГИГАНТА (Idle)
+			-- =========================================================
+			if mName == "WaistJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.6, 0, 0), 0.2)
+			elseif mName == "NeckJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.4, math.sin(timeNow * 0.8) * 0.06, 0), 0.2)
+			elseif mName == "Joint_ArmL" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(0, 0, math.rad(-6) + breathe * 0.2), 0.2)
+			elseif mName == "Joint_ArmR" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(0, 0, math.rad(6) - breathe * 0.2), 0.2)
+			else
+				motor.Transform = motor.Transform:Lerp(CFrame.identity, 0.2)
+			end
+		end
+	end
+end
+
 -- Главный цикл обновления кадров (60 FPS)
 RunService.RenderStepped:Connect(function(dt)
 	-- 1. Анимация монстров в MobsFolder
@@ -143,6 +239,8 @@ RunService.RenderStepped:Connect(function(dt)
 				if hrp and humanoid and humanoid.Health > 0 then
 					if mobType == "Wolf" or mob.Name:find("Волк") or mob.Name:find("Wolf") then
 						animateWolf(mob, hrp, humanoid, dt)
+					elseif mobType == "Yeti" or mob.Name:find("Йети") or mob.Name:find("Yeti") or mobType == "Bigfoot" or mob.Name:find("Бигфут") or mob.Name:find("Bigfoot") then
+						animateYeti(mob, hrp, humanoid, dt)
 					end
 				end
 			end

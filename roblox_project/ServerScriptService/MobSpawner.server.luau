@@ -91,30 +91,35 @@ local mobConfigs = {
 		PatrolRadius = 156,      -- Радиус патруля увеличен в 1.3 раза (120 * 1.3 = 156)
 		HipHeight = 1.90,
 		HrpSize = Vector3.new(2.4, 2.0, 4.4),
+		Scale = 2.70,
 		Loot = { Item = "WolfPelt", Chance = 0.85, Count = 1 }
 	},
 	Yeti = {
 		Name = "❄️ Снежный Йети",
-		Hp = 60,
-		Damage = 25,
-		Speed = 6.0,
-		ThreatLevel = 4,
-		AggroRadius = 40,
-		PatrolRadius = 90,
-		HipHeight = 1.8,
-		HrpSize = Vector3.new(2.4, 2.6, 2.0),
+		Hp = 100,
+		Damage = 30,
+		Speed = 8.0,             -- Скорость при яростном беге / погоне
+		PatrolSpeed = 4.0,       -- Скорость при патрульной ходьбе
+		ThreatLevel = 5,
+		AggroRadius = 48,
+		PatrolRadius = 120,
+		HipHeight = 3.60,
+		HrpSize = Vector3.new(4.8, 5.2, 4.0),
+		Scale = 4.0,
 		Loot = { Item = "YetiPelt", Chance = 0.90, Count = 1 }
 	},
 	Bigfoot = {
 		Name = "🦍 Бигфут",
 		Hp = 120,
 		Damage = 40,
-		Speed = 5.0,
+		Speed = 7.5,             -- Скорость при яростном беге / погоне
+		PatrolSpeed = 3.5,       -- Скорость при патрульной ходьбе
 		ThreatLevel = 6,
 		AggroRadius = 50,
 		PatrolRadius = 150,
-		HipHeight = 2.2,
-		HrpSize = Vector3.new(2.6, 3.0, 2.2),
+		HipHeight = 3.60,
+		HrpSize = Vector3.new(4.8, 5.2, 4.0),
+		Scale = 4.0,
 		Loot = { Item = "YetiPelt", Chance = 1.00, Count = 2 }
 	}
 }
@@ -136,7 +141,7 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 
 			local visualModel = Generator.create(mobModel, hrp.CFrame * offsetCF, {
 				isMob = true,
-				Scale = (mobType == "Wolf" and 2.70 or 1.0),
+				Scale = (cfg and cfg.Scale) or 1.0,
 				Anchored = false,
 				isAnimated = true
 			})
@@ -216,8 +221,8 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 			addSubPart("Head", Vector3.new(2.4, 2.2, 2.2), CFrame.new(0, 2.4, -0.4), Enum.Material.Fabric, BrickColor.new("Dark orange"))
 			addSubPart("BrowRidge", Vector3.new(2.2, 0.6, 0.8), CFrame.new(0, 2.7, -1.3), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
 			addSubPart("Jaw", Vector3.new(1.8, 0.9, 1.2), CFrame.new(0, 1.9, -1.2), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
-			addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.55, 2.6, -1.5), Enum.Material.Neon, BrickColor.new("Deep orange"))
-			addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.55, 2.6, -1.5), Enum.Material.Neon, BrickColor.new("Deep orange"))
+			addSubPart("EyeL", Vector3.new(0.4, 0.4, 0.4), CFrame.new(-0.55, 2.6, -1.5), Enum.Material.SmoothPlastic, BrickColor.new("Deep orange"))
+			addSubPart("EyeR", Vector3.new(0.4, 0.4, 0.4), CFrame.new(0.55, 2.6, -1.5), Enum.Material.SmoothPlastic, BrickColor.new("Deep orange"))
 			addSubPart("ArmL", Vector3.new(1.5, 4.2, 1.5), CFrame.new(-2.8, 0.0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
 			addSubPart("ArmR", Vector3.new(1.5, 4.2, 1.5), CFrame.new(2.8, 0.0, 0), Enum.Material.Fabric, BrickColor.new("Reddish brown"))
 			addSubPart("LegL", Vector3.new(1.5, 2.6, 1.5), CFrame.new(-1.2, -2.2, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))

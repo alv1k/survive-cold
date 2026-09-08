@@ -120,15 +120,8 @@ function WolfGenerator.create(parent, targetCF, options)
 	local fangLL = makeWedge("Fang_LowerL", Vector3.new(0.05, 0.12, 0.05), CFrame.new(-0.08, 0.90, -1.40), Enum.Material.SmoothPlastic, c_fangs)
 	local fangLR = makeWedge("Fang_LowerR", Vector3.new(0.05, 0.12, 0.05), CFrame.new(0.08, 0.90, -1.40), Enum.Material.SmoothPlastic, c_fangs)
 
-	local eyeL = makePart("EyeL", Vector3.new(0.10, 0.10, 0.06), CFrame.new(-0.17, 1.23, -1.15), Enum.Material.Neon, c_eye)
-	local eyeR = makePart("EyeR", Vector3.new(0.10, 0.10, 0.06), CFrame.new(0.17, 1.23, -1.15), Enum.Material.Neon, c_eye)
-
-	local eyeLight = Instance.new("PointLight")
-	eyeLight.Name = "WolfEyeGlow"
-	eyeLight.Color = c_eye
-	eyeLight.Range = 8 * scale
-	eyeLight.Brightness = 0.85
-	eyeLight.Parent = head
+	local eyeL = makePart("EyeL", Vector3.new(0.10, 0.10, 0.06), CFrame.new(-0.17, 1.23, -1.15), Enum.Material.SmoothPlastic, c_eye)
+	local eyeR = makePart("EyeR", Vector3.new(0.10, 0.10, 0.06), CFrame.new(0.17, 1.23, -1.15), Enum.Material.SmoothPlastic, c_eye)
 
 	local earL = makeWedge("Ear_L", Vector3.new(0.16, 0.38, 0.20), CFrame.new(-0.16, 1.58, -0.98) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_dark)
 	local earInL = makePart("EarInner_L", Vector3.new(0.08, 0.22, 0.05), CFrame.new(-0.15, 1.54, -1.02) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_pink)

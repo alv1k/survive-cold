@@ -254,9 +254,9 @@ def build_and_export_wolf():
     parts.append(make_prism_part("Nose", (-0.06, -1.55, 0.98), (0.0, -1.55, 1.14), (0.06, -1.55, 0.98),
                                          (-0.06, -1.63, 0.98), (0.0, -1.63, 1.10), (0.06, -1.63, 0.98), "pitch_black", mat))
 
-    # Eyes (Neon Red)
-    parts.append(make_box_part("Eye_L", -0.22, -0.12, -1.18, -1.12, 1.18, 1.28, "neon_red_glow", mat))
-    parts.append(make_box_part("Eye_R", 0.12, 0.22, -1.18, -1.12, 1.18, 1.28, "neon_red_glow", mat))
+    # Eyes (Crimson / non-glowing)
+    parts.append(make_box_part("Eye_L", -0.22, -0.12, -1.18, -1.12, 1.18, 1.28, "crimson_dark", mat))
+    parts.append(make_box_part("Eye_R", 0.12, 0.22, -1.18, -1.12, 1.18, 1.28, "crimson_dark", mat))
 
     # Ears & Inner Ears
     parts.append(make_pyramid_part("Ear_L", (-0.24, -0.88, 1.40), (-0.24, -1.08, 1.40), (-0.08, -1.08, 1.40), (-0.08, -0.88, 1.40), (-0.16, -0.96, 1.78), "stone_dark", mat))

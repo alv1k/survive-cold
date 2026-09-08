@@ -84,10 +84,11 @@ local mobConfigs = {
 		Name = "🐺 Полярный Волк",
 		Hp = 30,
 		Damage = 12,
-		Speed = 12.0,
+		Speed = 12.0,            -- Скорость при погоне (без изменений)
+		PatrolSpeed = 6.0,       -- Скорость при патрулировании (замедлена в 2 раза)
 		ThreatLevel = 2,
 		AggroRadius = 45,
-		PatrolRadius = 120,
+		PatrolRadius = 156,      -- Радиус патруля увеличен в 1.3 раза (120 * 1.3 = 156)
 		HipHeight = 1.90,
 		HrpSize = Vector3.new(2.4, 2.0, 4.4),
 		Loot = { Item = "WolfPelt", Chance = 0.85, Count = 1 }
@@ -128,14 +129,10 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 	if modScript then
 		local success, Generator = pcall(require, modScript)
 		if success and Generator and type(Generator.create) == "function" then
-			local offsetCF = CFrame.identity
-			if mobType == "Wolf" then
-				offsetCF = CFrame.new(0, -1.8, 0)
-			elseif mobType == "Yeti" then
-				offsetCF = CFrame.new(0, -1.8, 0)
-			elseif mobType == "Bigfoot" then
-				offsetCF = CFrame.new(0, -2.2, 0)
-			end
+			local cfg = mobConfigs[mobType]
+			local halfHrpY = hrp.Size.Y / 2
+			local hipHeight = (cfg and cfg.HipHeight) or 1.0
+			local offsetCF = CFrame.new(0, -(halfHrpY + hipHeight), 0)
 
 			local visualModel = Generator.create(mobModel, hrp.CFrame * offsetCF, {
 				isMob = true,
@@ -191,8 +188,8 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 			addSubPart("Nose", Vector3.new(0.3, 0.3, 0.3), CFrame.new(0, 0.35, -2.25), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
 			addSubPart("EarL", Vector3.new(0.3, 0.8, 0.4), CFrame.new(-0.5, 1.0, -1.1) * CFrame.Angles(0, 0, math.rad(-15)), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("EarR", Vector3.new(0.3, 0.8, 0.4), CFrame.new(0.5, 1.0, -1.1) * CFrame.Angles(0, 0, math.rad(15)), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
-			addSubPart("EyeL", Vector3.new(0.25, 0.25, 0.25), CFrame.new(-0.35, 0.55, -1.6), Enum.Material.Neon, BrickColor.new("Bright red"))
-			addSubPart("EyeR", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0.35, 0.55, -1.6), Enum.Material.Neon, BrickColor.new("Bright red"))
+			addSubPart("EyeL", Vector3.new(0.25, 0.25, 0.25), CFrame.new(-0.35, 0.55, -1.6), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
+			addSubPart("EyeR", Vector3.new(0.25, 0.25, 0.25), CFrame.new(0.35, 0.55, -1.6), Enum.Material.SmoothPlastic, BrickColor.new("Bright red"))
 			addSubPart("LegFL", Vector3.new(0.4, 1.2, 0.4), CFrame.new(-0.5, -0.6, -0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("LegFR", Vector3.new(0.4, 1.2, 0.4), CFrame.new(0.5, -0.6, -0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
 			addSubPart("LegBL", Vector3.new(0.45, 1.2, 0.45), CFrame.new(-0.5, -0.6, 0.7), Enum.Material.SmoothPlastic, BrickColor.new("Dark stone grey"))
@@ -385,7 +382,8 @@ task.spawn(function()
 				end
 
 				if targetTarget then
-					-- Движение и атака цели
+					-- Погоня и атака цели: полная скорость бега
+					humanoid.WalkSpeed = cfg.Speed
 					humanoid:MoveTo(targetTarget.Position)
 					if targetIsPlayer and closestDist < 6 then
 						local pChar = targetTarget.Parent
@@ -395,7 +393,8 @@ task.spawn(function()
 						end
 					end
 				else
-					-- Патруль в радиусе своей 210-метровой зоны обитания
+					-- Патруль в радиусе своей зоны обитания: замедленная скорость
+					humanoid.WalkSpeed = cfg.PatrolSpeed or (cfg.Speed / 2)
 					local distFromHouse = math.sqrt(hrp.Position.X^2 + hrp.Position.Z^2)
 					if distFromHouse < 80 then
 						-- Возврат на исходную позицию 210м при случайном приближении к дому

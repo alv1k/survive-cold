@@ -154,9 +154,8 @@ for petId, cfg in pairs(PET_CONFIG) do
 				elseif petId == "Wolf" then
 					-- 🐺 ЛЕДЯНОЙ ВОЛЧОНОК: Высокоточная 3D Low-Poly модель, серебристый мех, небесно-голубые глазки
 					body.Transparency = 1
-					body.Size = Vector3.new(2.0, 2.0, 3.2)
-
-					local wolfVisual = WolfGenerator.create(petModel, body.CFrame * CFrame.new(0, -0.9, 0), {
+					local petGroundOffset = -(body.Size.Y / 2 + petHum.HipHeight)
+					local wolfVisual = WolfGenerator.create(petModel, body.CFrame * CFrame.new(0, petGroundOffset, 0), {
 						isPet = true,
 						Scale = 1.90,
 						isAnimated = true,

@@ -1,32 +1,32 @@
 --[[
     ReplicatedStorage/GeneratedModels/Wolf.luau
-    Высокоточный, стилизованный 3D-генератор Полярного Волка (~300 полигонов / Low-Poly Predator):
-    - Мускулистый корпус с пышным загривком (Mane Ruff), светлым подбрюшьем и хребтом
-    - Голова с клыкастой пастью (Fangs & Jaws), открытой алой пастью и черным носом
-    - Светящиеся хищные красные глаза (Neon Red Eyes)
-    - Остроконечные уши с розовой внутренней частью
-    - 4 атлетичные лапы с когтями и суставами
-    - Пушистый изогнутый хвост с белоснежным кончиком
+    Высокоточная 3D-модель Полярного Волка и Ледяного Волчонка (Gold Standard):
+    - Полная 1:1 анатомия из Blender 5.0 (406 tris) с палитрой palette.png
+    - Надежные соединения Weld (C0/C1) и Motor6D суставы для 60 FPS анимаций
+    - 4 полные 3-сегментные лапы (Upper -> Lower -> Paw с когтями)
+    - 3-сегментный пушистый хвост (TailBase -> TailMid -> SnowTip)
+    - Голова с клыками, открытой пастью, стоячими ушами и светящимися глазами (Neon)
 --]]
 
 local WolfGenerator = {}
 
 function WolfGenerator.create(parent, targetCF, options)
 	options = options or {}
-	local scale = options.Scale or 1.35
-	local isAnchored = (options.Anchored ~= false) and (options.isMob ~= true)
+	local isPet = (options.isPet == true)
+	local isMob = (options.isMob == true) or (options.isAnimated == true)
+	local scale = options.Scale or (isPet and 0.95 or 1.35)
+	local isAnchored = (options.Anchored ~= false) and (not isMob) and (not isPet)
+	local isAnimated = (options.isAnimated ~= false) and (isMob or isPet)
 	
 	targetCF = targetCF or CFrame.new(0, 1.2, 0)
 	local model = Instance.new("Model")
-	model.Name = "Wolf"
+	model.Name = isPet and "IceWolf" or "Wolf"
 
 	local function makePart(name, size, cfOffset, material, color, canCollide)
 		local p = Instance.new("Part")
 		p.Name = name
 		p.Size = size * scale
-		local scaledPos = cfOffset.Position * scale
-		local scaledRot = cfOffset - cfOffset.Position
-		p.CFrame = targetCF * CFrame.new(scaledPos) * scaledRot
+		p.CFrame = targetCF * CFrame.new(cfOffset.Position * scale) * cfOffset.Rotation
 		p.Material = material or Enum.Material.SmoothPlastic
 		p.Color = color or Color3.fromRGB(71, 85, 105)
 		p.Anchored = isAnchored
@@ -43,9 +43,7 @@ function WolfGenerator.create(parent, targetCF, options)
 		local p = Instance.new("WedgePart")
 		p.Name = name
 		p.Size = size * scale
-		local scaledPos = cfOffset.Position * scale
-		local scaledRot = cfOffset - cfOffset.Position
-		p.CFrame = targetCF * CFrame.new(scaledPos) * scaledRot
+		p.CFrame = targetCF * CFrame.new(cfOffset.Position * scale) * cfOffset.Rotation
 		p.Material = material or Enum.Material.SmoothPlastic
 		p.Color = color or Color3.fromRGB(71, 85, 105)
 		p.Anchored = isAnchored
@@ -58,77 +56,72 @@ function WolfGenerator.create(parent, targetCF, options)
 		return p
 	end
 
-	-- Цветовая палитра полярного волка
-	local c_dark = Color3.fromRGB(71, 85, 105)    -- stone_dark (#475569) - основной серый
-	local c_light = Color3.fromRGB(148, 163, 184) -- slate_light (#94A3B8) - светло-серый
-	local c_spine = Color3.fromRGB(30, 41, 59)    -- cast_iron (#1E293B) - темный хребет
-	local c_belly = Color3.fromRGB(241, 245, 249) -- snow_pure (#F1F5F9) - светлое брюхо
-	local c_black = Color3.fromRGB(9, 9, 11)      -- pitch_black (#09090B) - нос и когти
-	local c_fangs = Color3.fromRGB(255, 255, 255) -- bone_ivory (#FFFFFF) - клыки
-	local c_mouth = Color3.fromRGB(127, 29, 29)   -- crimson_dark (#7F1D1D) - пасть
-	local c_pink = Color3.fromRGB(244, 114, 182)  -- pink_soft (#F472B6) - ушки внутри
-	local c_eye = Color3.fromRGB(255, 0, 85)      -- neon_red_glow (#FF0055) - глаза
+	-- Жесткая сварка через классический Weld с C0/C1 (100% стабильность без разлетания частей)
+	local function weldParts(parentPart, childPart)
+		local w = Instance.new("Weld")
+		w.Name = "Weld_" .. childPart.Name
+		w.Part0 = parentPart
+		w.Part1 = childPart
+		w.C0 = parentPart.CFrame:ToObjectSpace(childPart.CFrame)
+		w.C1 = CFrame.identity
+		w.Parent = childPart
+		return w
+	end
+
+	-- Палитра цветов (соответствует assets/palette_uv_map.json)
+	local c_dark = isPet and Color3.fromRGB(100, 116, 139) or Color3.fromRGB(71, 85, 105)    -- stone_dark (#475569)
+	local c_light = Color3.fromRGB(148, 163, 184) -- slate_light (#94A3B8)
+	local c_spine = Color3.fromRGB(30, 41, 59)    -- cast_iron (#1E293B)
+	local c_belly = Color3.fromRGB(241, 245, 249) -- snow_pure (#F1F5F9)
+	local c_black = Color3.fromRGB(9, 9, 11)      -- pitch_black (#09090B)
+	local c_fangs = Color3.fromRGB(255, 255, 255) -- bone_ivory (#FFFFFF)
+	local c_mouth = Color3.fromRGB(153, 27, 27)   -- crimson_dark (#991B1B)
+	local c_pink = Color3.fromRGB(253, 164, 175)  -- pink_soft (#FDA4AF)
+	local c_eye = options.EyeColor or (isPet and Color3.fromRGB(0, 245, 212) or Color3.fromRGB(255, 0, 85))
 
 	-- =========================================================================
-	-- 1. КОРПУС, ЗАГРИВОК И ХРЕБЕТ (Body, Mane, Underbelly) - Направлен вперед по -Z
+	-- 1. КОРПУС И ХРЕБЕТ (Body / Torso)
 	-- =========================================================================
-	-- Основная грудная клетка (Chest)
-	local body = makePart("Body", Vector3.new(0.72, 0.72, 0.65), CFrame.new(0, 0.94, -0.32), Enum.Material.SmoothPlastic, c_dark, false)
+	local body = makePart("Body", Vector3.new(0.72, 0.72, 0.68), CFrame.new(0, 0.94, -0.32), Enum.Material.SmoothPlastic, c_dark, false)
 	model.PrimaryPart = body
 
-	-- Загривок / воротник (Mane Ruff)
-	makePart("ManeRuff", Vector3.new(0.60, 0.50, 0.48), CFrame.new(0, 1.20, -0.48), Enum.Material.SmoothPlastic, c_dark)
+	-- Загривок (Mane Ruff)
+	local mane = makePart("ManeRuff", Vector3.new(0.60, 0.48, 0.44), CFrame.new(0, 1.16, -0.48), Enum.Material.SmoothPlastic, c_dark)
+	local ruffL = makeWedge("RuffL", Vector3.new(0.24, 0.42, 0.42), CFrame.new(-0.44, 1.00, -0.32) * CFrame.Angles(0, math.rad(-25), math.rad(-15)), Enum.Material.SmoothPlastic, c_light)
+	local ruffR = makeWedge("RuffR", Vector3.new(0.24, 0.42, 0.42), CFrame.new(0.44, 1.00, -0.32) * CFrame.Angles(0, math.rad(25), math.rad(15)), Enum.Material.SmoothPlastic, c_light)
+	local belly = makePart("Underbelly", Vector3.new(0.48, 0.32, 0.52), CFrame.new(0, 0.62, -0.32), Enum.Material.SmoothPlastic, c_belly)
 
-	-- Боковые пучки шерсти на груди (Ruff Flares)
-	makeWedge("RuffL", Vector3.new(0.24, 0.45, 0.45), CFrame.new(-0.46, 1.05, -0.35) * CFrame.Angles(0, math.rad(-25), math.rad(-15)), Enum.Material.SmoothPlastic, c_light)
-	makeWedge("RuffR", Vector3.new(0.24, 0.45, 0.45), CFrame.new(0.46, 1.05, -0.35) * CFrame.Angles(0, math.rad(25), math.rad(15)), Enum.Material.SmoothPlastic, c_light)
+	-- Таз и задняя часть хребта
+	local pelvis = makePart("Pelvis", Vector3.new(0.56, 0.63, 0.72), CFrame.new(0, 0.865, 0.36), Enum.Material.SmoothPlastic, c_dark)
+	local spineRidge = makePart("SpineRidge", Vector3.new(0.16, 0.14, 1.25), CFrame.new(0, 1.34, 0.05), Enum.Material.SmoothPlastic, c_spine)
 
-	-- Светлое подбрюшье и манишка (Underbelly Bib)
-	makePart("Underbelly", Vector3.new(0.48, 0.34, 0.50), CFrame.new(0, 0.64, -0.35), Enum.Material.SmoothPlastic, c_belly)
-
-	-- Задняя часть торса / таз (Pelvis / Flanks)
-	makePart("Pelvis", Vector3.new(0.56, 0.62, 0.75), CFrame.new(0, 0.88, 0.38), Enum.Material.SmoothPlastic, c_dark)
-
-	-- Темный шерстяной гребень на спине (Dorsal Spine Ridge)
-	makePart("SpineRidge", Vector3.new(0.18, 0.16, 1.20), CFrame.new(0, 1.34, 0.05), Enum.Material.SmoothPlastic, c_spine)
-
-	-- =========================================================================
-	-- 2. ГОЛОВА, КЛЫКАСТАЯ ПАСТЬ И НОС (Head, Jaws, Fangs) - Впереди (-Z)
-	-- =========================================================================
-	-- Череп (Cranium)
-	local head = makePart("Head", Vector3.new(0.50, 0.52, 0.45), CFrame.new(0, 1.14, -0.88), Enum.Material.SmoothPlastic, c_dark)
-
-	-- Щечные очесы (Cheek Tufts)
-	makeWedge("CheekL", Vector3.new(0.20, 0.32, 0.34), CFrame.new(-0.32, 1.05, -0.85) * CFrame.Angles(0, math.rad(-15), math.rad(-10)), Enum.Material.SmoothPlastic, c_light)
-	makeWedge("CheekR", Vector3.new(0.20, 0.32, 0.34), CFrame.new(0.32, 1.05, -0.85) * CFrame.Angles(0, math.rad(15), math.rad(10)), Enum.Material.SmoothPlastic, c_light)
-
-	-- Верхняя морда (Upper Snout / Muzzle)
-	makePart("Snout", Vector3.new(0.30, 0.22, 0.48), CFrame.new(0, 1.01, -1.32), Enum.Material.SmoothPlastic, c_dark)
-	makePart("SnoutBridge", Vector3.new(0.14, 0.08, 0.46), CFrame.new(0, 1.14, -1.32), Enum.Material.SmoothPlastic, c_spine)
-
-	-- Черный нос (Black Nose)
-	makePart("Nose", Vector3.new(0.14, 0.14, 0.10), CFrame.new(0, 1.05, -1.58), Enum.Material.SmoothPlastic, c_black)
-
-	-- Нижняя челюсть (Lower Mandible)
-	makePart("LowerJaw", Vector3.new(0.26, 0.16, 0.44), CFrame.new(0, 0.78, -1.28), Enum.Material.SmoothPlastic, c_light)
-
-	-- Открытая пасть (Mouth Cavity)
-	makePart("MouthCavity", Vector3.new(0.22, 0.08, 0.36), CFrame.new(0, 0.88, -1.28), Enum.Material.SmoothPlastic, c_mouth)
-
-	-- 4 Острых белых клыка (Sharp White Canines)
-	-- Верхние клыки
-	makeWedge("Fang_UpperL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.11, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_UpperR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.11, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
-	-- Нижние клыки
-	makeWedge("Fang_LowerL", Vector3.new(0.06, 0.14, 0.06), CFrame.new(-0.09, 0.92, -1.41), Enum.Material.SmoothPlastic, c_fangs)
-	makeWedge("Fang_LowerR", Vector3.new(0.06, 0.14, 0.06), CFrame.new(0.09, 0.92, -1.41), Enum.Material.SmoothPlastic, c_fangs)
+	weldParts(body, mane)
+	weldParts(body, ruffL)
+	weldParts(body, ruffR)
+	weldParts(body, belly)
+	weldParts(body, pelvis)
+	weldParts(body, spineRidge)
 
 	-- =========================================================================
-	-- 3. СВЕТЯЩИЕСЯ ГЛАЗА И УШИ (Eyes & Ears)
+	-- 2. ГОЛОВА, МОРДА, ГЛАЗА И УШИ (Head)
 	-- =========================================================================
-	-- Светящиеся хищные глаза
-	local eyeL = makePart("EyeL", Vector3.new(0.12, 0.08, 0.12), CFrame.new(-0.16, 1.18, -1.08) * CFrame.Angles(0, math.rad(15), math.rad(-10)), Enum.Material.Neon, c_eye)
-	local eyeR = makePart("EyeR", Vector3.new(0.12, 0.08, 0.12), CFrame.new(0.16, 1.18, -1.08) * CFrame.Angles(0, math.rad(-15), math.rad(10)), Enum.Material.Neon, c_eye)
+	local head = makePart("Head", Vector3.new(0.50, 0.50, 0.35), CFrame.new(0, 1.15, -1.015), Enum.Material.SmoothPlastic, c_dark)
+	local cheekL = makeWedge("CheekL", Vector3.new(0.22, 0.28, 0.32), CFrame.new(-0.31, 1.05, -0.98) * CFrame.Angles(0, math.rad(-15), math.rad(-10)), Enum.Material.SmoothPlastic, c_light)
+	local cheekR = makeWedge("CheekR", Vector3.new(0.22, 0.28, 0.32), CFrame.new(0.31, 1.05, -0.98) * CFrame.Angles(0, math.rad(15), math.rad(10)), Enum.Material.SmoothPlastic, c_light)
+	local snout = makePart("Snout", Vector3.new(0.30, 0.22, 0.40), CFrame.new(0, 1.03, -1.35), Enum.Material.SmoothPlastic, c_dark)
+	local snoutBridge = makePart("SnoutBridge", Vector3.new(0.14, 0.08, 0.38), CFrame.new(0, 1.16, -1.35), Enum.Material.SmoothPlastic, c_spine)
+	local nose = makePart("Nose", Vector3.new(0.12, 0.12, 0.08), CFrame.new(0, 1.06, -1.58), Enum.Material.SmoothPlastic, c_black)
+
+	local lowerJaw = makePart("LowerJaw", Vector3.new(0.26, 0.16, 0.42), CFrame.new(0, 0.80, -1.28), Enum.Material.SmoothPlastic, c_light)
+	local mouth = makePart("MouthCavity", Vector3.new(0.22, 0.06, 0.34), CFrame.new(0, 0.88, -1.28), Enum.Material.SmoothPlastic, c_mouth)
+
+	local fangUL = makeWedge("Fang_UpperL", Vector3.new(0.05, 0.12, 0.05), CFrame.new(-0.10, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	local fangUR = makeWedge("Fang_UpperR", Vector3.new(0.05, 0.12, 0.05), CFrame.new(0.10, 0.84, -1.45) * CFrame.Angles(math.rad(180), 0, 0), Enum.Material.SmoothPlastic, c_fangs)
+	local fangLL = makeWedge("Fang_LowerL", Vector3.new(0.05, 0.12, 0.05), CFrame.new(-0.08, 0.90, -1.40), Enum.Material.SmoothPlastic, c_fangs)
+	local fangLR = makeWedge("Fang_LowerR", Vector3.new(0.05, 0.12, 0.05), CFrame.new(0.08, 0.90, -1.40), Enum.Material.SmoothPlastic, c_fangs)
+
+	local eyeL = makePart("EyeL", Vector3.new(0.10, 0.10, 0.06), CFrame.new(-0.17, 1.23, -1.15), Enum.Material.Neon, c_eye)
+	local eyeR = makePart("EyeR", Vector3.new(0.10, 0.10, 0.06), CFrame.new(0.17, 1.23, -1.15), Enum.Material.Neon, c_eye)
 
 	local eyeLight = Instance.new("PointLight")
 	eyeLight.Name = "WolfEyeGlow"
@@ -137,53 +130,95 @@ function WolfGenerator.create(parent, targetCF, options)
 	eyeLight.Brightness = 0.85
 	eyeLight.Parent = head
 
-	-- Острые стоячие уши
-	makeWedge("Ear_L", Vector3.new(0.14, 0.36, 0.22), CFrame.new(-0.16, 1.58, -0.82) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_dark)
-	makePart("EarInner_L", Vector3.new(0.08, 0.22, 0.06), CFrame.new(-0.15, 1.54, -0.86) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_pink)
+	local earL = makeWedge("Ear_L", Vector3.new(0.16, 0.38, 0.20), CFrame.new(-0.16, 1.58, -0.98) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_dark)
+	local earInL = makePart("EarInner_L", Vector3.new(0.08, 0.22, 0.05), CFrame.new(-0.15, 1.54, -1.02) * CFrame.Angles(0, math.rad(10), math.rad(5)), Enum.Material.SmoothPlastic, c_pink)
+	local earR = makeWedge("Ear_R", Vector3.new(0.16, 0.38, 0.20), CFrame.new(0.16, 1.58, -0.98) * CFrame.Angles(0, math.rad(-10), math.rad(-5)), Enum.Material.SmoothPlastic, c_dark)
+	local earInR = makePart("EarInner_R", Vector3.new(0.08, 0.22, 0.05), CFrame.new(0.15, 1.54, -1.02) * CFrame.Angles(0, math.rad(-10), math.rad(-5)), Enum.Material.SmoothPlastic, c_pink)
 
-	makeWedge("Ear_R", Vector3.new(0.14, 0.36, 0.22), CFrame.new(0.16, 1.58, -0.82) * CFrame.Angles(0, math.rad(-10), math.rad(-5)), Enum.Material.SmoothPlastic, c_dark)
-	makePart("EarInner_R", Vector3.new(0.08, 0.22, 0.06), CFrame.new(0.15, 1.54, -0.86) * CFrame.Angles(0, math.rad(-10), math.rad(-5)), Enum.Material.SmoothPlastic, c_pink)
+	local headParts = { cheekL, cheekR, snout, snoutBridge, nose, lowerJaw, mouth, fangUL, fangUR, fangLL, fangLR, eyeL, eyeR, earL, earInL, earR, earInR }
+	for _, p in ipairs(headParts) do
+		weldParts(head, p)
+	end
 
 	-- =========================================================================
-	-- 4. 4 ЛАПЫ С КОГТЯМИ И СУСТАВАМИ (Legs & Paws) - Передние (-Z), Задние (+Z)
+	-- 3. 4 ПОЛНЫЕ АРТИКУЛИРОВАННЫЕ ЛАПЫ (Upper -> Lower -> Paw с когтями)
 	-- =========================================================================
-	local legConfigs = {
-		{ name = "Leg_FL", pos = Vector3.new(-0.26, 0.38, -0.40), isFront = true, isLeft = true },
-		{ name = "Leg_FR", pos = Vector3.new(0.26, 0.38, -0.40), isFront = true, isLeft = false },
-		{ name = "Leg_BL", pos = Vector3.new(-0.24, 0.38, 0.55), isFront = false, isLeft = true },
-		{ name = "Leg_BR", pos = Vector3.new(0.24, 0.38, 0.55), isFront = false, isLeft = false },
+	local legs = {}
+	local legCfgs = {
+		{ key = "Leg_FL", shoulderPos = Vector3.new(-0.26, 0.80, -0.39), isFront = true },
+		{ key = "Leg_FR", shoulderPos = Vector3.new(0.26, 0.80, -0.39), isFront = true },
+		{ key = "Leg_BL", shoulderPos = Vector3.new(-0.25, 0.78, 0.50), isFront = false },
+		{ key = "Leg_BR", shoulderPos = Vector3.new(0.25, 0.78, 0.50), isFront = false },
 	}
 
-	for _, cfg in ipairs(legConfigs) do
-		-- Верхняя часть / бедро
-		makePart(cfg.name .. "_Upper", Vector3.new(0.18, 0.55, 0.22), CFrame.new(cfg.pos), Enum.Material.SmoothPlastic, c_dark)
-		-- Лапа / подушечка с когтями (когти смотрят вперед)
-		local pawZ = cfg.pos.Z + (cfg.isFront and -0.08 or 0.04)
-		makePart(cfg.name .. "_Paw", Vector3.new(0.20, 0.12, 0.26), CFrame.new(cfg.pos.X, 0.06, pawZ), Enum.Material.SmoothPlastic, c_spine)
+	for _, cfg in ipairs(legCfgs) do
+		local posX = cfg.shoulderPos.X
+		local posZ = cfg.shoulderPos.Z
+		
+		-- 1. Верхняя часть (Upper / Thigh) - Центр на Y=0.62
+		local upper = makePart(cfg.key .. "_Upper", Vector3.new(0.16, 0.36, 0.20), CFrame.new(posX, 0.62, posZ), Enum.Material.SmoothPlastic, c_dark)
+		
+		-- 2. Нижняя часть (Lower / Forearm) - Центр на Y=0.30
+		local lower = makePart(cfg.key .. "_Lower", Vector3.new(0.14, 0.32, 0.18), CFrame.new(posX, 0.30, posZ), Enum.Material.SmoothPlastic, c_light)
+		
+		-- 3. Лапа / Подушечка с когтями (Paw) - Центр на Y=0.07, чуть выдается вперед
+		local pawZ = posZ + (cfg.isFront and -0.06 or 0.04)
+		local paw = makePart(cfg.key .. "_Paw", Vector3.new(0.18, 0.14, 0.24), CFrame.new(posX, 0.07, pawZ), Enum.Material.SmoothPlastic, c_spine)
+		
+		weldParts(upper, lower)
+		weldParts(upper, paw)
+		
+		legs[cfg.key] = {
+			upper = upper,
+			shoulderPos = cfg.shoulderPos
+		}
 	end
 
 	-- =========================================================================
-	-- 5. ПУШИСТЫЙ ХВОСТ С БЕЛЫМ КОНЧИКОМ (Tail & Tip) - Сзади (+Z)
+	-- 4. 3-СЕГМЕНТНЫЙ ПУШИСТЫЙ ХВОСТ (TailBase -> TailMid -> SnowTip)
 	-- =========================================================================
-	-- Основание хвоста
-	makePart("TailBase", Vector3.new(0.22, 0.24, 0.36), CFrame.new(0, 0.88, 0.85) * CFrame.Angles(math.rad(25), 0, 0), Enum.Material.SmoothPlastic, c_dark)
-	-- Средняя часть хвоста
-	makePart("TailMid", Vector3.new(0.24, 0.26, 0.42), CFrame.new(0, 0.72, 1.16) * CFrame.Angles(math.rad(15), 0, 0), Enum.Material.SmoothPlastic, c_light)
-	-- Белый кончик хвоста (Snow Tip)
-	makePart("TailTip", Vector3.new(0.18, 0.20, 0.28), CFrame.new(0, 0.62, 1.45) * CFrame.Angles(math.rad(5), 0, 0), Enum.Material.SmoothPlastic, c_belly)
+	local tailBase = makePart("TailBase", Vector3.new(0.22, 0.24, 0.30), CFrame.new(0, 0.88, 0.85) * CFrame.Angles(math.rad(-10), 0, 0), Enum.Material.SmoothPlastic, c_dark)
+	local tailMid = makePart("TailMid", Vector3.new(0.24, 0.26, 0.34), CFrame.new(0, 0.72, 1.15) * CFrame.Angles(math.rad(-20), 0, 0), Enum.Material.SmoothPlastic, c_light)
+	local tailTip = makePart("TailTip", Vector3.new(0.20, 0.22, 0.30), CFrame.new(0, 0.55, 1.45) * CFrame.Angles(math.rad(-30), 0, 0), Enum.Material.SmoothPlastic, c_belly)
+
+	weldParts(tailBase, tailMid)
+	weldParts(tailBase, tailTip)
 
 	-- =========================================================================
-	-- 6. СВАРКА ВСЕХ ЧАСТЕЙ К КОРПУСУ (WeldConstraint)
+	-- 5. СОЕДИНЕНИЕ СУСТАВОВ ЧЕРЕЗ ШАРНИРЫ (Motor6D с точным центром вращения)
 	-- =========================================================================
-	for _, part in ipairs(model:GetDescendants()) do
-		if part:IsA("BasePart") and part ~= body then
-			local weld = Instance.new("WeldConstraint")
-			weld.Name = "Weld_" .. part.Name
-			weld.Part0 = body
-			weld.Part1 = part
-			weld.Parent = part
+	local function bindLimbMotor(jointName, part0, part1, pivotWorldPos)
+		local pivotCF = targetCF * CFrame.new(pivotWorldPos * scale)
+		if isAnimated then
+			local motor = Instance.new("Motor6D")
+			motor.Name = jointName
+			motor.Part0 = part0
+			motor.Part1 = part1
+			motor.C0 = part0.CFrame:ToObjectSpace(pivotCF)
+			motor.C1 = part1.CFrame:ToObjectSpace(pivotCF)
+			motor:SetAttribute("RestC0", motor.C0)
+			motor:SetAttribute("RestC1", motor.C1)
+			motor.Parent = part0
+			return motor
+		else
+			return weldParts(part0, part1)
 		end
 	end
+
+	-- Сустав Шеи (NeckJoint) - вращается вокруг основания черепа
+	bindLimbMotor("NeckJoint", body, head, Vector3.new(0, 1.10, -0.75))
+	
+	-- Сустав Хвоста (TailJoint) - вращается вокруг основания таза
+	bindLimbMotor("TailJoint", body, tailBase, Vector3.new(0, 0.90, 0.72))
+
+	-- Суставы 4 Лап (Joint_FL, FR, BL, BR) - вращаются вокруг плечевых/тазобедренных суставов
+	for key, legData in pairs(legs) do
+		local jointName = "Joint_" .. string.sub(key, 5) -- Joint_FL, Joint_FR...
+		bindLimbMotor(jointName, body, legData.upper, legData.shoulderPos)
+	end
+
+	model:SetAttribute("IsWolfModel", true)
+	model:SetAttribute("IsAnimatedModel", isAnimated)
 
 	if parent then
 		model.Parent = parent

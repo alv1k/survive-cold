@@ -12,6 +12,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local GeneratedModels = ReplicatedStorage:WaitForChild("GeneratedModels")
+local WolfGenerator = require(GeneratedModels:WaitForChild("Wolf"))
+
 -- Папка Remotes
 local RemotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or Instance.new("Folder", ReplicatedStorage)
 RemotesFolder.Name = "Remotes"
@@ -149,27 +152,31 @@ for petId, cfg in pairs(PET_CONFIG) do
 					addSubPart("TailTip", Vector3.new(0.4, 0.4, 0.6), CFrame.new(0, 0.7, 2.2) * CFrame.Angles(math.rad(30), 0, 0), Enum.Material.Fabric, BrickColor.new("White"))
 
 				elseif petId == "Wolf" then
-					-- 🐺 ЛЕДЯНОЙ ВОЛЧОНОК: Серебристый мех, небесно-голубые глазки
-					body.Size = Vector3.new(1.5, 1.3, 2.4)
-					body.Material = Enum.Material.Fabric
-					body.BrickColor = BrickColor.new("Medium stone grey")
+					-- 🐺 ЛЕДЯНОЙ ВОЛЧОНОК: Высокоточная 3D Low-Poly модель, серебристый мех, небесно-голубые глазки
+					body.Transparency = 1
+					body.Size = Vector3.new(1.0, 1.0, 1.6)
 
-					addSubPart("Head", Vector3.new(1.2, 1.1, 1.3), CFrame.new(0, 0.6, -1.5), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
-					addSubPart("Snout", Vector3.new(0.7, 0.5, 0.9), CFrame.new(0, 0.4, -2.1), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-					addSubPart("Nose", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0, 0.55, -2.6), Enum.Material.SmoothPlastic, BrickColor.new("Really black"))
+					local wolfVisual = WolfGenerator.create(petModel, body.CFrame * CFrame.new(0, -0.45, 0), {
+						isPet = true,
+						Scale = 0.95,
+						isAnimated = true,
+						EyeColor = Color3.fromRGB(0, 245, 212),
+						Anchored = false
+					})
 
-					addSubPart("EarL", Vector3.new(0.25, 0.6, 0.3), CFrame.new(-0.45, 1.25, -1.4) * CFrame.Angles(0, 0, math.rad(-12)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-					addSubPart("EarR", Vector3.new(0.25, 0.6, 0.3), CFrame.new(0.45, 1.25, -1.4) * CFrame.Angles(0, 0, math.rad(12)), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
+					if wolfVisual and wolfVisual.PrimaryPart then
+						wolfVisual.Name = "WolfVisual"
+						local primary = wolfVisual.PrimaryPart
 
-					addSubPart("EyeL", Vector3.new(0.2, 0.2, 0.2), CFrame.new(-0.3, 0.7, -2.0), Enum.Material.Neon, BrickColor.new("Pastel light blue"))
-					addSubPart("EyeR", Vector3.new(0.2, 0.2, 0.2), CFrame.new(0.3, 0.7, -2.0), Enum.Material.Neon, BrickColor.new("Pastel light blue"))
-
-					addSubPart("LegFL", Vector3.new(0.4, 1.0, 0.4), CFrame.new(-0.55, -0.8, -0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-					addSubPart("LegFR", Vector3.new(0.4, 1.0, 0.4), CFrame.new(0.55, -0.8, -0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-					addSubPart("LegBL", Vector3.new(0.45, 1.0, 0.45), CFrame.new(-0.55, -0.8, 0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-					addSubPart("LegBR", Vector3.new(0.45, 1.0, 0.45), CFrame.new(0.55, -0.8, 0.8), Enum.Material.Fabric, BrickColor.new("Dark stone grey"))
-
-					addSubPart("Tail", Vector3.new(0.45, 0.45, 1.6), CFrame.new(0, 0.35, 1.7) * CFrame.Angles(math.rad(-20), 0, 0), Enum.Material.Fabric, BrickColor.new("Medium stone grey"))
+						local rootJoint = Instance.new("Motor6D")
+						rootJoint.Name = "RootJoint"
+						rootJoint.Part0 = body
+						rootJoint.Part1 = primary
+						rootJoint.C0 = body.CFrame:ToObjectSpace(primary.CFrame)
+						rootJoint.C1 = CFrame.identity
+						rootJoint:SetAttribute("RestC0", rootJoint.C0)
+						rootJoint.Parent = body
+					end
 
 				elseif petId == "Bear" then
 					-- 🐻 ПОЛЯРНЫЙ МЕДВЕЖОНОК: Толстенький белый мишка, круглые ушки и носик-пуговка

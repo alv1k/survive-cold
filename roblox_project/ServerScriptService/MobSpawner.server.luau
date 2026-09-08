@@ -137,31 +137,26 @@ local function attachEnemyVisuals(mobModel, mobType, hrp)
 				offsetCF = CFrame.new(0, -2.2, 0)
 			end
 
-			local visualModel = Generator.create(nil, hrp.CFrame * offsetCF, {
+			local visualModel = Generator.create(mobModel, hrp.CFrame * offsetCF, {
 				isMob = true,
 				Scale = (mobType == "Wolf" and 1.35 or 1.0),
-				Anchored = false
+				Anchored = false,
+				isAnimated = true
 			})
 
 			if visualModel and visualModel.PrimaryPart then
+				visualModel.Name = "Visual_" .. mobType
 				local primary = visualModel.PrimaryPart
-				-- Переносим все части визуальной модели в mobModel
-				for _, desc in ipairs(visualModel:GetChildren()) do
-					if desc:IsA("BasePart") then
-						desc.Anchored = false
-						desc.CanCollide = false
-						desc.Massless = true
-						desc.Parent = mobModel
-					end
-				end
-				visualModel:Destroy()
 
-				-- Привариваем PrimaryPart (Torso/Body) к hrp
-				local rootWeld = Instance.new("WeldConstraint")
-				rootWeld.Name = "Weld_Root_" .. mobType
-				rootWeld.Part0 = hrp
-				rootWeld.Part1 = primary
-				rootWeld.Parent = hrp
+				-- Соединяем PrimaryPart к hrp через Motor6D для поддержки анимаций
+				local rootJoint = Instance.new("Motor6D")
+				rootJoint.Name = "RootJoint"
+				rootJoint.Part0 = hrp
+				rootJoint.Part1 = primary
+				rootJoint.C0 = hrp.CFrame:ToObjectSpace(primary.CFrame)
+				rootJoint.C1 = CFrame.identity
+				rootJoint:SetAttribute("RestC0", rootJoint.C0)
+				rootJoint.Parent = hrp
 
 				loaded = true
 			end

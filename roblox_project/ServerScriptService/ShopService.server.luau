@@ -10,6 +10,9 @@
 
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local BuildingGenerator = require(ReplicatedStorage:WaitForChild("GeneratedModels"):WaitForChild("BuildingGenerator"))
 
 local ROBUX_GAMEPASS_ID = 123456789
 
@@ -25,45 +28,59 @@ local ClothingTiers = {
 local ShopFolder = workspace:FindFirstChild("ClothingShop") or Instance.new("Folder", workspace)
 ShopFolder.Name = "ClothingShop"
 
-local SHOP_POSITION = Vector3.new(70, 2.5, 0)
+local SHOP_POSITION = Vector3.new(70, 0.6, 0)
 
 local function setupBalancedShop()
-	local shopBase = Instance.new("Part")
-	shopBase.Name = "ShopBase"
-	shopBase.Size = Vector3.new(30, 1, 25)
-	shopBase.Position = SHOP_POSITION
-	shopBase.Anchored = true
-	shopBase.Material = Enum.Material.WoodPlanks
-	shopBase.BrickColor = BrickColor.new("Lapis")
-	shopBase.Parent = ShopFolder
+	ShopFolder:ClearAllChildren()
+
+	-- 1. Стилизованный 3D-сруб мастерской одежды со станком для шкур и манекеном с паркой
+	local building = BuildingGenerator.createBuilding("ClothingShop", CFrame.new(SHOP_POSITION), ShopFolder)
+	building.Name = "ClothingShopBuilding"
 	
+	-- 2. Печь-камин под трубой (X = -5.2, Z = 4.0)
 	local fireplace = Instance.new("Part")
 	fireplace.Name = "ShopFireplace"
-	fireplace.Size = Vector3.new(4, 2, 4)
-	fireplace.Position = SHOP_POSITION + Vector3.new(0, 1.5, -8)
+	fireplace.Size = Vector3.new(3.8, 3.2, 3.8)
+	fireplace.Position = SHOP_POSITION + Vector3.new(-5.2, 2.1, 4.0)
 	fireplace.Anchored = true
-	fireplace.Material = Enum.Material.Neon
-	fireplace.BrickColor = BrickColor.new("Bright orange")
+	fireplace.Material = Enum.Material.Cobblestone
+	fireplace.Color = Color3.fromHex("#475569")
 	fireplace:SetAttribute("HeatRadius", 35)
 	fireplace:SetAttribute("HeatPower", 12)
 	fireplace.Parent = workspace:FindFirstChild("HeatSources") or workspace
+
+	local fire = Instance.new("Fire", fireplace)
+	fire.Size = 6
+	fire.Heat = 12
+	fire.Enabled = true
+
+	local fireLight = Instance.new("PointLight", fireplace)
+	fireLight.Color = Color3.fromRGB(255, 140, 40)
+	fireLight.Brightness = 0.8
+	fireLight.Range = 22
+
+	-- 3. Потолочное теплое освещение
+	local ceilingLight = Instance.new("PointLight", fireplace)
+	ceilingLight.Color = Color3.fromRGB(255, 230, 190)
+	ceilingLight.Brightness = 0.5
+	ceilingLight.Range = 24
 	
 	local mannequinConfig = {
-		{ Id = 1, Tier = 1, IsRobux = false },
-		{ Id = 2, Tier = 2, IsRobux = false },
-		{ Id = 3, Tier = 3, IsRobux = false },
-		{ Id = 4, Tier = 4, IsRobux = false },
-		{ Id = 5, Tier = 5, IsRobux = true }
+		{ Id = 1, Tier = 1, IsRobux = false, Offset = Vector3.new(-7.5, 2.7, -4.5) },
+		{ Id = 2, Tier = 2, IsRobux = false, Offset = Vector3.new(-7.5, 2.7, 1.5) },
+		{ Id = 3, Tier = 3, IsRobux = false, Offset = Vector3.new(0.0, 2.7, -6.0) },
+		{ Id = 4, Tier = 4, IsRobux = false, Offset = Vector3.new(7.5, 2.7, -4.5) },
+		{ Id = 5, Tier = 5, IsRobux = true,  Offset = Vector3.new(7.5, 2.7, 1.5) }
 	}
 	
 	for _, m in ipairs(mannequinConfig) do
 		local mannequinPart = Instance.new("Part")
 		mannequinPart.Name = "Mannequin_" .. m.Id
-		mannequinPart.Size = Vector3.new(2, 5, 2)
-		mannequinPart.Position = SHOP_POSITION + Vector3.new(-10 + (m.Id * 4), 3, 0)
+		mannequinPart.Size = Vector3.new(1.8, 4.2, 1.8)
+		mannequinPart.Position = SHOP_POSITION + m.Offset
 		mannequinPart.Anchored = true
-		mannequinPart.Material = m.IsRobux and Enum.Material.Neon or Enum.Material.Wood
-		mannequinPart.BrickColor = m.IsRobux and BrickColor.new("Lime green") or BrickColor.new("Dark stone grey")
+		mannequinPart.Material = m.IsRobux and Enum.Material.Neon or Enum.Material.Fabric
+		mannequinPart.Color = m.IsRobux and Color3.fromHex("#FFD700") or Color3.fromHex("#1E1B4B")
 		mannequinPart.Parent = ShopFolder
 		
 		local tierInfo = ClothingTiers[m.Tier]
@@ -80,6 +97,8 @@ local function setupBalancedShop()
 			prompt.ObjectText = string.format("🧥 Костюм Lvl %d (+%d%% защиты)", m.Tier, tierInfo.Protection * 100)
 		end
 		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 12
+		prompt.RequiresLineOfSight = false
 		
 		prompt.Triggered:Connect(function(player)
 			if m.IsRobux then

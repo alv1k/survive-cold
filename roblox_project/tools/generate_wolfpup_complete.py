@@ -127,12 +127,12 @@ def build_and_export_wolfpup():
     def build_torso(bm):
         # Main fluffy body
         t1 = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, 0, 0.75)) @ Matrix.Diagonal((0.85, 0.95, 0.75, 1.0)))
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
-        # Soft white underbelly
+        # Soft warm cream underbelly
         t2 = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, 0, 0.52)) @ Matrix.Diagonal((0.65, 0.85, 0.38, 1.0)))
         for v in t2['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "snow_pure")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_birch")
     
     obj_torso = create_mesh_part("Torso", build_torso, root, mat)
     parts.append(obj_torso)
@@ -140,7 +140,7 @@ def build_and_export_wolfpup():
     # 2. FLUFFY CHEST MANE
     def build_chest(bm):
         c1 = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=6, radius1=0.42, radius2=0.10, depth=0.50, matrix=Matrix.Translation((0, -0.45, 0.82)) @ Euler((math.radians(-50), 0, 0)).to_matrix().to_4x4())
-        for f in bm.faces: set_bmesh_uv(bm, [f], "snow_pure")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_birch")
     
     obj_chest = create_mesh_part("ChestFluff", build_chest, root, mat)
     parts.append(obj_chest)
@@ -163,17 +163,17 @@ def build_and_export_wolfpup():
     def build_head(bm):
         # Rounded chibi head
         h = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, -0.65, 1.35)) @ Matrix.Diagonal((0.95, 0.85, 0.85, 1.0)))
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
         # Fluffy cheek L
         chL = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=5, radius1=0.28, radius2=0.06, depth=0.36, matrix=Matrix.Translation((-0.52, -0.65, 1.22)) @ Euler((math.radians(35), math.radians(-35), 0)).to_matrix().to_4x4())
         for v in chL['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "snow_pure")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_birch")
             
         # Fluffy cheek R
         chR = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=5, radius1=0.28, radius2=0.06, depth=0.36, matrix=Matrix.Translation((0.52, -0.65, 1.22)) @ Euler((math.radians(35), math.radians(35), 0)).to_matrix().to_4x4())
         for v in chR['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "snow_pure")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_birch")
     
     obj_head = create_mesh_part("Head", build_head, root, mat)
     parts.append(obj_head)
@@ -182,7 +182,7 @@ def build_and_export_wolfpup():
     def build_muzzle(bm):
         # Short cute snout
         m = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, -1.05, 1.20)) @ Matrix.Diagonal((0.46, 0.40, 0.36, 1.0)))
-        for f in bm.faces: set_bmesh_uv(bm, [f], "snow_pure")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_birch")
         
         # Button black nose
         nose = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, -1.25, 1.30)) @ Matrix.Diagonal((0.20, 0.14, 0.14, 1.0)))
@@ -201,7 +201,7 @@ def build_and_export_wolfpup():
     def build_ears(bm):
         # Left ear
         earL = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=5, radius1=0.26, radius2=0.05, depth=0.52, matrix=Matrix.Translation((-0.38, -0.55, 1.78)) @ Euler((math.radians(15), math.radians(-18), 0)).to_matrix().to_4x4())
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
         # Pink inner flap L
         flapL = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((-0.36, -0.62, 1.74)) @ Euler((math.radians(15), math.radians(-18), 0)).to_matrix().to_4x4() @ Matrix.Diagonal((0.16, 0.05, 0.30, 1.0)))
@@ -210,7 +210,7 @@ def build_and_export_wolfpup():
 
         # Right ear
         earR = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=5, radius1=0.26, radius2=0.05, depth=0.52, matrix=Matrix.Translation((0.38, -0.55, 1.78)) @ Euler((math.radians(15), math.radians(18), 0)).to_matrix().to_4x4())
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
         # Pink inner flap R
         flapR = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0.36, -0.62, 1.74)) @ Euler((math.radians(15), math.radians(18), 0)).to_matrix().to_4x4() @ Matrix.Diagonal((0.16, 0.05, 0.30, 1.0)))
@@ -254,12 +254,12 @@ def build_and_export_wolfpup():
     def build_leg(bm, side_x, side_y, is_front):
         # Upper Leg
         thigh = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((side_x * 0.36, side_y * 0.32, 0.38)) @ Matrix.Diagonal((0.30, 0.30, 0.40, 1.0)))
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
-        # Lower Paw (fluffy white)
+        # Lower Paw (fluffy cream)
         paw = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((side_x * 0.36, side_y * 0.32 - (0.05 if is_front else -0.02), 0.12)) @ Matrix.Diagonal((0.34, 0.38, 0.24, 1.0)))
         for v in paw['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "snow_pure")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_birch")
 
     obj_fl = create_mesh_part("Leg_FL", lambda bm: build_leg(bm, -1, -1, True), root, mat)
     obj_fr = create_mesh_part("Leg_FR", lambda bm: build_leg(bm, 1, -1, True), root, mat)
@@ -267,21 +267,21 @@ def build_and_export_wolfpup():
     obj_br = create_mesh_part("Leg_BR", lambda bm: build_leg(bm, 1, 1, False), root, mat)
     parts.extend([obj_fl, obj_fr, obj_bl, obj_br])
 
-    # 9. FLUFFY WAGGING TAIL WITH WHITE SNOW TIP
+    # 9. FLUFFY WAGGING TAIL WITH CREAM TIP
     def build_tail(bm):
         # Base tail
         t1 = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, 0.46, 0.85)) @ Euler((math.radians(-40), 0, 0)).to_matrix().to_4x4() @ Matrix.Diagonal((0.28, 0.38, 0.28, 1.0)))
-        for f in bm.faces: set_bmesh_uv(bm, [f], "slate_light")
+        for f in bm.faces: set_bmesh_uv(bm, [f], "wood_cedar")
         
         # Mid curl
         t2 = bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((0, 0.68, 1.10)) @ Euler((math.radians(-65), 0, 0)).to_matrix().to_4x4() @ Matrix.Diagonal((0.30, 0.36, 0.30, 1.0)))
         for v in t2['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "slate_light")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_cedar")
             
-        # Fluffy white tip
+        # Fluffy cream tip
         t3 = bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=6, radius1=0.20, radius2=0.04, depth=0.38, matrix=Matrix.Translation((0, 0.82, 1.32)) @ Euler((math.radians(-80), 0, 0)).to_matrix().to_4x4())
         for v in t3['verts']:
-            for f in v.link_faces: set_bmesh_uv(bm, [f], "snow_pure")
+            for f in v.link_faces: set_bmesh_uv(bm, [f], "wood_birch")
 
     obj_tail = create_mesh_part("Tail", build_tail, root, mat)
     parts.append(obj_tail)

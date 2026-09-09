@@ -474,17 +474,22 @@ task.spawn(function()
 					heatSourcesGain = heatSourcesGain + bearBuff
 
 					-- Проверка нахождения внутри жилого дома игрока (Тепло не тратится!)
-					local inPlayerHouse = (math.abs(pPos.X) <= 16 and math.abs(pPos.Z) <= 13 and pPos.Y <= 14)
+					local inPlayerHouse = (math.abs(pPos.X) <= 13.5 and math.abs(pPos.Z) <= 12.5 and pPos.Y <= 17)
 
-					-- Проверка нахождения внутри здания Магазина Продуктов (Тепло стоит на месте)
+					-- Проверка нахождения внутри здания Магазина Продуктов
 					local foodShopCfg = GameConfig.Locations.FoodShop
-					local dx = math.abs(pPos.X - foodShopCfg.Position.X)
-					local dz = math.abs(pPos.Z - foodShopCfg.Position.Z)
-					local bounds = foodShopCfg.Bounds or { SizeX = 32, SizeZ = 26, MinY = 2, MaxY = 18 }
-					local inFoodShop = (dx <= (bounds.SizeX / 2) and dz <= (bounds.SizeZ / 2) and pPos.Y >= bounds.MinY and pPos.Y <= bounds.MaxY)
+					local dxF = math.abs(pPos.X - foodShopCfg.Position.X)
+					local dzF = math.abs(pPos.Z - foodShopCfg.Position.Z)
+					local inFoodShop = (dxF <= 13.5 and dzF <= 12.5 and pPos.Y <= 17)
 
-					if inPlayerHouse or inFoodShop then
-						-- Внутри дома и магазина тепло никогда не расходуется и игрок согревается
+					-- Проверка нахождения внутри Магазина Одежды
+					local clothingShopCfg = GameConfig.Locations.ClothingShop
+					local dxC = math.abs(pPos.X - clothingShopCfg.Position.X)
+					local dzC = math.abs(pPos.Z - clothingShopCfg.Position.Z)
+					local inClothingShop = (dxC <= 13.5 and dzC <= 12.5 and pPos.Y <= 17)
+
+					if inPlayerHouse or inFoodShop or inClothingShop then
+						-- Внутри дома и магазинов тепло никогда не расходуется и игрок согревается
 						warmth = math.min(100, warmth + 2.0)
 					elseif nearBurningFire or isHoldingTorch then
 						-- Около огня или с горящим факелом в руках игрок всегда гарантированно согревается!

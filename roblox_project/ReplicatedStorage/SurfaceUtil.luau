@@ -13,7 +13,7 @@ local SurfaceUtil = {}
 
 -- 1. Зона дома игрока (PlayerHouse)
 function SurfaceUtil.isInsidePlayerHouse(pos: Vector3): boolean
-	return math.abs(pos.X) <= 17 and math.abs(pos.Z) <= 14 and pos.Y <= 14
+	return math.abs(pos.X) <= 13.5 and math.abs(pos.Z) <= 12.5 and pos.Y <= 17
 end
 
 -- 2. Зона замерзшего озера (IceLake: центр -650, -350, размер 450x400)
@@ -29,8 +29,8 @@ end
 -- 4. Получить точную высоту поверхности Y по координатам X, Z
 function SurfaceUtil.getGroundHeight(x: number, z: number, _startY: number?, _customIgnoreList: { Instance }?): number
 	-- 1. Дом игрока
-	if math.abs(x) <= 17 and math.abs(z) <= 14 then
-		return 1.2
+	if math.abs(x) <= 13.5 and math.abs(z) <= 12.5 then
+		return 2.6
 	end
 
 	-- 2. Замерзшее озеро
@@ -54,7 +54,7 @@ function SurfaceUtil.getSurfacePosition(targetPos: Vector3, _customIgnoreList: {
 
 	-- 1. Дом игрока
 	if SurfaceUtil.isInsidePlayerHouse(targetPos) then
-		return Vector3.new(x, 1.2, z), Vector3.new(0, 1, 0), Enum.Material.WoodPlanks
+		return Vector3.new(x, 2.6, z), Vector3.new(0, 1, 0), Enum.Material.WoodPlanks
 	end
 
 	-- 2. Замерзшее озеро

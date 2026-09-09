@@ -157,6 +157,16 @@ function ModelHelper.findTemplate(itemKey)
 				return true
 			end
 		end
+		if lowerKey == "fox" or lowerKey == "лис" or lowerKey == "лиса" or lowerKey == "лисенок" or lowerKey == "лисёнок" then
+			if string.find(l, "fox", 1, true) or string.find(l, "лис", 1, true) then
+				return true
+			end
+		end
+		if lowerKey == "bear" or lowerKey == "bearcub" or lowerKey == "медведь" or lowerKey == "медвежонок" or lowerKey == "мишка" then
+			if string.find(l, "bear", 1, true) or string.find(l, "медвед", 1, true) or string.find(l, "мишк", 1, true) then
+				return true
+			end
+		end
 		if lowerKey == "wolf" or lowerKey == "волк" then
 			if string.find(l, "wolf", 1, true) or string.find(l, "волк", 1, true) then
 				return true
@@ -329,16 +339,19 @@ function ModelHelper.assembleDropModel(itemName, pos)
 	local isFlatBundle = (lower == "spear" or lower == "torch" or lower == "branches" or lower == "branch" or lower == "fiber" or lower == "straw" or string.find(lower, "spear") or string.find(lower, "torch") or string.find(lower, "branch") or string.find(lower, "fiber") or string.find(lower, "ветк") or string.find(lower, "камыш") or string.find(lower, "волокн"))
 	local flatTilt = isFlatBundle and CFrame.Angles(math.rad(90), 0, 0) or CFrame.identity
 
+	local groundY = SurfaceUtil.getGroundHeight(pos.X, pos.Z)
+	local restingY = isFlatBundle and (groundY + 0.12) or (groundY + 0.35)
+	local exactRestCF = CFrame.new(pos.X, restingY, pos.Z) * randYaw * flatTilt
+
 	if clone:IsA("BasePart") then
 		clone.Name = "Dropped_" .. itemName
-		clone.CFrame = CFrame.new(pos) * randYaw * flatTilt
+		clone.CFrame = exactRestCF
 		clone.Anchored = true
 		clone.CanCollide = true
 		clone.Massless = false
 		clone.Transparency = 0
 		clone.AssemblyLinearVelocity = Vector3.zero
 		clone.AssemblyAngularVelocity = Vector3.zero
-		SurfaceUtil.placeOnSurface(clone, pos, 0.05)
 		return clone
 	else
 		local allParts = {}
@@ -357,11 +370,8 @@ function ModelHelper.assembleDropModel(itemName, pos)
 		clone.PrimaryPart = primary
 		clone.Name = "Dropped_" .. itemName
 
-		-- Применяем поворот
-		clone:PivotTo(CFrame.new(pos) * randYaw * flatTilt)
-
-		-- Автоматически сажаем дном на снег/пол через BoundingBox
-		SurfaceUtil.placeOnSurface(clone, pos, 0.05)
+		-- Применяем точный CFrame посадки на землю
+		clone:PivotTo(exactRestCF)
 
 		for _, p in ipairs(allParts) do
 			p.Anchored = true

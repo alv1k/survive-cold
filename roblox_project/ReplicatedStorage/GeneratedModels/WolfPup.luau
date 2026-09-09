@@ -66,10 +66,10 @@ function WolfPupGenerator.create(parent, targetCF, options)
 		return w
 	end
 
-	-- Цветовая палитра питомца (Мягкие теплые и чистые цвета)
-	local c_fur_main = Color3.fromRGB(226, 232, 240)  -- slate_light (#E2E8F0)
-	local c_fur_dark = Color3.fromRGB(100, 116, 139)  -- stone_slate (#64748B)
-	local c_fur_white = Color3.fromRGB(255, 255, 255) -- snow_pure (#FFFFFF)
+	-- Цветовая палитра питомца (Теплый коричневый волчонок)
+	local c_fur_main = Color3.fromRGB(146, 92, 49)   -- warm timber brown (#925C31)
+	local c_fur_dark = Color3.fromRGB(88, 48, 20)    -- dark chocolate brown (#583014)
+	local c_fur_white = Color3.fromRGB(254, 243, 199) -- warm vanilla cream (#FEF3C7)
 	local c_pink = Color3.fromRGB(253, 164, 175)       -- pink_soft (#FDA4AF)
 	local c_black = Color3.fromRGB(15, 23, 42)        -- pitch_black (#0F172A)
 	local c_eye = options.EyeColor or Color3.fromRGB(34, 211, 238) -- aqua_bright (#22D3EE)

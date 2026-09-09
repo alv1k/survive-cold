@@ -17,6 +17,7 @@ local Network = require(ReplicatedStorage:WaitForChild("Network"))
 local InventoryService = require(script.Parent:WaitForChild("InventoryService"))
 
 local FoodGenerator = require(ReplicatedStorage:WaitForChild("GeneratedModels"):WaitForChild("Food"))
+local BuildingGenerator = require(ReplicatedStorage:WaitForChild("GeneratedModels"):WaitForChild("BuildingGenerator"))
 
 local BuyFoodRemote = Network.getFunction("BuyFood")
 local ShowNotificationRemote = Network.getEvent("ShowNotification")
@@ -181,12 +182,12 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 	-- Деревянная полка-подставка
 	local shelfPart = Instance.new("Part")
 	shelfPart.Name = "Shelf_" .. foodKey
-	shelfPart.Size = Vector3.new(6.0, 0.5, 2.2)
+	shelfPart.Size = Vector3.new(4.5, 0.4, 1.4)
 	shelfPart.Position = shelfCenterPos
 	shelfPart.Orientation = Vector3.new(0, shelfRotationY, 0)
 	shelfPart.Anchored = true
 	shelfPart.Material = Enum.Material.WoodPlanks
-	shelfPart.BrickColor = BrickColor.new("Brown")
+	shelfPart.Color = Color3.fromHex("#8C451A")
 	shelfPart.Parent = FoodShopFolder
 
 	-- Информационный ценник над полкой
@@ -220,154 +221,61 @@ local function createRetailShelfSection(foodKey, shelfCenterPos, shelfRotationY)
 	ShelfStocks[foodKey] = shelfData
 
 	-- Расставляем 4 штуки еды на полке
-	local offsets = { -2.0, -0.65, 0.65, 2.0 }
+	local offsets = { -1.5, -0.5, 0.5, 1.5 }
 	for idx, xOff in ipairs(offsets) do
-		shelfData.SlotCFrames[idx] = shelfPart.CFrame * CFrame.new(xOff, 0.4, 0)
+		shelfData.SlotCFrames[idx] = shelfPart.CFrame * CFrame.new(xOff, 0.35, 0)
 		spawnShelfItem(foodKey, idx)
 	end
 end
-
 
 local function buildFoodShopBuilding()
 	ShelfStocks = {}
 	FoodShopFolder:ClearAllChildren()
 
-	-- 1. Пол магазина (32 x 26 studs)
-	local floor = Instance.new("Part")
-	floor.Name = "Floor"
-	floor.Size = Vector3.new(32, 1.2, 26)
-	floor.Position = FOOD_SHOP_POSITION
-	floor.Anchored = true
-	floor.Material = Enum.Material.WoodPlanks
-	floor.BrickColor = BrickColor.new("Dark orange")
-	floor.Parent = FoodShopFolder
+	-- 1. Стилизованный 3D-сруб продуктовой лавки с торговым прилавком и навесом
+	local buildingModel = BuildingGenerator.createBuilding("FoodShop", CFrame.new(FOOD_SHOP_POSITION), FoodShopFolder)
+	buildingModel.Name = "FoodShopBuilding"
 
-	-- 2. Задняя стена
-	local wallBack = Instance.new("Part")
-	wallBack.Name = "WallBack"
-	wallBack.Size = Vector3.new(32, 10, 1.5)
-	wallBack.Position = FOOD_SHOP_POSITION + Vector3.new(0, 5, -12.25)
-	wallBack.Anchored = true
-	wallBack.Material = Enum.Material.Wood
-	wallBack.BrickColor = BrickColor.new("Brown")
-	wallBack.Parent = FoodShopFolder
-
-	-- 3. Левая стена
-	local wallLeft = Instance.new("Part")
-	wallLeft.Name = "WallLeft"
-	wallLeft.Size = Vector3.new(1.5, 10, 26)
-	wallLeft.Position = FOOD_SHOP_POSITION + Vector3.new(-15.25, 5, 0)
-	wallLeft.Anchored = true
-	wallLeft.Material = Enum.Material.Wood
-	wallLeft.BrickColor = BrickColor.new("Brown")
-	wallLeft.Parent = FoodShopFolder
-
-	-- 4. Правая стена
-	local wallRight = Instance.new("Part")
-	wallRight.Name = "WallRight"
-	wallRight.Size = Vector3.new(1.5, 10, 26)
-	wallRight.Position = FOOD_SHOP_POSITION + Vector3.new(15.25, 5, 0)
-	wallRight.Anchored = true
-	wallRight.Material = Enum.Material.Wood
-	wallRight.BrickColor = BrickColor.new("Brown")
-	wallRight.Parent = FoodShopFolder
-
-	-- 5. Фасадная стена С ОТКРЫТЫМ ДВЕРНЫМ ВХОДОМ (Проход 8 studs)
-	local frontLeft = Instance.new("Part")
-	frontLeft.Name = "FrontWallLeft"
-	frontLeft.Size = Vector3.new(11.5, 10, 1.5)
-	frontLeft.Position = FOOD_SHOP_POSITION + Vector3.new(-10.25, 5, 12.25)
-	frontLeft.Anchored = true
-	frontLeft.Material = Enum.Material.Wood
-	frontLeft.BrickColor = BrickColor.new("Brown")
-	frontLeft.Parent = FoodShopFolder
-
-	local frontRight = Instance.new("Part")
-	frontRight.Name = "FrontWallRight"
-	frontRight.Size = Vector3.new(11.5, 10, 1.5)
-	frontRight.Position = FOOD_SHOP_POSITION + Vector3.new(10.25, 5, 12.25)
-	frontRight.Anchored = true
-	frontRight.Material = Enum.Material.Wood
-	frontRight.BrickColor = BrickColor.new("Brown")
-	frontRight.Parent = FoodShopFolder
-
-	local frontTopLintel = Instance.new("Part")
-	frontTopLintel.Name = "DoorLintel"
-	frontTopLintel.Size = Vector3.new(9, 2.5, 1.5)
-	frontTopLintel.Position = FOOD_SHOP_POSITION + Vector3.new(0, 8.75, 12.25)
-	frontTopLintel.Anchored = true
-	frontTopLintel.Material = Enum.Material.Wood
-	frontTopLintel.BrickColor = BrickColor.new("Brown")
-	frontTopLintel.Parent = FoodShopFolder
-
-	-- 6. Крыша со снегом
-	local roof = Instance.new("Part")
-	roof.Name = "Roof"
-	roof.Size = Vector3.new(35, 1.5, 29)
-	roof.Position = FOOD_SHOP_POSITION + Vector3.new(0, 10.5, 0)
-	roof.Anchored = true
-	roof.Material = Enum.Material.Snow
-	roof.BrickColor = BrickColor.new("White")
-	roof.Parent = FoodShopFolder
-
-	-- 7. Потолочное теплое освещение (Без костров и ослепляющего неона)
+	-- 2. Потолочное теплое освещение
 	local ceilingLightPart = Instance.new("Part", FoodShopFolder)
 	ceilingLightPart.Name = "CeilingLight"
 	ceilingLightPart.Size = Vector3.new(3, 0.4, 3)
-	ceilingLightPart.Position = FOOD_SHOP_POSITION + Vector3.new(0, 9.2, 0)
+	ceilingLightPart.Position = FOOD_SHOP_POSITION + Vector3.new(0, 9.5, 0)
 	ceilingLightPart.Anchored = true
-	ceilingLightPart.Material = Enum.Material.SmoothPlastic
-	ceilingLightPart.Color = Color3.fromRGB(245, 235, 205)
+	ceilingLightPart.Material = Enum.Material.Neon
+	ceilingLightPart.Color = Color3.fromRGB(254, 240, 138)
 
 	local shopLight = Instance.new("PointLight", ceilingLightPart)
 	shopLight.Color = Color3.fromRGB(255, 220, 150)
-	shopLight.Range = 18
-	shopLight.Brightness = 0.6
+	shopLight.Range = 28
+	shopLight.Brightness = 0.9
 
 	----------------------------------------------------------------------------
 	-- 🛒 РАССТАНОВКА СТЕЛЛАЖЕЙ И ПОЛОК С ЕДОЙ (ПО 4 ШТ КАЖДАЯ)
 	----------------------------------------------------------------------------
 
-
 	-- Стеллаж 1: Вдоль левой стены (3 полки)
-	local shelfLeftBackdrop = Instance.new("Part", FoodShopFolder)
-	shelfLeftBackdrop.Name = "ShelfRack_Left"
-	shelfLeftBackdrop.Size = Vector3.new(1.2, 7.5, 16)
-	shelfLeftBackdrop.Position = FOOD_SHOP_POSITION + Vector3.new(-13.8, 4.25, -2)
-	shelfLeftBackdrop.Anchored = true
-	shelfLeftBackdrop.Material = Enum.Material.WoodPlanks
-	shelfLeftBackdrop.BrickColor = BrickColor.new("Dark orange")
-
-	createRetailShelfSection("Bar", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, -6.5), 0)    -- 4x Батончики
-	createRetailShelfSection("Bread", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, 0.0), 0)   -- 4x Хлеб
-	createRetailShelfSection("Chips", FOOD_SHOP_POSITION + Vector3.new(-12.4, 2.0, 6.5), 0)   -- 4x Чипсы
+	createRetailShelfSection("Bar", FOOD_SHOP_POSITION + Vector3.new(-8.5, 1.4, -4.5), 0)    -- 4x Батончики
+	createRetailShelfSection("Bread", FOOD_SHOP_POSITION + Vector3.new(-8.5, 1.4, 0.0), 0)   -- 4x Хлеб
+	createRetailShelfSection("Chips", FOOD_SHOP_POSITION + Vector3.new(-8.5, 1.4, 4.5), 0)   -- 4x Чипсы
 
 	-- Стеллаж 2: Вдоль правой стены (3 полки)
-	local shelfRightBackdrop = Instance.new("Part", FoodShopFolder)
-	shelfRightBackdrop.Name = "ShelfRack_Right"
-	shelfRightBackdrop.Size = Vector3.new(1.2, 7.5, 14)
-	shelfRightBackdrop.Position = FOOD_SHOP_POSITION + Vector3.new(13.8, 4.25, 2)
-	shelfRightBackdrop.Anchored = true
-	shelfRightBackdrop.Material = Enum.Material.WoodPlanks
-	shelfRightBackdrop.BrickColor = BrickColor.new("Dark orange")
+	createRetailShelfSection("Soup", FOOD_SHOP_POSITION + Vector3.new(8.5, 1.4, -4.5), 0)    -- 4x Суп
+	createRetailShelfSection("Pepper", FOOD_SHOP_POSITION + Vector3.new(8.5, 1.4, 0.0), 0)   -- 4x Перец
+	createRetailShelfSection("Coffee", FOOD_SHOP_POSITION + Vector3.new(8.5, 1.4, 4.5), 0)   -- 4x Кофе
 
-	createRetailShelfSection("Soup", FOOD_SHOP_POSITION + Vector3.new(12.4, 2.0, -1.5), 0)    -- 4x Суп
-	createRetailShelfSection("Pepper", FOOD_SHOP_POSITION + Vector3.new(12.4, 2.0, 4.0), 0)   -- 4x Перец
-	createRetailShelfSection("Coffee", FOOD_SHOP_POSITION + Vector3.new(12.4, 4.8, 1.2), 0)   -- 4x Кофе
-
-	-- Стеллаж 3: Центральный островной прилавок
+	-- Стеллаж 3: Центральный островной прилавок (Стейки)
 	local centerCounter = Instance.new("Part", FoodShopFolder)
 	centerCounter.Name = "CenterDisplay_Steak"
-	centerCounter.Size = Vector3.new(8, 2.2, 4)
-	centerCounter.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.1, -2)
+	centerCounter.Size = Vector3.new(7.0, 1.2, 3.2)
+	centerCounter.Position = FOOD_SHOP_POSITION + Vector3.new(0, 1.2, 0.0)
 	centerCounter.Anchored = true
 	centerCounter.Material = Enum.Material.WoodPlanks
-	centerCounter.BrickColor = BrickColor.new("Dark orange")
+	centerCounter.Color = Color3.fromHex("#5C2E0B")
 
-	createRetailShelfSection("Steak", FOOD_SHOP_POSITION + Vector3.new(0, 2.3, -2), 0)        -- 4x Стейк
+	createRetailShelfSection("Steak", FOOD_SHOP_POSITION + Vector3.new(0, 1.8, 0.0), 0)      -- 4x Стейк
 
-	print("🏪 [FoodShopService] Бесплатный продуктовый магазин с полками готов!")
+	print("🏪 [FoodShopService] 3D Продуктовая лавка с торговым прилавком и полками успешно создана!")
 end
-
 
 buildFoodShopBuilding()

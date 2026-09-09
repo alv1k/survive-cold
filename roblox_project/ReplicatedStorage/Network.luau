@@ -31,7 +31,11 @@ local REMOTE_EVENTS = {
 	"EatFood",
 	"PlayCustomSound",
 	"ToggleFoxRadar",
-	"PromptRebirth"
+	"PromptRebirth",
+	"OpenPetMenu",
+	"TogglePetMode",
+	"FeedPet",
+	"UpdatePetData"
 }
 
 local REMOTE_FUNCTIONS = {

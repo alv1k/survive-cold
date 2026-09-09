@@ -14,6 +14,7 @@ local Terrain = workspace.Terrain
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SurfaceUtil = require(ReplicatedStorage:WaitForChild("SurfaceUtil"))
+local BuildingGenerator = require(ReplicatedStorage:WaitForChild("GeneratedModels"):WaitForChild("BuildingGenerator"))
 
 local WorldFolder = workspace:FindFirstChild("WorldStructures") or Instance.new("Folder", workspace)
 WorldFolder.Name = "WorldStructures"
@@ -133,25 +134,14 @@ end
 
 -- 4. ПОСТРОЙКА ЖИЛОГО ДОМА ИГРОКА (PLAYER HOUSE)
 local function buildPlayerHouse()
-	local houseModel = Instance.new("Model")
+	local HOUSE_POS = Vector3.new(0, 2.0, 0)
+	local houseModel = BuildingGenerator.createBuilding("PlayerHouse", CFrame.new(HOUSE_POS), WorldFolder)
 	houseModel.Name = "PlayerHouse"
-
-	local HOUSE_POS = Vector3.new(0, 0, 0)
-
-	local floor = Instance.new("Part")
-	floor.Name = "HouseFloor"
-	floor.Size = Vector3.new(34, 1.2, 28)
-	floor.Position = HOUSE_POS + Vector3.new(0, 0.6, 0)
-	floor.Anchored = true
-	floor.CanCollide = true
-	floor.Material = Enum.Material.WoodPlanks
-	floor.BrickColor = BrickColor.new("Brown")
-	floor.Parent = houseModel
 
 	local houseSpawn = Instance.new("SpawnLocation")
 	houseSpawn.Name = "HouseSpawnLocation"
-	houseSpawn.Size = Vector3.new(12, 0.5, 12)
-	houseSpawn.Position = HOUSE_POS + Vector3.new(0, 1.25, 0)
+	houseSpawn.Size = Vector3.new(8, 0.5, 8)
+	houseSpawn.Position = HOUSE_POS + Vector3.new(0, 1.0, 0)
 	houseSpawn.Anchored = true
 	houseSpawn.CanCollide = true
 	houseSpawn.Transparency = 1
@@ -160,58 +150,29 @@ local function buildPlayerHouse()
 	houseSpawn.Enabled = true
 	houseSpawn.Parent = houseModel
 
-	local wallConfigs = {
-		{ Size = Vector3.new(34, 12, 1.5), Pos = Vector3.new(0, 6.6, -13.5) },
-		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(-16.5, 6.6, 0) },
-		{ Size = Vector3.new(1.5, 12, 28), Pos = Vector3.new(16.5, 6.6, 0) },
-		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(-11, 6.6, 13.5) },
-		{ Size = Vector3.new(12, 12, 1.5), Pos = Vector3.new(11, 6.6, 13.5) }
-	}
-
-	for _, wc in ipairs(wallConfigs) do
-		local wall = Instance.new("Part")
-		wall.Size = wc.Size
-		wall.Position = HOUSE_POS + wc.Pos
-		wall.Anchored = true
-		wall.Material = Enum.Material.WoodPlanks
-		wall.BrickColor = BrickColor.new("Pine Orange")
-		wall.Parent = houseModel
-	end
-
-	local roof = Instance.new("Part")
-	roof.Name = "HouseRoof"
-	roof.Size = Vector3.new(38, 2, 32)
-	roof.Position = HOUSE_POS + Vector3.new(0, 13, 0)
-	roof.Anchored = true
-	roof.CanCollide = true
-	roof.CanQuery = false -- Исключает попадание луча спавнера Roblox на крышу
-	roof.Material = Enum.Material.WoodPlanks
-	roof.BrickColor = BrickColor.new("Dark stone grey")
-	roof.Parent = houseModel
-
+	-- Печь-очаг под трубой (X = -7.5, Z = -5.0)
 	local fireplace = Instance.new("Part")
 	fireplace.Name = "HouseFireplace"
-	fireplace.Size = Vector3.new(6, 4, 6)
-	-- Точное приземление на пол (высота пола 1.2, половина высоты камина 2.0 -> Y = 3.2)
-	fireplace.Position = HOUSE_POS + Vector3.new(0, 3.2, -9)
+	fireplace.Size = Vector3.new(4.8, 4.0, 4.8)
+	fireplace.Position = HOUSE_POS + Vector3.new(-7.5, 2.6, -5.0)
 	fireplace.Anchored = true
 	fireplace.Material = Enum.Material.Cobblestone
-	fireplace.BrickColor = BrickColor.new("Dark stone grey")
+	fireplace.Color = Color3.fromHex("#475569")
 	fireplace:SetAttribute("FuelSeconds", 0) -- Изначально потушен
 	fireplace:SetAttribute("MaxFuel", 600)
-	fireplace:SetAttribute("HeatRadius", 40)
+	fireplace:SetAttribute("HeatRadius", 45)
 	fireplace:SetAttribute("HeatPower", 15)
 	fireplace.Parent = houseModel
 
 	local fire = Instance.new("Fire", fireplace)
-	fire.Size = 8
+	fire.Size = 7
 	fire.Heat = 15
 	fire.Enabled = false
 
 	local fireLight = Instance.new("PointLight", fireplace)
 	fireLight.Color = Color3.fromRGB(255, 140, 40)
-	fireLight.Brightness = 0.6
-	fireLight.Range = 22
+	fireLight.Brightness = 0.9
+	fireLight.Range = 26
 	fireLight.Enabled = false
 
 	local prompt = Instance.new("ProximityPrompt", fireplace)
@@ -219,38 +180,36 @@ local function buildPlayerHouse()
 	prompt.ActionText = "Зажечь костер (1 🌿 Ветка = +60с)"
 	prompt.ObjectText = "🔥 Потухший камин"
 	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 14
+	prompt.MaxActivationDistance = 16
 	prompt.RequiresLineOfSight = false
 
 	local heatFolder = workspace:FindFirstChild("HeatSources") or Instance.new("Folder", workspace)
 	heatFolder.Name = "HeatSources"
 	fireplace.Parent = heatFolder
 
-	-- 4. ВЕРСТАК ВЫЖИВАЛЬЩИКА (С красивой подсветкой, верстачной столешницей и надежным ProximityPrompt)
+	-- Верстак выживальщика у боковой стены
 	local workbench = Instance.new("Part")
 	workbench.Name = "Workbench"
-	workbench.Size = Vector3.new(6.0, 2.8, 3.8)
-	workbench.Position = HOUSE_POS + Vector3.new(-12, 2.6, 8)
+	workbench.Size = Vector3.new(5.5, 2.6, 3.4)
+	workbench.Position = HOUSE_POS + Vector3.new(-8.2, 1.9, 3.5)
 	workbench.Anchored = true
 	workbench.Material = Enum.Material.WoodPlanks
-	workbench.Color = Color3.fromRGB(120, 75, 40)
+	workbench.Color = Color3.fromHex("#8C451A")
 	workbench.Parent = houseModel
 
-	-- Столешница с тисками и инструментами
 	local tabletop = Instance.new("Part")
 	tabletop.Name = "TableTop"
-	tabletop.Size = Vector3.new(6.4, 0.4, 4.2)
-	tabletop.Position = workbench.Position + Vector3.new(0, 1.5, 0)
+	tabletop.Size = Vector3.new(6.0, 0.4, 3.8)
+	tabletop.Position = workbench.Position + Vector3.new(0, 1.4, 0)
 	tabletop.Anchored = true
 	tabletop.Material = Enum.Material.Wood
-	tabletop.Color = Color3.fromRGB(160, 105, 55)
+	tabletop.Color = Color3.fromHex("#C68B59")
 	tabletop.Parent = houseModel
 
-	-- Мягкий свет от верстачной лампы
 	local wbLight = Instance.new("PointLight")
 	wbLight.Color = Color3.fromRGB(254, 240, 138)
-	wbLight.Brightness = 0.6
-	wbLight.Range = 12
+	wbLight.Brightness = 0.7
+	wbLight.Range = 16
 	wbLight.Parent = tabletop
 
 	local wbPrompt = Instance.new("ProximityPrompt")
@@ -258,34 +217,41 @@ local function buildPlayerHouse()
 	wbPrompt.ActionText = "Открыть Верстак [E]"
 	wbPrompt.ObjectText = "🛠️ Верстак выживальщика"
 	wbPrompt.HoldDuration = 0
-	wbPrompt.MaxActivationDistance = 16
+	wbPrompt.MaxActivationDistance = 18
 	wbPrompt.RequiresLineOfSight = false
 	wbPrompt.KeyboardKeyCode = Enum.KeyCode.E
 	wbPrompt:SetAttribute("IsWorkbench", true)
 	wbPrompt.Parent = workbench
 
+	-- Просторная лежанка питомцев (в правом углу)
 	local petBed = Instance.new("Part")
 	petBed.Name = "PetBed"
-	petBed.Position = HOUSE_POS + Vector3.new(11, 1.6, 8)
+	petBed.Size = Vector3.new(6.8, 0.45, 6.0)
+	petBed.Position = HOUSE_POS + Vector3.new(6.5, 0.85, 4.0)
 	petBed.Anchored = true
 	petBed.Material = Enum.Material.Fabric
-	petBed.BrickColor = BrickColor.new("Lilac")
+	petBed.BrickColor = BrickColor.new("Pastel Blue")
+	petBed.TopSurface = Enum.SurfaceType.Smooth
+	petBed.BottomSurface = Enum.SurfaceType.Smooth
 	petBed.Parent = houseModel
 
-	-- 3D Охотничье копьё у верстака
-	local genSpear = require(ReplicatedStorage.GeneratedModels.Spear)
-	if genSpear and type(genSpear.create) == "function" then
-		local spearModel = genSpear.create(houseModel, CFrame.new(HOUSE_POS + Vector3.new(-14.2, 0.6, 6)) * CFrame.Angles(0, 0, math.rad(-12)))
-		spearModel.Name = "HouseDecorSpear"
-		for _, desc in ipairs(spearModel:GetDescendants()) do
-			if desc:IsA("BasePart") then
-				desc.Anchored = true
-				desc.CanCollide = false
-			end
-		end
-	end
+	local bedRim = Instance.new("Part")
+	bedRim.Name = "PetBedRim"
+	bedRim.Size = Vector3.new(7.4, 0.55, 6.6)
+	bedRim.Position = HOUSE_POS + Vector3.new(6.5, 0.8, 4.0)
+	bedRim.Anchored = true
+	bedRim.Material = Enum.Material.Fabric
+	bedRim.BrickColor = BrickColor.new("Lilac")
+	bedRim.CanCollide = false
+	bedRim.Parent = houseModel
 
-	houseModel.Parent = WorldFolder
+	-- Уютный внутренний свет
+	local ceilingLight = Instance.new("PointLight")
+	ceilingLight.Name = "HouseInteriorLight"
+	ceilingLight.Color = Color3.fromRGB(255, 235, 205)
+	ceilingLight.Brightness = 0.6
+	ceilingLight.Range = 28
+	ceilingLight.Parent = houseSpawn
 end
 
 -- Зоны исключения для спавна деревьев (Дом игрока, Продуктовый магазин и Магазин одежды в радиусе 200, Заимки в радиусе 35)
@@ -360,43 +326,24 @@ local function buildHunterCabins()
 	}
 
 	for i, c in ipairs(CABIN_POSITIONS) do
-		local cabin = Instance.new("Model")
-		cabin.Name = c.Name
-
 		local groundY = SurfaceUtil.getGroundHeight(c.Pos.X, c.Pos.Z, 50)
 		local basePos = Vector3.new(c.Pos.X, groundY, c.Pos.Z)
 
-		local base = Instance.new("Part")
-		base.Name = "Floor"
-		base.Size = Vector3.new(20, 1.2, 20)
-		base.Position = basePos + Vector3.new(0, 0.6, 0)
-		base.Anchored = true
-		base.Material = Enum.Material.WoodPlanks
-		base.BrickColor = BrickColor.new("Reddish brown")
-		base.Parent = cabin
+		local cabin = BuildingGenerator.createBuilding("HunterCabin", CFrame.new(basePos), cabinsFolder)
+		cabin.Name = c.Name
 
-		-- Крыша
-		local roof = Instance.new("Part")
-		roof.Size = Vector3.new(22, 1.2, 22)
-		roof.Position = basePos + Vector3.new(0, 10, 0)
-		roof.Anchored = true
-		roof.Material = Enum.Material.Wood
-		roof.BrickColor = BrickColor.new("Dark stone grey")
-		roof.Parent = cabin
-
-		-- Печь-очаг
+		-- Печь-очаг заимки под трубой (X = -7.5, Z = -5.0)
 		local stove = Instance.new("Part")
 		stove.Name = "CabinStove_" .. i
-		stove.Size = Vector3.new(4, 4, 4)
-		-- Точное приземление на пол заимки (пол 1.2, половина печи 2.0 -> Y = 3.2)
-		stove.Position = basePos + Vector3.new(-5, 3.2, -5)
+		stove.Size = Vector3.new(4.8, 4.0, 4.8)
+		stove.Position = basePos + Vector3.new(-7.5, 2.6, -5.0)
 		stove.Anchored = true
-		stove.Material = Enum.Material.Brick
-		stove.BrickColor = BrickColor.new("Dark stone grey")
+		stove.Material = Enum.Material.Cobblestone
+		stove.Color = Color3.fromHex("#475569")
 		stove:SetAttribute("FuelSeconds", 0) -- Изначально потушена
 		stove:SetAttribute("MaxFuel", 600)
-		stove:SetAttribute("HeatRadius", 35)
-		stove:SetAttribute("HeatPower", 12)
+		stove:SetAttribute("HeatRadius", 40)
+		stove:SetAttribute("HeatPower", 14)
 		stove.Parent = cabin
 
 		local stoveFire = Instance.new("Fire", stove)
@@ -422,21 +369,11 @@ local function buildHunterCabins()
 		heatFolder.Name = "HeatSources"
 		stove.Parent = heatFolder
 
-		-- Охотничье копьё у стены заимки
-		local genSpear = require(ReplicatedStorage.GeneratedModels.Spear)
-		if genSpear and type(genSpear.create) == "function" then
-			local spearModel = genSpear.create(cabin, CFrame.new(basePos + Vector3.new(7.5, 0.6, 5)) * CFrame.Angles(0, 0, math.rad(-14)))
-			spearModel.Name = "CabinSpear_" .. i
-			for _, desc in ipairs(spearModel:GetDescendants()) do
-				if desc:IsA("BasePart") then
-					desc.Anchored = true
-					desc.CanCollide = false
-				end
-			end
-		end
-
-		cabin.PrimaryPart = base
-		cabin.Parent = cabinsFolder
+		-- Мягкий свет внутри заимки
+		local cabinLight = Instance.new("PointLight", stove)
+		cabinLight.Color = Color3.fromRGB(255, 230, 180)
+		cabinLight.Brightness = 0.4
+		cabinLight.Range = 20
 	end
 end
 

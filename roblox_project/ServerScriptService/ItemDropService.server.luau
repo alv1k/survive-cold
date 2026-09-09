@@ -62,13 +62,25 @@ local function build3DDropObject(itemName, pos)
 		return dropModel
 	end
 
+	local container = Instance.new("Model")
+	container.Name = "Dropped_" .. itemName
+
 	local root = Instance.new("Part")
-	root.Name = "Dropped_" .. itemName
-	local surfPos, _, _ = SurfaceUtil.getSurfacePosition(pos)
-	root.Position = surfPos + Vector3.new(0, 0.4, 0)
+	root.Name = "Handle"
+	local groundY = SurfaceUtil.getGroundHeight(pos.X, pos.Z)
+	local lower = string.lower(itemName)
+	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
+	local restingHeight = isElongated and 0.12 or 0.35
+	local exactSurfPos = Vector3.new(pos.X, groundY + restingHeight, pos.Z)
+	local randYaw = CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
+	local flatTilt = isElongated and CFrame.Angles(math.rad(90), 0, 0) or CFrame.identity
+
+	root.CFrame = CFrame.new(exactSurfPos) * randYaw * flatTilt
 	root.Anchored = true
 	root.CanCollide = true
 	root.Massless = false
+	root.Parent = container
+	container.PrimaryPart = root
 
 	local function addSubPart(name, size, cfOffset, material, color)
 		local sub = Instance.new("Part")
@@ -80,7 +92,7 @@ local function build3DDropObject(itemName, pos)
 		sub.CanCollide = false
 		sub.Massless = true
 		sub.Anchored = true
-		sub.Parent = root
+		sub.Parent = container
 
 		local weld = Instance.new("WeldConstraint")
 		weld.Part0 = root
@@ -213,13 +225,13 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 
 	local lower = string.lower(itemName)
 	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
-	local restingHeight = isElongated and 0.22 or 0.42
+	local restingHeight = isElongated and 0.12 or 0.35
 
-	-- Находим точную точку посадки на верхней границе поверхности
-	local surfacePos, _, _ = SurfaceUtil.getSurfacePosition(spawnPos)
-	local safeRestingPos = surfacePos + Vector3.new(0, restingHeight, 0)
+	-- Находим точную высоту посадки на верхней границе поверхности (снег Y=2.0, дом Y=1.2)
+	local groundY = SurfaceUtil.getGroundHeight(spawnPos.X, spawnPos.Z)
+	local exactLandPos = Vector3.new(spawnPos.X, groundY + restingHeight, spawnPos.Z)
 
-	local dropObj = build3DDropObject(itemName, spawnPos)
+	local dropObj = build3DDropObject(itemName, exactLandPos)
 	if not dropObj then return end
 
 	dropObj:SetAttribute("ItemName", itemName)
@@ -232,9 +244,10 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 		return
 	end
 
-	-- Точный CFrame посадки на снег
+	-- Точный CFrame посадки на землю/снег
 	local landCF = dropObj:IsA("Model") and dropObj:GetPivot() or dropObj.CFrame
-	local landPos = landCF.Position
+	local landRot = landCF.Rotation
+	local finalLandCF = CFrame.new(exactLandPos) * landRot
 
 	-- Гарантируем закрепление всех частей модели
 	for _, p in ipairs(dropObj:GetDescendants()) do
@@ -258,7 +271,7 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 	if isImpulse and player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 		local hrp = player.Character.HumanoidRootPart
 		local startPos = hrp.Position + hrp.CFrame.LookVector * 1.5 + Vector3.new(0, 0.4, 0)
-		local startCF = CFrame.new(startPos) * landCF.Rotation
+		local startCF = CFrame.new(startPos) * landRot
 
 		if dropObj:IsA("Model") then
 			dropObj:PivotTo(startCF)
@@ -268,15 +281,15 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 
 		dropObj.Parent = DroppedFolder
 
-		-- Плавная дуговая CFrame-анимация броска в зафиксированном состоянии (без провала под землю)
+		-- Плавная дуговая CFrame-анимация броска в зафиксированном состоянии (без провала под землю и без зависания в воздухе)
 		task.spawn(function()
 			local steps = 8
 			for s = 1, steps do
 				task.wait(0.03)
 				if not dropObj or not dropObj.Parent then break end
 				local t = s / steps
-				local currentPos = startPos:Lerp(landPos, t) + Vector3.new(0, math.sin(t * math.pi) * 1.0, 0)
-				local currentCF = CFrame.new(currentPos) * landCF.Rotation
+				local currentPos = startPos:Lerp(exactLandPos, t) + Vector3.new(0, math.sin(t * math.pi) * 0.8, 0)
+				local currentCF = CFrame.new(currentPos) * landRot
 				if dropObj:IsA("Model") then
 					dropObj:PivotTo(currentCF)
 				else
@@ -284,12 +297,20 @@ local function spawnSingleDrop(player, itemName, spawnPos, isImpulse)
 				end
 			end
 			if dropObj and dropObj.Parent then
-				SurfaceUtil.placeOnSurface(dropObj, spawnPos, 0.05)
+				if dropObj:IsA("Model") then
+					dropObj:PivotTo(finalLandCF)
+				else
+					dropObj.CFrame = finalLandCF
+				end
 			end
 		end)
 	else
 		-- Мгновенная фиксация на поверхности (из сундуков/контейнеров)
-		SurfaceUtil.placeOnSurface(dropObj, spawnPos, 0.05)
+		if dropObj:IsA("Model") then
+			dropObj:PivotTo(finalLandCF)
+		else
+			dropObj.CFrame = finalLandCF
+		end
 		dropObj.Parent = DroppedFolder
 	end
 

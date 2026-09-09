@@ -233,6 +233,176 @@ local function animateYeti(model, hrp, humanoid, dt)
 	end
 end
 
+local function animateFox(model, hrp, humanoid, dt)
+	local state = getAnimState(model)
+	cacheMotors(model, state)
+
+	local speed = hrp.AssemblyLinearVelocity.Magnitude
+	local isMoving = (speed > 0.5) or (humanoid and humanoid.MoveDirection.Magnitude > 0.1)
+	local isSleeping = (model:GetAttribute("IsSleeping") == true) or (model:GetAttribute("Mode") == "stay_home")
+
+	local targetMode = isSleeping and "Sleep" or (isMoving and "Walk" or "Idle")
+	local timeNow = os.clock()
+
+	if isMoving then
+		local stepRate = math.clamp(speed * 1.05, 4.5, 15.0)
+		state.walkPhase = (state.walkPhase + dt * stepRate) % (math.pi * 2)
+	end
+
+	local walkT = state.walkPhase
+	local breathe = math.sin(timeNow * 2.2) * 0.025
+	local sleepBreathe = math.sin(timeNow * 1.4) * 0.035
+
+	for _, motor in ipairs(state.motors) do
+		if not motor or not motor.Parent then continue end
+		local mName = motor.Name
+
+		if targetMode == "Walk" then
+			-- 🦊 Грациозная быстрая рысь лисички
+			local legStride = 0.58
+			if mName == "Joint_FL" then
+				local rotX = math.sin(walkT) * legStride
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "Joint_FR" then
+				local rotX = -math.sin(walkT) * legStride
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "Joint_BL" then
+				local rotX = -math.sin(walkT) * (legStride * 0.9)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "Joint_BR" then
+				local rotX = math.sin(walkT) * (legStride * 0.9)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
+			elseif mName == "TailJoint" then
+				-- Большой лисий хвост плавно и красиво раскачивается
+				local tailWag = math.sin(walkT * 0.9) * 0.55
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(18), tailWag, 0), 0.3)
+			elseif mName == "NeckJoint" then
+				local bobX = math.abs(math.sin(walkT)) * 0.12 - 0.04
+				local tiltZ = math.sin(walkT * 0.5) * 0.10
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(bobX, 0, tiltZ), 0.3)
+			elseif mName == "RootJoint" then
+				local bounceY = math.abs(math.sin(walkT)) * 0.08
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, bounceY, 0), 0.3)
+			end
+
+		elseif targetMode == "Sleep" then
+			-- 🦊 Лисичка сворачивается в уютный клубочек и укрывается пышным хвостом
+			if mName == "Joint_FL" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(70), math.rad(-18), math.rad(12)), 0.2)
+			elseif mName == "Joint_FR" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(65), math.rad(20), math.rad(-14)), 0.2)
+			elseif mName == "Joint_BL" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(80), math.rad(-25), math.rad(18)), 0.2)
+			elseif mName == "Joint_BR" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(75), math.rad(22), math.rad(-16)), 0.2)
+			elseif mName == "TailJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-15), math.rad(60), math.rad(-30)), 0.2)
+			elseif mName == "NeckJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-22 + sleepBreathe * 15), math.rad(-15), math.rad(-25)), 0.2)
+			elseif mName == "RootJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, -0.16 + sleepBreathe * 0.5, 0) * CFrame.Angles(math.rad(-6), math.rad(-10), math.rad(14)), 0.2)
+			end
+
+		else
+			-- 🦊 Покой: любопытные наклоны головы и взмахи хвостом
+			if mName == "NeckJoint" then
+				local headTilt = math.sin(timeNow * 1.6) * 0.14
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.6, 0, headTilt), 0.25)
+			elseif mName == "TailJoint" then
+				local wag = math.sin(timeNow * 2.8) * 0.38
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(16), wag, 0), 0.25)
+			else
+				motor.Transform = motor.Transform:Lerp(CFrame.identity, 0.25)
+			end
+		end
+	end
+end
+
+local function animateBearCub(model, hrp, humanoid, dt)
+	local state = getAnimState(model)
+	cacheMotors(model, state)
+
+	local speed = hrp.AssemblyLinearVelocity.Magnitude
+	local isMoving = (speed > 0.5) or (humanoid and humanoid.MoveDirection.Magnitude > 0.1)
+	local isSleeping = (model:GetAttribute("IsSleeping") == true) or (model:GetAttribute("Mode") == "stay_home")
+
+	local targetMode = isSleeping and "Sleep" or (isMoving and "Walk" or "Idle")
+	local timeNow = os.clock()
+
+	if isMoving then
+		local stepRate = math.clamp(speed * 0.85, 3.5, 11.0)
+		state.walkPhase = (state.walkPhase + dt * stepRate) % (math.pi * 2)
+	end
+
+	local walkT = state.walkPhase
+	local breathe = math.sin(timeNow * 1.8) * 0.02
+	local sleepBreathe = math.sin(timeNow * 1.2) * 0.035
+
+	for _, motor in ipairs(state.motors) do
+		if not motor or not motor.Parent then continue end
+		local mName = motor.Name
+
+		if targetMode == "Walk" then
+			-- 🐻 Походка медвежонка вперевалочку (милый waddle)
+			local legStride = 0.48
+			if mName == "Joint_FL" then
+				local rotX = math.sin(walkT) * legStride
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(-4)), 0.3)
+			elseif mName == "Joint_FR" then
+				local rotX = -math.sin(walkT) * legStride
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(4)), 0.3)
+			elseif mName == "Joint_BL" then
+				local rotX = -math.sin(walkT) * (legStride * 0.85)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(-4)), 0.3)
+			elseif mName == "Joint_BR" then
+				local rotX = math.sin(walkT) * (legStride * 0.85)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, math.rad(4)), 0.3)
+			elseif mName == "TailJoint" then
+				local tailWag = math.sin(walkT * 1.5) * 0.25
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(0, tailWag, 0), 0.3)
+			elseif mName == "NeckJoint" then
+				local bobX = math.abs(math.sin(walkT)) * 0.08 - 0.03
+				local tiltZ = -math.sin(walkT) * 0.08
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(bobX, 0, tiltZ), 0.25)
+			elseif mName == "RootJoint" then
+				local rollZ = math.sin(walkT) * 0.06 -- покачивание боками при шаге
+				local bounceY = math.abs(math.sin(walkT)) * 0.06
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, bounceY, 0) * CFrame.Angles(0, 0, rollZ), 0.25)
+			end
+
+		elseif targetMode == "Sleep" then
+			-- 🐻 Медвежонок лежит клубочком, поджав толстенькие лапки
+			if mName == "Joint_FL" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(60), math.rad(-12), math.rad(8)), 0.2)
+			elseif mName == "Joint_FR" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(55), math.rad(15), math.rad(-10)), 0.2)
+			elseif mName == "Joint_BL" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(68), math.rad(-16), math.rad(12)), 0.2)
+			elseif mName == "Joint_BR" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(64), math.rad(16), math.rad(-12)), 0.2)
+			elseif mName == "TailJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-10), 0, 0), 0.2)
+			elseif mName == "NeckJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-14 + sleepBreathe * 12), 0, math.rad(-10)), 0.2)
+			elseif mName == "RootJoint" then
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, -0.16 + sleepBreathe * 0.5, 0) * CFrame.Angles(math.rad(-3), 0, math.rad(6)), 0.2)
+			end
+
+		else
+			-- 🐻 Покой: спокойное глубокое дыхание и мягкие повороты головы
+			if mName == "NeckJoint" then
+				local headTurn = math.sin(timeNow * 1.0) * 0.08
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.5, headTurn, 0), 0.2)
+			elseif mName == "TailJoint" then
+				local wag = math.sin(timeNow * 1.5) * 0.15
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(0, wag, 0), 0.2)
+			else
+				motor.Transform = motor.Transform:Lerp(CFrame.identity, 0.2)
+			end
+		end
+	end
+end
+
 -- Главный цикл обновления кадров (60 FPS)
 RunService.RenderStepped:Connect(function(dt)
 	-- 1. Анимация монстров в MobsFolder
@@ -258,13 +428,17 @@ RunService.RenderStepped:Connect(function(dt)
 	if PetsFolder then
 		for _, pet in ipairs(PetsFolder:GetChildren()) do
 			if pet:IsA("Model") then
-				local hrp = pet.PrimaryPart or pet:FindFirstChild("Body") or pet:FindFirstChild("HumanoidRootPart")
+				local hrp = pet.PrimaryPart or pet:FindFirstChild("HumanoidRootPart") or pet:FindFirstChild("Body")
 				local humanoid = pet:FindFirstChildOfClass("Humanoid")
 				local petId = pet:GetAttribute("PetId")
 
 				if hrp and humanoid and humanoid.Health > 0 then
 					if petId == "Wolf" or pet.Name:find("Волк") or pet.Name:find("Wolf") then
 						animateWolf(pet, hrp, humanoid, dt)
+					elseif petId == "Fox" or pet.Name:find("Лис") or pet.Name:find("Fox") then
+						animateFox(pet, hrp, humanoid, dt)
+					elseif petId == "Bear" or petId == "BearCub" or pet.Name:find("Медвед") or pet.Name:find("Bear") then
+						animateBearCub(pet, hrp, humanoid, dt)
 					end
 				end
 			end

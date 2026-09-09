@@ -10,7 +10,7 @@ local GameConfig = {}
 GameConfig.Locations = {
 	PlayerHouse = {
 		Name = "Дом Выживших",
-		Position = Vector3.new(0, 3.5, 0),
+		Position = Vector3.new(0, 2.0, 0),
 		WaypointHeight = 14,
 		Color = Color3.fromRGB(56, 189, 248),
 		BgColor = Color3.fromRGB(15, 23, 42),
@@ -19,24 +19,24 @@ GameConfig.Locations = {
 	},
 	FoodShop = {
 		Name = "Продуктовая Лавка",
-		Position = Vector3.new(-50, 0.6, 0),
-		WaypointHeight = 12,
+		Position = Vector3.new(-50, 2.0, 0),
+		WaypointHeight = 14,
 		Color = Color3.fromRGB(250, 204, 21),
 		BgColor = Color3.fromRGB(15, 23, 42),
 		IconKey = "Soup",
 		MaxDist = 3000,
 		-- Границы зоны укрытия от холода (размеры магазина)
 		Bounds = {
-			SizeX = 32,
-			SizeZ = 26,
-			MinY = 0,
-			MaxY = 14
+			SizeX = 22,
+			SizeZ = 20,
+			MinY = 1.0,
+			MaxY = 18.0
 		}
 	},
 	ClothingShop = {
 		Name = "Мастерская Одежды",
-		Position = Vector3.new(70, 2.5, 0),
-		WaypointHeight = 12,
+		Position = Vector3.new(70, 2.0, 0),
+		WaypointHeight = 14,
 		Color = Color3.fromRGB(168, 85, 247),
 		BgColor = Color3.fromRGB(15, 23, 42),
 		IconKey = "Clothing_4",

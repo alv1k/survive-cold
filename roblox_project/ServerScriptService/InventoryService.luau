@@ -245,19 +245,23 @@ function InventoryService.dropItem(player: Player, itemKey: string, count: numbe
 	local droppedFolder = workspace:FindFirstChild("DroppedItems") or Instance.new("Folder", workspace)
 	droppedFolder.Name = "DroppedItems"
 
-	local dropModel = ModelHelper.assembleDropModel(itemKey, spawnPos)
+	local groundY = SurfaceUtil.getGroundHeight(spawnPos.X, spawnPos.Z)
+	local lower = string.lower(itemKey)
+	local isElongated = (lower == "spear" or lower == "torch" or string.find(lower, "spear") or string.find(lower, "torch"))
+	local exactLandPos = Vector3.new(spawnPos.X, groundY + (isElongated and 0.12 or 0.35), spawnPos.Z)
+
+	local dropModel = ModelHelper.assembleDropModel(itemKey, exactLandPos)
 	if not dropModel then
 		local p = Instance.new("Part")
 		p.Name = "Dropped_" .. itemKey
 		p.Size = Vector3.new(1.2, 1.2, 1.2)
 		p.Anchored = true
 		p.CanCollide = true
+		p.CFrame = CFrame.new(exactLandPos)
 		p.Parent = droppedFolder
 		dropModel = p :: any
-		SurfaceUtil.placeOnSurface(dropModel, spawnPos, 0.15)
 	else
 		dropModel.Parent = droppedFolder
-		SurfaceUtil.placeOnSurface(dropModel, spawnPos, 0.05)
 	end
 
 	-- Гарантируем закрепление всех частей модели на земле

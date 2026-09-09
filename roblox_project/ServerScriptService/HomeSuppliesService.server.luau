@@ -118,7 +118,7 @@ local function createHomeResourceNode(resType, pos, index)
 			InventoryService.dropItem(player, resType, count, exactPos + Vector3.new(0, 1.0, 0))
 		else
 			if resType == "Torch" then
-				ShowNotificationRemote:FireClient(player, "🔥 Вы взяли Факел! Подойдите к ледяной глыбе у дома и отогрейте Волчонка!")
+				ShowNotificationRemote:FireClient(player, "🔥 Вы взяли Факел! Подойдите к ледяным глыбам у дома и отогрейте питомцев (Волчонка, Лисичку, Медвежонка)!")
 			end
 		end
 
@@ -196,10 +196,9 @@ for i, pos in ipairs(stonePositions) do
 	createHomeResourceNode("Stone", pos, i)
 end
 
--- 2 ОХОТНИЧЬИХ КОПЬЯ (На крыльце у входа и верстака)
+-- 🗡️ 1 ЕДИНСТВЕННОЕ ОХОТНИЧЬЕ КОПЬЕ (На крыльце у верстака)
 local spearPositions = {
 	Vector3.new(11.5, 0, 13.8), -- Около верстака на крыльце
-	Vector3.new(-11.5, 0, 13.8), -- У левой стойки крыльца
 }
 for i, pos in ipairs(spearPositions) do
 	createHomeResourceNode("Spear", pos, i)
@@ -213,5 +212,5 @@ for i, pos in ipairs(torchPositions) do
 	createHomeResourceNode("Torch", pos, i)
 end
 
-print(string.format("🏡 [HomeSuppliesService] %d камней, копья и зажженный факел у волчонка успешно расставлены вокруг дома!", #stonePositions))
+print(string.format("🏡 [HomeSuppliesService] %d камней, 1 охотничье копьё и зажженный факел успешно расставлены вокруг дома!", #stonePositions))
 

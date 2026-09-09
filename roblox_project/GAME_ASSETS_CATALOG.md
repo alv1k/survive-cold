@@ -211,11 +211,24 @@
    - **Модульная структура:** Корневой Empty `Bigfoot` + 34 дочерних сегмента: `Torso` (массивный ореховый торс `wood_walnut`), `LowerTorso` (`soil_rich`), `FurCollar` (воротник `wood_bark`), `ChestBulge` (грудные мышцы `leather_warm`), `BackHump` (`wood_walnut`), `Head` (голова с сагиттальным гребнем `wood_cedar`), `FaceMask` (кожаная маска морды `leather_tan`), `BrowRidge` (`wood_burnt`), `ApeNose` (`wood_bark`), `Ear_L`/`Ear_R` (`leather_tan`), `Fang_Upper*`/`Fang_Lower*` (4 белых клыка `snow_pure`), `Eye_L`/`Eye_R` (матовые янтарные глаза `copper_bronze` **без Neon/PointLight**), `Shoulder*`/`Arm*`/`Forearm*`/`Claw*` (мощные лапы `wood_walnut`/`wood_cedar`/`wood_bark`), `Thigh*`/`Leg*`/`Foot*` (широкие ступни Сасквача `wood_bark`).
    - **Масштаб и анимация:** 4x масштаб (`Scale = 4.0`), шарниры `Motor6D` с процедурной 60 FPS анимацией ходьбы (`Walk`), яростного бега (`Run`) и дыхания (`Idle`) (332 tris, Flat Shading, `palette.png`).
 
-### 2.5. 🐾 Питомцы (.FBX, Cute Chibi Low-Poly)
-1. **🦊 Снежный Лис (Fox)**:
+### 2.5. 🐾 Питомцы (.FBX / .OBJ, Cute Chibi Low-Poly)
+> **Папка размещения:** `assets/models/pets/` (также синхронизировано в `assets/models/` и `ReplicatedStorage/GeneratedModels/`)
+> **Стандарт сборки:** Корневой Empty в `(0,0,0)`, очаровательные чиби-пропорции, мягкие цвета палитры `palette.png`, поддержка суставов `Motor6D` для анимаций бега, сна и виляния хвостом.
+
+1. **🦊 Снежный Лис / Fox (`assets/models/pets/fox.fbx`)**:
    - Ярко-оранжевый с белой грудкой, огромный пушистый хвост, **большие изумрудные глазки** (220 tris).
-2. **🐺 Ледяной Волчонок (Wolf Pup)**:
-   - Серебристый щенок с милой мордочкой и **голубыми глазками** (220 tris).
+2. **🐺 Ледяной Волчонок / Friendly Wolf Pup (`assets/models/pets/wolfpup.fbx`, `wolfpup.obj`, `wolfpup.blend`, `WolfPup.luau`)**:
+   - **Модульная структура:** Корневой Empty `WolfPup` + 12 дочерних `MeshPart`:
+     - `Torso` & `Underbelly`: пухленькое пушистое серебристое тельце (`slate_light` / `#E2E8F0`) с мягким белым животиком (`snow_pure` / `#FFFFFF`).
+     - `ChestFluff`: пушистая белая манишка на грудке.
+     - `Collar` & `Bell`: уютный алый ошейник (`meat_steak` / `#EF4444`) со сверкающим золотым колокольчиком-медальоном (`gold_pure` / `#FACC15`).
+     - `Head` & `Cheeks`: крупная очаровательная голова щенка с пушистыми белыми щёчками.
+     - `Muzzle`, `Nose` & `Tongue`: короткая закругленная белая мордочка, черная кнопка-носик (`pitch_black`) и довольный розовый язычок (`pink_soft` / `#FDA4AF`).
+     - `Ears`: мягкие ушки с розовой подкладкой внутри.
+     - `Eyes`: большие добрые глаза со светящейся аква-радужкой (`aqua_bright` / `#22D3EE`), темными зрачками и белыми бликами-искрами.
+     - `Leg_FL` – `Leg_BR`: 4 короткие пухлые лапки с белоснежными носочками-подушечками.
+     - `Tail`: задорно приподнятый пушистый хвостик с белым кончиком, виляющий в 60 FPS.
+   - **Полигонаж:** ~428 tris (Flat Shading, `palette.png`).
 3. **🐻 Полярный Медвежонок (Bear Cub)**:
    - Круглый белый комочек с круглыми ушками и черным носиком-пуговкой (180 tris).
 

@@ -88,7 +88,7 @@ local mobConfigs = {
 		PatrolSpeed = 6.0,       -- Скорость при патрулировании (замедлена в 2 раза)
 		ThreatLevel = 2,
 		AggroRadius = 45,
-		PatrolRadius = 156,      -- Радиус патруля увеличен в 1.3 раза (120 * 1.3 = 156)
+		PatrolRadius = 312,      -- Радиус патруля увеличен в 2 раза (156 * 2 = 312)
 		HipHeight = 1.90,
 		HrpSize = Vector3.new(2.4, 2.0, 4.4),
 		Scale = 2.70,
@@ -102,7 +102,7 @@ local mobConfigs = {
 		PatrolSpeed = 4.0,       -- Скорость при патрульной ходьбе
 		ThreatLevel = 5,
 		AggroRadius = 48,
-		PatrolRadius = 120,
+		PatrolRadius = 480,      -- Радиус патруля увеличен в 2 раза (240 * 2 = 480)
 		HipHeight = 3.60,
 		HrpSize = Vector3.new(4.8, 5.2, 4.0),
 		Scale = 4.0,
@@ -116,7 +116,7 @@ local mobConfigs = {
 		PatrolSpeed = 3.5,       -- Скорость при патрульной ходьбе
 		ThreatLevel = 6,
 		AggroRadius = 50,
-		PatrolRadius = 150,
+		PatrolRadius = 600,      -- Радиус патруля увеличен в 2 раза (300 * 2 = 600)
 		HipHeight = 3.60,
 		HrpSize = Vector3.new(4.8, 5.2, 4.0),
 		Scale = 4.0,
@@ -319,11 +319,11 @@ local function getGroundHeight(x, z)
 	return SurfaceUtil.getGroundHeight(x, z, 50)
 end
 
--- Спавн по 1 штуке каждого типа врагов на расстоянии ровно 210 метров от дома
+-- Спавн по 1 штуке каждого типа врагов на расстоянии ровно 500 метров (studs) от дома
 local MOB_SPAWN_POINTS = {
-	{ Type = "Wolf", Pos = Vector3.new(210, 0, 0) },       -- 🐺 Волк: 210м к востоку
-	{ Type = "Yeti", Pos = Vector3.new(148, 0, 148) },     -- ❄️ Йети: 210м к юго-востоку
-	{ Type = "Bigfoot", Pos = Vector3.new(148, 0, -148) }  -- 🦍 Бигфут: 210м к северо-востоку
+	{ Type = "Wolf", Pos = Vector3.new(500, 0, 0) },       -- 🐺 Волк: 500 studs к востоку
+	{ Type = "Yeti", Pos = Vector3.new(354, 0, 354) },     -- ❄️ Йети: 500 studs к юго-востоку
+	{ Type = "Bigfoot", Pos = Vector3.new(354, 0, -354) }  -- 🦍 Бигфут: 500 studs к северо-востоку
 }
 
 for _, sp in ipairs(MOB_SPAWN_POINTS) do
@@ -387,6 +387,12 @@ task.spawn(function()
 				end
 
 				if targetTarget then
+					-- Сброс патрульной точки, чтобы после боя моб выбрал новый маршрут
+					mob:SetAttribute("PatrolTargetX", nil)
+					mob:SetAttribute("PatrolTargetY", nil)
+					mob:SetAttribute("PatrolTargetZ", nil)
+					mob:SetAttribute("PatrolNextTime", nil)
+
 					-- Погоня и атака цели: полная скорость бега
 					humanoid.WalkSpeed = cfg.Speed
 					humanoid:MoveTo(targetTarget.Position)
@@ -398,20 +404,65 @@ task.spawn(function()
 						end
 					end
 				else
-					-- Патруль в радиусе своей зоны обитания: замедленная скорость
+					-- Патруль в радиусе своей зоны обитания: стабильное следование к дальней путевой точке
 					humanoid.WalkSpeed = cfg.PatrolSpeed or (cfg.Speed / 2)
-					local distFromHouse = math.sqrt(hrp.Position.X^2 + hrp.Position.Z^2)
-					if distFromHouse < 80 then
-						-- Возврат на исходную позицию 210м при случайном приближении к дому
-						humanoid:MoveTo(spawnPos)
+
+					local now = os.clock()
+					local tX = mob:GetAttribute("PatrolTargetX")
+					local tY = mob:GetAttribute("PatrolTargetY")
+					local tZ = mob:GetAttribute("PatrolTargetZ")
+					local nextTime = mob:GetAttribute("PatrolNextTime") or 0
+
+					local needNewWaypoint = false
+					if not tX or not tY or not tZ or now >= nextTime then
+						needNewWaypoint = true
 					else
-						local offset = Vector3.new(math.random(-cfg.PatrolRadius, cfg.PatrolRadius), 0, math.random(-cfg.PatrolRadius, cfg.PatrolRadius))
-						local targetPos = spawnPos + offset
-						local targetDistToHouse = math.sqrt(targetPos.X^2 + targetPos.Z^2)
-						if targetDistToHouse < 80 then
-							targetPos = spawnPos
+						local distToTarget = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(tX, 0, tZ)).Magnitude
+						if distToTarget < 12 then
+							needNewWaypoint = true
 						end
-						humanoid:MoveTo(targetPos)
+					end
+
+					if needNewWaypoint then
+						-- Выбираем удаленную точку по всему радиусу патрулирования (от 35% до 100% PatrolRadius)
+						local angle = math.random() * math.pi * 2
+						local minR = math.floor(cfg.PatrolRadius * 0.35)
+						local maxR = cfg.PatrolRadius
+						local dist = math.random(minR, maxR)
+
+						local newX = spawnPos.X + math.cos(angle) * dist
+						local newZ = spawnPos.Z + math.sin(angle) * dist
+
+						-- Защита базы: если точка ближе 90м к дому, отталкиваем её в безопасную зону
+						local distToHouse = math.sqrt(newX^2 + newZ^2)
+						if distToHouse < 90 then
+							local dirFromHouse = (Vector3.new(newX, 0, newZ) - Vector3.zero).Unit
+							if dirFromHouse.Magnitude < 0.1 then
+								dirFromHouse = Vector3.new(1, 0, 0)
+							end
+							local safePos = dirFromHouse * (95 + math.random(20, 150))
+							newX = safePos.X
+							newZ = safePos.Z
+						end
+
+						local newY = getGroundHeight(newX, newZ) + (cfg.HipHeight or 2)
+						local travelDist = (Vector3.new(newX, newY, newZ) - hrp.Position).Magnitude
+						local walkSeconds = (travelDist / humanoid.WalkSpeed) + math.random(4, 9) -- время перехода + пауза на осмотр
+
+						mob:SetAttribute("PatrolTargetX", newX)
+						mob:SetAttribute("PatrolTargetY", newY)
+						mob:SetAttribute("PatrolTargetZ", newZ)
+						mob:SetAttribute("PatrolNextTime", now + walkSeconds)
+						mob:SetAttribute("LastMoveToTime", now)
+
+						humanoid:MoveTo(Vector3.new(newX, newY, newZ))
+					else
+						-- Переподтверждаем команду MoveTo каждые 4 секунды (обход внутреннего 8-секундного таймаута Roblox MoveTo)
+						local lastMoveTo = mob:GetAttribute("LastMoveToTime") or 0
+						if now - lastMoveTo >= 4 or (humanoid.MoveDirection.Magnitude < 0.05 and now - lastMoveTo >= 1.5) then
+							mob:SetAttribute("LastMoveToTime", now)
+							humanoid:MoveTo(Vector3.new(tX, tY, tZ))
+						end
 					end
 				end
 			end

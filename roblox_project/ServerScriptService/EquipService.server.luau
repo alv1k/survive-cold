@@ -165,8 +165,8 @@ EquipItemRemote.OnServerEvent:Connect(function(player, itemKey)
 
 			if itemKey == "Torch" then
 				local fire = Instance.new("Fire", primary)
-				fire.Size = 4
-				fire.Heat = 10
+				fire.Size = 1.8
+				fire.Heat = 5
 
 				local light = Instance.new("PointLight", primary)
 				light.Color = Color3.fromRGB(255, 160, 50)
@@ -203,8 +203,8 @@ EquipItemRemote.OnServerEvent:Connect(function(player, itemKey)
 
 		if cfg.HasFire then
 			local fire = Instance.new("Fire", itemPart)
-			fire.Size = 4
-			fire.Heat = 10
+			fire.Size = 1.8
+			fire.Heat = 5
 
 			local light = Instance.new("PointLight", itemPart)
 			light.Color = Color3.fromRGB(255, 160, 50)

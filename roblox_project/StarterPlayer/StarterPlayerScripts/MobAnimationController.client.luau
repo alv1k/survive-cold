@@ -60,6 +60,7 @@ local function animateWolf(model, hrp, humanoid, dt)
 		state.walkPhase = (state.walkPhase + dt * stepRate) % (math.pi * 2)
 	end
 
+	local isPup = (model:GetAttribute("IsWolfPup") == true) or (model:GetAttribute("PetId") == "Wolf")
 	local walkT = state.walkPhase
 	local breathe = math.sin(timeNow * 2.0) * 0.025
 	local sleepBreathe = math.sin(timeNow * 1.5) * 0.04
@@ -70,34 +71,37 @@ local function animateWolf(model, hrp, humanoid, dt)
 
 		if targetMode == "Walk" then
 			-- =========================================================
-			-- АНИМАЦИЯ ХОДЬБЫ / РЫСИ (Wolf_Walk)
+			-- АНИМАЦИЯ ХОДЬБЫ / РЫСИ (Wolf_Walk / Puppy_Trot)
 			-- =========================================================
+			local legStride = isPup and 0.60 or 0.52
 			if mName == "Joint_FL" then
-				local rotX = math.sin(walkT) * 0.52
+				local rotX = math.sin(walkT) * legStride
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
 			elseif mName == "Joint_FR" then
-				local rotX = -math.sin(walkT) * 0.52
+				local rotX = -math.sin(walkT) * legStride
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
 			elseif mName == "Joint_BL" then
-				local rotX = -math.sin(walkT) * 0.48
+				local rotX = -math.sin(walkT) * (legStride * 0.9)
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
 			elseif mName == "Joint_BR" then
-				local rotX = math.sin(walkT) * 0.48
+				local rotX = math.sin(walkT) * (legStride * 0.9)
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(rotX, 0, 0), 0.35)
 			elseif mName == "TailJoint" then
-				local swayY = math.sin(walkT * 0.8) * 0.42
-				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-5), swayY, 0), 0.3)
+				-- У щенка хвостик задорно и быстро виляет при беге
+				local tailWag = isPup and (math.sin(timeNow * 8.0) * 0.55) or (math.sin(walkT * 0.8) * 0.42)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(isPup and 15 or -5), tailWag, 0), 0.35)
 			elseif mName == "NeckJoint" then
-				local bobX = math.abs(math.sin(walkT)) * 0.10 - 0.05
-				motor.Transform = motor.Transform:Lerp(CFrame.Angles(bobX, 0, 0), 0.3)
+				local bobX = math.abs(math.sin(walkT)) * (isPup and 0.14 or 0.10) - 0.05
+				local tiltZ = isPup and (math.sin(walkT * 0.5) * 0.08) or 0
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(bobX, 0, tiltZ), 0.3)
 			elseif mName == "RootJoint" then
-				local bounceY = -math.abs(math.sin(walkT)) * 0.08
+				local bounceY = math.abs(math.sin(walkT)) * (isPup and 0.08 or 0.05)
 				motor.Transform = motor.Transform:Lerp(CFrame.new(0, bounceY, 0), 0.3)
 			end
 
 		elseif targetMode == "Sleep" then
 			-- =========================================================
-			-- АНИМАЦИЯ СНА (Wolf_Sleep)
+			-- АНИМАЦИЯ СНА (Wolf_Sleep / Puppy_Cuddle)
 			-- =========================================================
 			if mName == "Joint_FL" then
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(68), math.rad(-15), math.rad(10)), 0.2)
@@ -112,17 +116,20 @@ local function animateWolf(model, hrp, humanoid, dt)
 			elseif mName == "NeckJoint" then
 				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-18 + sleepBreathe * 15), 0, math.rad(-22)), 0.2)
 			elseif mName == "RootJoint" then
-				motor.Transform = motor.Transform:Lerp(CFrame.new(0, -0.48 + sleepBreathe, 0) * CFrame.Angles(math.rad(-5), math.rad(-8), math.rad(12)), 0.2)
+				motor.Transform = motor.Transform:Lerp(CFrame.new(0, -0.18 + sleepBreathe * 0.5, 0) * CFrame.Angles(math.rad(-5), math.rad(-8), math.rad(12)), 0.2)
 			end
 
 		else
 			-- =========================================================
-			-- АНИМАЦИЯ ПОКОЯ (Idle)
+			-- АНИМАЦИЯ ПОКОЯ (Idle / Happy Pup Wag)
 			-- =========================================================
 			if mName == "NeckJoint" then
-				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.5, 0, 0), 0.25)
+				local headTilt = isPup and (math.sin(timeNow * 1.5) * 0.10) or 0
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(breathe * 0.5, 0, headTilt), 0.25)
 			elseif mName == "TailJoint" then
-				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(-5), math.sin(timeNow * 1.2) * 0.15, 0), 0.25)
+				-- В покое щенок радостно помахивает хвостиком
+				local wag = isPup and (math.sin(timeNow * 4.5) * 0.40) or (math.sin(timeNow * 1.2) * 0.15)
+				motor.Transform = motor.Transform:Lerp(CFrame.Angles(math.rad(isPup and 12 or -5), wag, 0), 0.25)
 			else
 				motor.Transform = motor.Transform:Lerp(CFrame.identity, 0.25)
 			end

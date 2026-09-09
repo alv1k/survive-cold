@@ -13,14 +13,24 @@ local WolfGenerator = {}
 function WolfGenerator.create(parent, targetCF, options)
 	options = options or {}
 	local isPet = (options.isPet == true)
+	if isPet then
+		local pupMod = script.Parent:FindFirstChild("WolfPup")
+		if pupMod then
+			local success, WolfPupGen = pcall(require, pupMod)
+			if success and WolfPupGen and type(WolfPupGen.create) == "function" then
+				return WolfPupGen.create(parent, targetCF, options)
+			end
+		end
+	end
+
 	local isMob = (options.isMob == true) or (options.isAnimated == true)
-	local scale = options.Scale or (isPet and 1.90 or 2.70)
-	local isAnchored = (options.Anchored ~= false) and (not isMob) and (not isPet)
-	local isAnimated = (options.isAnimated ~= false) and (isMob or isPet)
+	local scale = options.Scale or 2.70
+	local isAnchored = (options.Anchored ~= false) and (not isMob)
+	local isAnimated = (options.isAnimated ~= false) and isMob
 	
 	targetCF = targetCF or CFrame.new(0, 2.4, 0)
 	local model = Instance.new("Model")
-	model.Name = isPet and "IceWolf" or "Wolf"
+	model.Name = "Wolf"
 
 	local function makePart(name, size, cfOffset, material, color, canCollide)
 		local p = Instance.new("Part")

@@ -86,6 +86,7 @@ local function createHomeResourceNode(resType, pos, index)
 		or (resType == "Planks" and "Взять доски (x2)")
 		or (resType == "Parts" and "Взять детали (x2)")
 		or (resType == "Spear" and "Взять охотничье копье")
+		or (resType == "Torch" and "Взять зажженный факел")
 		or "Взять ресурс"
 
 	local promptName = (resType == "Branches" and "🌿 Ветки")
@@ -94,13 +95,14 @@ local function createHomeResourceNode(resType, pos, index)
 		or (resType == "Planks" and "🌲 Доски")
 		or (resType == "Parts" and "⚙️ Детали")
 		or (resType == "Spear" and "🗡️ Охотничье копье")
+		or (resType == "Torch" and "🔥 Факел (для отогрева)")
 		or "📦 Ресурс"
 
 	local prompt = Instance.new("ProximityPrompt", hitBox)
 	prompt.ActionText = actionTitle
 	prompt.ObjectText = promptName
 	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 12
+	prompt.MaxActivationDistance = 14
 	prompt.RequiresLineOfSight = false
 
 	local isBusy = false
@@ -110,10 +112,14 @@ local function createHomeResourceNode(resType, pos, index)
 		isBusy = true
 		prompt.Enabled = false
 
-		local count = (resType == "Spear") and 1 or 2
+		local count = (resType == "Spear" or resType == "Torch") and 1 or 2
 		local given = InventoryService.giveItem(player, resType, count)
 		if not given then
 			InventoryService.dropItem(player, resType, count, exactPos + Vector3.new(0, 1.0, 0))
+		else
+			if resType == "Torch" then
+				ShowNotificationRemote:FireClient(player, "🔥 Вы взяли Факел! Подойдите к ледяной глыбе у дома и отогрейте Волчонка!")
+			end
 		end
 
 		-- Плавное исчезновение модели
@@ -199,5 +205,13 @@ for i, pos in ipairs(spearPositions) do
 	createHomeResourceNode("Spear", pos, i)
 end
 
-print(string.format("🏡 [HomeSuppliesService] %d околодомовых кубических камней (Stone) и охотничьи копья успешно расставлены вокруг дома!", #stonePositions))
+-- 🔥 ЗАЖЖЕННЫЙ ФАКЕЛ У ДОМА (Рядом со льдом Волчонка)
+local torchPositions = {
+	Vector3.new(13.5, 0, 14.5), -- Рядом с ледяной глыбой волчонка (X=16.5, Z=14.0)
+}
+for i, pos in ipairs(torchPositions) do
+	createHomeResourceNode("Torch", pos, i)
+end
+
+print(string.format("🏡 [HomeSuppliesService] %d камней, копья и зажженный факел у волчонка успешно расставлены вокруг дома!", #stonePositions))
 

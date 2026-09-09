@@ -95,8 +95,8 @@ local function attachDetailed3DModel(tool, itemKey)
 		local head = addSubPart("Head", Vector3.new(0.65, 0.7, 0.65), CFrame.new(0, 1.1, 0), Enum.Material.Fabric, BrickColor.new("Dark orange"))
 		
 		local fire = Instance.new("Fire", head)
-		fire.Size = 3.5
-		fire.Heat = 10
+		fire.Size = 1.7
+		fire.Heat = 5
 
 		local light = Instance.new("PointLight", head)
 		light.Color = Color3.fromRGB(255, 160, 50)

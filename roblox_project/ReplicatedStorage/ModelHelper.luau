@@ -152,6 +152,11 @@ function ModelHelper.findTemplate(itemKey)
 				return true
 			end
 		end
+		if lowerKey == "wolfpup" or lowerKey == "волчонок" or lowerKey == "щен" or lowerKey == "pup" then
+			if string.find(l, "pup", 1, true) or string.find(l, "волчон", 1, true) or string.find(l, "щен", 1, true) then
+				return true
+			end
+		end
 		if lowerKey == "wolf" or lowerKey == "волк" then
 			if string.find(l, "wolf", 1, true) or string.find(l, "волк", 1, true) then
 				return true

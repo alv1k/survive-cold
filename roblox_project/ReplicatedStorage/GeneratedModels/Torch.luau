@@ -5,7 +5,7 @@
 
 local TorchModel = {}
 
-function TorchModel.create(parent)
+function TorchModel.create(parent, targetCF)
 	local container = Instance.new("Model")
 	container.Name = "Torch"
 
@@ -55,10 +55,10 @@ function TorchModel.create(parent)
 	local clampMesh = Instance.new("SpecialMesh", clamp)
 	clampMesh.MeshType = Enum.MeshType.Cylinder
 
-	-- Пламя и свет
+	-- Пламя и свет (аккуратный походный огонь)
 	local fire = Instance.new("Fire", head)
-	fire.Size = 3.5
-	fire.Heat = 10
+	fire.Size = 1.7
+	fire.Heat = 5
 	fire.Color = Color3.fromRGB(255, 140, 30)
 	fire.SecondaryColor = Color3.fromRGB(255, 60, 0)
 
@@ -76,6 +76,10 @@ function TorchModel.create(parent)
 			weld.Part1 = p
 			weld.Parent = p
 		end
+	end
+
+	if targetCF then
+		container:PivotTo(targetCF)
 	end
 
 	if parent then container.Parent = parent end
